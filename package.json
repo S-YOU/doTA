@@ -1,0 +1,16 @@
+{
+  "name": "doTA",
+  "version": "0.0.1",
+  "description": "doT for Angular",
+  "main": "doTA.js",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt-contrib-concat": "*",
+    "grunt": "*",
+    "grunt-contrib-copy": "*",
+    "grunt-contrib-uglify": "*",
+    "grunt-string-replace": "*"
+  },
+  "scripts": {},
+  "license": "MIT"
+}
