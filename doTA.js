@@ -118,6 +118,26 @@ var doTA = {
       return v;
     };
     var N = function(str){
+      if (str.indexOf('{{') >= 0) {
+        var CV = C(V);
+        var Z = str.split(/\{\{|\}\}/);
+        for (var i = 0; i < Z.length; i+= 2) {
+          if (Z[i].indexOf("'") >= 0) {
+            Z[i] = Z[i].replace(/'/g, "\\'");
+          }
+        }
+        for (var i = 1; i < Z.length - 1; i+= 2) {
+          Z[i] = CV(null, Z[i]);
+        }
+        return Z.join('');
+      } else {
+        if (str.indexOf("'") >= 0) {
+          return str.replace(/'/g, "\\'");
+        }
+        return str;
+      }
+    };
+    var M = function(str) {
       return str.replace(/\{\{([^}]+)\}\}/g, C(V));
     };
     var C = function(V){
@@ -209,7 +229,7 @@ var doTA = {
               //console.log(222, attr[x]);
 
               //ToDO: ng-class is complicated, this need some more work!
-              R += D(L) + 'var s=[],n=' + N(Y(V, attr[x])) + ';\n';
+              R += D(L) + 'var s=[],n=' + Y(V, attr[x]) + ';\n';
               R += D(L) + 'for(var c in n){n[c]&&s.push(c);}\n';
               n=1;
 
@@ -226,23 +246,23 @@ var doTA = {
             R += D(L) + 's.push("' + val + '");\n';
 
           } else {
+            a[x] = '="' + N(val) + '"';
             //ng-repeat loop variables are not available!
             // only way to acccess is to use $index like "data[$index]"
             // instead of "item" as in "item in data"
-            if(val.indexOf('$index') !== -1) {
+            if(a[x].indexOf('$index') !== -1) {
               //console.log([val], T[L]);
-              for(var j=L;j>0;j--){
-                if(I[j]) {
-                  val = val.replace('$index', "'+" + I[j] + "+'");
+              for(var j = L; j >= 0; j--){
+                if (I[j]) {
+                  a[x] = a[x].replace('$index', "'+" + I[j] + "+'");
                   break;
                 }
               }
             }
-            a[x] = '="' + N(val) + '"';
           }
         }
 
-        R += D(L) + "R+='<" + name + (n ? " class=\"'+s.join(' ')+'\"" : ''); //+ "';\n";
+        R += D(L) + "R+='<" + name + (n ? " class=\"'+s.join(' ')+'\"" : '');
         for(var k in a) {
           R += " " + k + a[k];
         }
@@ -270,9 +290,9 @@ var doTA = {
       ontext: function(text){
         if (text.indexOf('{{') !== -1){
           //console.log(22, 'start');
-          text = N(text);
+          text = M(text);
         }
-        R += D(L) + ('R+=\'' + text.replace(/\s{2,}/g,' ') + '\';\n').replace(/\+''|''\+/g,'');
+        R += D(L) + ('R+=\'' + text.replace(/\s{2,}|\n/g,' ') + '\';\n').replace(/\+''|''\+/g,'');
         //console.log(111, R.slice(-50));
       },
       oncomment: function(data){

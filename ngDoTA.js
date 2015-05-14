@@ -85,36 +85,40 @@
               s.data = s[a.data]; //may be there is better way?
             }
 
-            if(a.watch) { // && !d.cache[a.dotaRender]
+            if(a.watch) {
               console.log(a.dotaRender, 'registering watch for', a.watch);
               s.$watchCollection(a.watch, function(newValue, oldValue){
-                if(newValue !== oldValue) {
-                  console.log(a.dotaRender, 'watch before render (cache)');
-                  render(d.cache[a.dotaRender]);
-                  console.log(a.dotaRender, 'watch after render (cache)');
+                if(newValue !== oldValue && d.cache.hasOwnProperty(a.dotaRender)) {
+                  console.log(a.dotaRender, 'watch before render');
+                  loader();
+                  console.log(a.dotaRender, 'watch after render');
                 }
-              })
-            }
-
-            if(d.cache[a.dotaRender]){
-              console.log(a.dotaRender,'get compile function from cache');
-              render(d.cache[a.dotaRender]);
-
-            } else if (a.inline) { //render by template name
-              // render inline by loading inner html tags,
-              // html entities encoding sometimes need for htmlparser here or you can use htmlparser2
-              console.log(a.dotaRender,'before get elem.html()');
-              var v = e.html();
-              console.log(a.dotaRender,'after get elem.html()');
-              render(compile(v, a));
-
-            } else if (a.dotaRender) { //load real template
-              console.log('before h', a.dotaRender);
-              h.get(a.dotaRender, {cache: t}).success(function (v) {
-                console.log('after h response', a.dotaRender);
-                render(compile(v, a));
               });
             }
+            
+            function loader(){
+              if(d.cache[a.dotaRender]){
+                console.log(a.dotaRender,'get compile function from cache');
+                render(d.cache[a.dotaRender]);
+  
+              } else if (a.inline) { //render by template name
+                // render inline by loading inner html tags,
+                // html entities encoding sometimes need for htmlparser here or you can use htmlparser2
+                console.log(a.dotaRender,'before get elem.html()');
+                var v = e.html();
+                console.log(a.dotaRender,'after get elem.html()');
+                render(compile(v, a));
+  
+              } else if (a.dotaRender) { //load real template
+                console.log('before h', a.dotaRender);
+                h.get(a.dotaRender, {cache: t}).success(function (v) {
+                  console.log('after h response', a.dotaRender);
+                  render(compile(v, a));
+                });
+              }
+            }
+            
+            loader();
 
           };
         }
