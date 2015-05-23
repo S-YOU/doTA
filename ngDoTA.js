@@ -123,6 +123,46 @@
           };
         }
       };
+    }])
+    .directive('dotaInclude', ['$http', '$templateCache', '$compile', function($http, $templateCache, $compile) {
+      return {
+        restrict: 'A',
+        priority: 1000,
+        terminal: true,
+        compile: function() {
+          return function(scope, elem, attr) {
+            console.log('dotaInclude', attr.dotaInclude)
+            $http.get(attr.dotaInclude, {cache: $templateCache}).success(function (data) {
+              elem.html(data);
+              if (attr.compile !== 'false') {
+                $compile(elem.contents())(scope);
+              }
+            });
+          };
+        }
+      };
+    }])
+    .directive('dotaTemplate', ['$http', '$templateCache', '$compile', function($http, $templateCache, $compile) {
+      return {
+        restrict: 'A',
+        priority: 1000,
+        terminal: true,
+        compile: function() {
+          return function(scope, elem, attr) {
+            scope.$watch(attr.dotaTemplate, function(newVal, oldVal) {
+              if (newVal) {
+                console.log('dotaTemplate', newVal);
+                $http.get(newVal, {cache: $templateCache}).success(function (data) {
+                  elem.html(data);
+                  if (attr.compile !== 'false') {
+                    $compile(elem.contents())(scope);
+                  }
+                });
+              }
+            });
+          };
+        }
+      };
     }]);
 
 })(window.angular);

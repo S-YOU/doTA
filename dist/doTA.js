@@ -8,9 +8,9 @@ var doTA = {
   parse: function(html, func){'use strict';
     var chunks = html.match(/([<>]|[^<>]+)/g), x=0;
     var html_decode = function(text) {
-      return text.replace(/&gt;|&lt;|&amp;|&quot;/g, function($0){
+      return text.indexOf('&') !== -1 ? text.replace(/&gt;|&lt;|&amp;|&quot;/g, function($0){
         return {'&gt;': '>', '&lt;': '<', '&amp;': '&', '&quot;': '"'}[$0];
-      });
+      }) : text;
     };
     do {
       // console.log("X", [chunks[x]]);
@@ -104,7 +104,7 @@ var doTA = {
         //ToDo: Buggy, this need to improve
         v = v.replace(/'[^']+'|"[^"]+"|(?:^|\s*|[^\w.'"])([$\w]+(?:\.[$\w]+|\[[^\]]+\])*)/g, function($0,$1){
           //logg && console.log(22, [$0, $1]);
-          if(v[0] === '"' || v[0] === "'") {
+          if(v[0] === '"' || v[0] === "'" || (v[0] >= "0" && v[0] <= "9")) {
             return $0;
           }
           var v0 = /([$A-Za-z_][$\w]*)/.test($1) && RegExp.$1; //\s*
@@ -152,7 +152,15 @@ var doTA = {
           for(var i=1; i < v.length; i++){
             var p = v[i].split(':');
             // console.log(2121,v[i], val, p)
-            val = 'F(\'' + p.shift().trim() + '\')('+ val + (p.length ? ',"' + p.join('","') + '"' : '') +')';
+            val = 'F(\'' + p.shift().trim() + '\')('+ val;
+            if (p.length) {
+              var pr = [];
+              for(var j=0; j<p.length; j++) {
+                pr.push(Y(V, p[j]));
+              }
+              val += ',' + pr.join(',');
+            }
+            val += ')';
           }
           return "'+(" + val + val_mod +  ")+'";
         }
