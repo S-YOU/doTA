@@ -23,10 +23,10 @@ module.exports = (grunt) ->
     'string-replace':
       dist:
         files:
-          'dist/': ['dist/doTA.min.js']
+          'dist/': ['dist/*.min.js']
         options:
           replacements: [
-            pattern: /\bD\([^)]+\)\s*\+\s*|\\n/ig,
+            pattern: /\bD\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/gm,
             replacement: ''
           ]
 

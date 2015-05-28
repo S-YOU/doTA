@@ -161,6 +161,7 @@ var doTA = {
               val += ',' + pr.join(',');
             }
             val += ')';
+            break; //implicitly ignore multiple instance of multiple filters that are not supported now
           }
           return "'+(" + val + val_mod +  ")+'";
         }
@@ -206,7 +207,7 @@ var doTA = {
               //if need to check array is valid, add -> if(' + _v + '){\n
               R += D(L, 1) + 'var D' + L + '=' + _v + ',' + i + '=-1,' + l + '=D' + L + '.length;\n';
               R += D(L, 1) + 'while(++' + i + '<' + l + '){\n';
-              R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + '];\n';
+              R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + ']; \n'; //"; " - space is needed for manual uglify 
 
               //remember this as local variable, so no need to attach args to it.
               V[v[0]] = 1;
