@@ -204,13 +204,18 @@ var doTA = {
               I[L] = i;
 
               //make ng-repeat as javascript loop
-              //if need to check array is valid, add -> if(' + _v + '){\n
-              R += D(L, 1) + 'var D' + L + '=' + _v + ',' + i + '=-1,' + l + '=D' + L + '.length;\n';
-              R += D(L, 1) + 'while(++' + i + '<' + l + '){\n';
-              R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + ']; \n'; //"; " - space is needed for manual uglify 
-
-              //remember this as local variable, so no need to attach args to it.
-              V[v[0]] = 1;
+              if (v[0].indexOf(",") !== -1) {
+                var v01 = v[0].split(',');
+                R += D(L, 1) + 'var D' + L + '=' + _v + ';\n';
+                R += D(L, 1) + 'for(var ' + v01[0] + ' in D' + L + '){\n';
+                R += D(L, 1) + 'var ' + v01[1] + ' = ' + 'D' + L + '[' + v01[0] + '];\n';
+                V[v01[0]] = V[v01[1]] = 1;
+              } else {
+                R += D(L, 1) + 'var D' + L + '=' + _v + ',' + i + '=-1,' + l + '=D' + L + '.length;\n';
+                R += D(L, 1) + 'while(++' + i + '<' + l + '){\n';
+                R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + '];\n';
+                V[v[0]] = 1;
+              }
 
               delete attr[x];
               break;
@@ -327,7 +332,6 @@ var doTA = {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = doTA;
 }
-
 (function (A) {
   'use strict';
 
