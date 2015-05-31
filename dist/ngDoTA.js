@@ -223,12 +223,12 @@ var doTA = {
                 var v01 = v[0].split(',');
                 R += D(L, 1) + 'var D' + L + '=' + _v + ';\n';
                 R += D(L, 1) + 'for(var ' + v01[0] + ' in D' + L + '){\n';
-                R += D(L, 1) + 'var ' + v01[1] + ' = ' + 'D' + L + '[' + v01[0] + '];\n';
+                R += D(L, 1) + 'var ' + v01[1] + ' = ' + 'D' + L + '[' + v01[0] + ']; \n'; //"; " - space is needed for manual uglify
                 V[v01[0]] = V[v01[1]] = 1;
               } else {
                 R += D(L, 1) + 'var D' + L + '=' + _v + ',' + i + '=-1,' + l + '=D' + L + '.length;\n';
                 R += D(L, 1) + 'while(++' + i + '<' + l + '){\n';
-                R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + '];\n';
+                R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + ']; \n'; //"; " - space is needed for manual uglify
                 V[v[0]] = 1;
               }
 
