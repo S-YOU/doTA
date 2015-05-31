@@ -6,6 +6,7 @@ if(!String.prototype.trim){
 }
 var doTA = {
   parse: function(html, func){'use strict';
+    if (!html) {return;}
     var chunks = html.match(/([<>]|[^<>]+)/g), x=0;
     var html_decode = function(text) {
       return text.indexOf('&') !== -1 ? text.replace(/&gt;|&lt;|&amp;|&quot;/g, function($0){
@@ -36,9 +37,14 @@ var doTA = {
             //console.log(222, [pos, cx]);
             while(++pos < len) {
               var eq_pos = cx.indexOf('=', pos);
+              //console.log(33, [eq_pos]);
+              //two spaces between attributes are not supported, clean up them first
               var attr_name = cx.slice(pos, eq_pos), attr_val;
+              //console.log(331, [attr_name]);
+              
               var val_st = cx[eq_pos + 1], val_end_pos;
-
+              //console.log(332, [val_st]);
+              
               if(val_st === '"' || val_st === "'") {
                 val_end_pos = cx.indexOf(val_st, eq_pos + 2);
                 attr_val =  cx.slice(eq_pos + 2, val_end_pos);
@@ -47,12 +53,21 @@ var doTA = {
                 pos = val_end_pos + 1;
               } else {
                 val_end_pos = cx.indexOf(' ', eq_pos + 2);
+                //console.log(44, [val_end_pos]);
                 if(val_end_pos === -1) {
                   attr_val =  cx.slice(eq_pos + 1);
                   attr[attr_name] = html_decode(attr_val);
-                  //console.log(312, [attr_val]);
+                  //console.log(442, [attr_val]);
                   break;
                 } else {
+                  //this can effect performance issues, 
+                  //but can cause infinite loop without with no value attributes
+                  //currently only support those at end of attributes, 
+                  //and only one like required
+                  if (eq_pos < 0) { 
+                    attr[attr_name] = "";
+                    break;
+                  }
                   attr_val =  cx.slice(eq_pos + 1, val_end_pos);
                   attr[attr_name] = html_decode(attr_val);
                   //console.log(313, [eq_pos, val_end_pos, attr_val]);
@@ -283,7 +298,9 @@ var doTA = {
         R += ">';\n";
 
         //some tag dont have close tag
-        if(!/^input|img|br$/i.test(name)) {
+        if(!/^input|img|br|hr/i.test(name)) {
+          //there is more, but most not used or can't use with doTA, so excluding them
+          //http://webdesign.about.com/od/htmltags/qt/html-void-elements.htm
           L++;
         }
       },
