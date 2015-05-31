@@ -5,6 +5,14 @@ if(!String.prototype.trim){
   };
 }
 var doTA = {
+  valid_chr: (function(){
+    var ret = {};
+    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$_";
+    for (var i = 0; i < chars.length; i++) {
+      ret[chars[i]] = 1;
+    }
+    return ret;
+  })(),
   parse: function(html, func){'use strict';
     if (!html) {return;}
     var chunks = html.match(/([<>]|[^<>]+)/g), x=0;
@@ -103,6 +111,7 @@ var doTA = {
   compile: function(E, O){'use strict';
     O = O || {};
     var val_mod = O.loose ? "||''" : '';
+    var self = this;
     //debug = 1;
     if(O.encode) {
       E = E.replace(/"[^"]*"|'[^']*'/g, function($0){
@@ -114,21 +123,33 @@ var doTA = {
     var Y = function(V, v){
       //console.log(V, [v]);
       if(v) {
-        //var logg = /active/.test(v);
+        //var logg = /error/.test(v);
         //logg && console.log(11, [v]);
         //ToDo: Buggy, this need to improve
-        v = v.replace(/'[^']+'|"[^"]+"|(?:^|\s*|[^\w.'"])([$\w]+(?:\.[$\w]+|\[[^\]]+\])*)/g, function($0,$1){
-          //logg && console.log(22, [$0, $1]);
-          if(v[0] === '"' || v[0] === "'" || (v[0] >= "0" && v[0] <= "9")) {
-            return $0;
+        var m = v.match(/'[^']+'|"[^"]+"|[\w$]+|[^\w$'"]+/g), vv = "";
+        //logg && console.log(12, m);
+        for(var i = 0; i < m.length; i++) {
+          if (self.valid_chr[m[i][0]] && !V[m[i]] && (!i || m[i-1][m[i-1].length-1] !== '.')) {
+            vv += 'A.' + m[i];
+          } else {
+            vv += m[i];
           }
-          var v0 = /([$A-Za-z_][$\w]*)/.test($1) && RegExp.$1; //\s*
-          //logg && console.log(33, [v0]);
-          if(v0 && !V[v0]) {
-            return $0.replace($1, 'A.' + $1);
-          }
-          return $0;
-        });
+        }
+        //logg && console.log(55,vv);
+        return vv;
+//        v = v.replace(/(?:^|\s*|[^\w.'"])([$\w]+(?:\.[$\w]+|\[[^\]]+\])*)/g, function($0,$1){
+//          logg && console.log(22, [$0, $1]);
+//          if(v[0] === '"' || v[0] === "'" || (v[0] >= "0" && v[0] <= "9")) {
+//            return $0;
+//          }
+//          var v0 = /([$A-Za-z_][$\w]*)/.test($1) && RegExp.$1; //\s*
+//          logg && console.log(33, [v0]);
+//          if(v0 && !V[v0]) {
+//            return $0.replace($1, 'A.' + $1);
+//          }
+//          return $0;
+//        });
+//        logg && console.log(55, v);
       }
       return v;
     };
@@ -230,6 +251,8 @@ var doTA = {
                 R += D(L, 1) + 'while(++' + i + '<' + l + '){\n';
                 R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + ']; \n'; //"; " - space is needed for manual uglify
                 V[v[0]] = 1;
+                //,$index=' + i +'
+                V['$index'] = 1;
               }
 
               delete attr[x];
@@ -335,6 +358,10 @@ var doTA = {
     if(O.optimize){
       //longer compile time, but faster rendering time
       R = R.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
+//      var R2 = R.replace(/,\$index=i\d+/g,'');
+//      if (R2.indexOf('$index') === -1) {
+//        R = R2;
+//      }
     }
     if(O.debug) {
       console.log(R);
