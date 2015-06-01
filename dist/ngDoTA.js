@@ -435,19 +435,29 @@ if (typeof module !== "undefined" && module.exports) {
               //directly write raw html to element
               e.html(v);
               console.log(a.dotaRender,'after put e.html(content)');
+              
+              if (a.scope) {
+                console.log('scope', a.scope);
+                if (a.newScope) {
+                  console.log('oldScope $destroy');
+                  a.newScope.$destroy();
+                }
+                a.newScope = s.$new();
+                console.log('newScope created', a.newScope);
+              }
 
               //c html if you need ng-model or ng-something
               if(a.compile){
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
                 A.forEach(e[0].querySelectorAll('[dota-pass]'), function(partial){
-                  c(partial)(s);
+                  c(partial)(a.newScope || s);
                 });
                 console.log(a.dotaRender,'after c partial');
 
               } else if(a.compileAll){
                 //just compile the whole template with c
-                c(e.contents())(s);
+                c(e.contents())(a.newScope || s);
                 console.log(a.dotaRender,'after c all');
               }
 
