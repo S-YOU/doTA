@@ -78,6 +78,17 @@
                   console.log(a.dotaRender, 'after s eval');
                 });
               }
+              
+              //you can now hide raw html before rendering done 
+              // with loaded=false attribute and following css
+              /*
+              [dota-render][loaded]:not([loaded=true]) {
+                display: none;
+              }
+              */
+              if (a.loaded) {
+                e.attr("loaded",true);
+              }
             }
 
             //when using same template with multiple data on same s

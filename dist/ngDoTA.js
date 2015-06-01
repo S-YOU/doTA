@@ -132,7 +132,17 @@ var doTA = {
           if (self.valid_chr[m[i][0]] && !V[m[i]] && (!i || m[i-1][m[i-1].length-1] !== '.')) {
             vv += 'A.' + m[i];
           } else {
-            vv += m[i];
+            if (m[i].indexOf('$index') !== -1) {
+              //console.log([val], T[L]);
+              for(var j = L; j >= 0; j--){
+                if (I[j]) {
+                  vv += m[i].replace(/\$index/g, I[j]);
+                  break;
+                }
+              }
+            } else {
+              vv += m[i];
+            }
           }
         }
         //logg && console.log(55,vv);
@@ -306,7 +316,7 @@ var doTA = {
               //console.log([val], T[L]);
               for(var j = L; j >= 0; j--){
                 if (I[j]) {
-                  a[x] = a[x].replace('$index', "'+" + I[j] + "+'");
+                  a[x] = a[x].replace(/\$index/g, "'+" + I[j] + "+'");
                   break;
                 }
               }
@@ -455,6 +465,17 @@ if (typeof module !== "undefined" && module.exports) {
                   s.$eval(a.dotaOnloadScope);
                   console.log(a.dotaRender, 'after s eval');
                 });
+              }
+              
+              //you can now hide raw html before rendering done 
+              // with loaded=false attribute and following css
+              /*
+              [dota-render][loaded]:not([loaded=true]) {
+                display: none;
+              }
+              */
+              if (a.loaded) {
+                e.attr("loaded",true);
               }
             }
 
