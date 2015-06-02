@@ -218,7 +218,7 @@ var doTA = {
       return x ? ret.slice(0,-2) : ret;
     };
     //console.log(E);
-    var L = 0, T = {}, I = {}, V = {}, P;
+    var L = 0, T = {}, I = {}, V = {}, P, Q;
     var R = '[(function(A,F){\n';
     R += D(L) + "var R='';\n";
     this.parse(E, {
@@ -232,8 +232,10 @@ var doTA = {
         // need to run first since IE8 have reorder html attributes
         for(var x in attr){
           if(x === 'dota-pass'){
-            P = L;
+            P = L; Q = 0;
             break;
+          } else if (x === 'dota-continue') {
+            Q = L;
           }
         }
 
@@ -269,7 +271,9 @@ var doTA = {
               break;
             }
           }
-
+        }
+        
+        if (!P || Q) {
           //run ng- attributes first
           for(var x in attr) {
             if(x[2] !== '-') { continue; }
