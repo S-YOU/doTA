@@ -497,6 +497,13 @@ if (typeof module !== "undefined" && module.exports) {
             if(a.data) {
               s.data = s[a.data]; //may be there is better way?
             }
+ 
+            //pass parameter called 'params' from directive to template           
+            //eval is used here, so no need to add double quotes in object keys.
+            if (a.params) {
+              //console.log(a, a.params, e.data('params'));
+              s['params'] = eval('(' + a.params + ')');
+            }
 
             if(a.watch) {
               console.log(a.dotaRender, 'registering watch for', a.watch);
