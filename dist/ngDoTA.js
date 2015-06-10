@@ -219,8 +219,7 @@ var doTA = {
     };
     //console.log(E);
     var L = 0, T = {}, I = {}, V = {}, P, Q;
-    var R = '[(function(A,F){\n';
-    R += D(L) + "var R='';\n";
+    var R = D(L) + "var R='';\n";
     this.parse(E, {
       onopentag: function(name, attr){
         //if(debug)
@@ -368,7 +367,7 @@ var doTA = {
         R += D(L) + "R+='<" + data.replace(/'/g,"\\'") + ">';\n";
       }
     });
-    R += D(0) +'return R;\n})][0]\n';
+    R += D(0) +'return R;\n';
     if(O.optimize){
       //longer compile time, but faster rendering time
       R = R.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
@@ -380,7 +379,14 @@ var doTA = {
     if(O.debug) {
       console.log(R);
     }
-    var F = eval(R); // evil?
+    try {
+      var F = new Function('A', 'F', R);
+    } catch (e) {
+			if (typeof console !== "undefined") {
+        console.log("doTA compile error:\n" + R);
+      }
+			throw e;
+		}
     R = L = T = I = V = P = null; /* just for less array usage on heap profiling */
     return F;
   },
