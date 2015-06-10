@@ -106,11 +106,12 @@
               s.data = s[a.data]; //may be there is better way?
             }
  
-            //pass parameter called 'params' from directive to template           
-            //eval is used here, so no need to add double quotes in object keys.
-            if (a.params) {
-              //console.log(a, a.params, e.data('params'));
-              s['params'] = eval('(' + a.params + ')');
+            //map data-* attributes into scope
+            for (var x in a.$attr) {
+              if (!a.$attr[x].indexOf('data-')) {
+                s[x] = a[x];
+                // console.log('aa', s[x], a[x]);
+              }
             }
 
             if(a.watch) {
