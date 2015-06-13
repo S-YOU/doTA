@@ -4,9 +4,6 @@ if(!String.prototype.trim){
     return this.replace(/^\s+|\s+$/g,'');
   };
 }
-if(!window.console) {
-  window.console = {log: function(){}};
-}
 var doTA = {
   valid_chr: (function(){
     var ret = {};
@@ -337,20 +334,26 @@ var doTA = {
         R += ">';\n";
 
         //some tag dont have close tag
-        if(!/^input|img|br|hr/i.test(name)) {
+        if(!/^(?:input|img|br|hr)/i.test(name)) {
           //there is more, but most not used or can't use with doTA, so excluding them
           //http://webdesign.about.com/od/htmltags/qt/html-void-elements.htm
           L++;
+
+        //ng-repeat or ng-if on self closing tag
+        } else if (T[L] > 0) {
+          R += D(L,1) + '}\n';
+          T[L]--;
+          I[L] = 0;
         }
       },
       onclosetag: function(name){
         R += D(L-1) + "R+='</" + name + ">';\n";
         L--;
-        while(T[L]>0){
+        while (T[L] > 0) {
           //console.log(T[L], 'ends here at L', L);
           R += D(L,1) + '}\n';
           T[L]--;
-          I[L]=0;
+          I[L] = 0;
         }
         //console.log('/L',[L,P]);
         if(P && P >= L) {
@@ -398,7 +401,13 @@ var doTA = {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = doTA;
+  if (typeof window === "undefined") {
+    window = {console: console};
+  }
+} else if (typeof console === "undefined") {
+  window.console = {log: function(){}};
 }
+
 (function (A) {
   'use strict';
 
