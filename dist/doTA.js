@@ -4,6 +4,9 @@ if(!String.prototype.trim){
     return this.replace(/^\s+|\s+$/g,'');
   };
 }
+if(!window.console) {
+  window.console = {log: function(){}};
+}
 var doTA = {
   valid_chr: (function(){
     var ret = {};
@@ -383,7 +386,7 @@ var doTA = {
       var F = new Function('A', 'F', R);
     } catch (e) {
 			if (typeof console !== "undefined") {
-        console.log("doTA compile error:\n" + R);
+        window["console"].log("doTA compile error:\n" + R);
       }
 			throw e;
 		}

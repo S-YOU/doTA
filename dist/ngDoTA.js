@@ -4,6 +4,9 @@ if(!String.prototype.trim){
     return this.replace(/^\s+|\s+$/g,'');
   };
 }
+if(!window.console) {
+  window.console = {log: function(){}};
+}
 var doTA = {
   valid_chr: (function(){
     var ret = {};
@@ -383,7 +386,7 @@ var doTA = {
       var F = new Function('A', 'F', R);
     } catch (e) {
 			if (typeof console !== "undefined") {
-        console.log("doTA compile error:\n" + R);
+        window["console"].log("doTA compile error:\n" + R);
       }
 			throw e;
 		}
@@ -422,11 +425,19 @@ if (typeof module !== "undefined" && module.exports) {
 
               console.log(a.dotaRender,'before compile');
               //compile the template html text to function like doT does
-              var r = d.compile(template, a);
+              try {
+                var r = d.compile(template, a);
+                console.log(a.dotaRender,'after compile(no-cache)');
+              } catch (e) {
+                window['console'].log('compile error', a, template);
+                throw e;
+                return;
+              }
+              
+              //compiled func into cache for later use
               if (a.dotaRender) {
                 d.cache[a.dotaRender] = r;
               }
-              console.log(a.dotaRender,'after compile(no-cache)');
 
               return r;
             }
@@ -435,8 +446,14 @@ if (typeof module !== "undefined" && module.exports) {
               console.log(a.dotaRender,'before render');
 
               //execute the function by passing s(data basically), and f
-              var v = func(s, f);
-              console.log(a.dotaRender,'after render');
+              try {
+                var v = func(s, f);
+                console.log(a.dotaRender,'after render');
+              } catch (e) {
+                window['console'].log('render error', func);
+                throw e;
+                return;
+              }
 
               if(a.debug) {
                 console.log(v);
