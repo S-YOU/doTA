@@ -92,14 +92,14 @@
                 setTimeout(function(){
                   eval(a.dotaOnload);
                   console.log(a.dotaRender,'after eval');
-                })
+                });
               }
 
               //execute s functions
               if(a.dotaOnloadScope) {
                 setTimeout(function() {
-                  s.$eval(a.dotaOnloadScope);
-                  console.log(a.dotaRender, 'after s eval');
+                  s.$evalAsync(a.dotaOnloadScope);
+                  console.log(a.dotaRender, 'after scope $evalAsync scheduled');
                 });
               }
               
