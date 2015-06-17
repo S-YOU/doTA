@@ -419,11 +419,13 @@ if (typeof module !== "undefined" && module.exports) {
     document.body.appendChild(hiddenDIV);
   }
   var cachedDOM = {};
+  var isIE = /MSIE|Trident/.test(navigator.userAgent);
 
   A.module('doTA', [])
     .config(['$provide',function(p) {
       p.factory('doTA', function(){return doTA});
     }])
+
     .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', function(d, h, f, t, c) {
       return {
         restrict: 'A',
@@ -437,14 +439,23 @@ if (typeof module !== "undefined" && module.exports) {
             a.loose = 1; //not to show "undefined" in templates
             
             if (a.cacheDom && cachedDOM[a.dotaRender]) {
+              // alert( cachedDOM[a.dotaRender].innerHTML);
               console.log('cacheDOM: just moved cached DOM', cachedDOM[a.dotaRender]);
-              return e.replaceWith(cachedDOM[a.dotaRender]);
+              var elem;
+              if (isIE) {
+                elem = cachedDOM[a.dotaRender].cloneNode(true);
+              } else {
+                elem = cachedDOM[a.dotaRender];
+              }
+              e[0].parentNode.replaceChild(elem, e[0]);
+              return;
             }
             
             function cacheDOM(){
               console.log('cacheDOM()', a)
               s.$on("$destroy", function(){
                 console.log('$destroy', e);
+                // alert(['$destroy', e[0], hiddenDIV]);
                 cachedDOM[a.dotaRender] = e[0];
                 hiddenDIV.appendChild(e[0]);
               });
