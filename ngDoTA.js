@@ -1,5 +1,14 @@
 (function (A) {
   'use strict';
+  
+  var hiddenDIV = document.getElementById('dota-cache');
+  if (!hiddenDIV) {
+    hiddenDIV = document.createElement('div');
+    hiddenDIV.id = 'dota-cache';
+    hiddenDIV.style.display = 'none';
+    document.body.appendChild(hiddenDIV);
+  }
+  var cachedDOM = {};
 
   A.module('doTA', [])
     .config(['$provide',function(p) {
@@ -16,6 +25,20 @@
 
           return function(s, e, a) {
             a.loose = 1; //not to show "undefined" in templates
+            
+            if (a.cacheDom && cachedDOM[a.dotaRender]) {
+              console.log('cacheDOM: just moved cached DOM', cachedDOM[a.dotaRender]);
+              return e.replaceWith(cachedDOM[a.dotaRender]);
+            }
+            
+            function cacheDOM(){
+              console.log('cacheDOM()', a)
+              s.$on("$destroy", function(){
+                console.log('$destroy', e);
+                cachedDOM[a.dotaRender] = e[0];
+                hiddenDIV.appendChild(e[0]);
+              });
+            }
 
             function compile(template){
               if(a.debug) {
@@ -101,6 +124,10 @@
                   s.$evalAsync(a.dotaOnloadScope);
                   console.log(a.dotaRender, 'after scope $evalAsync scheduled');
                 });
+              }
+              
+              if (a.cacheDom) {
+                cacheDOM();
               }
               
               //you can now hide raw html before rendering done 
