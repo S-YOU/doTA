@@ -437,9 +437,9 @@ if (typeof module !== "undefined" && module.exports) {
               try {
                 var r = d.compile(template, a);
                 console.log(a.dotaRender,'after compile(no-cache)');
-              } catch (e) {
+              } catch (x) {
                 window['console'].log('compile error', a, template);
-                throw e;
+                throw x;
                 return;
               }
               
@@ -458,9 +458,9 @@ if (typeof module !== "undefined" && module.exports) {
               try {
                 var v = func(s, f);
                 console.log(a.dotaRender,'after render');
-              } catch (e) {
+              } catch (x) {
                 window['console'].log('render error', func);
-                throw e;
+                throw x;
                 return;
               }
 
