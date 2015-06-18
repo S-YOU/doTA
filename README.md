@@ -23,17 +23,22 @@ Htmlparser part similar to htmlparser2:
  - **ontext**,
  - **oncomment**
 
-(html must be valid, and must use html entities to attributes, no `<, >, &, ', "` in html text nodes or inside attributes)
+If you don't know about above, checkout [htmlparser2](https://github.com/fb55/htmlparser2)
 
-if you don't know about above, checkout [htmlparser2](https://github.com/fb55/htmlparser2)
+Some Limitations on parser
+
+ - html must be valid, and must use html entities to attributes, NO `<, >, &, ', "` in html text nodes or inside attributes)
+ - `'` in text nodes must be encoded like `&#x27;` or `&#39;` or parser will throw error.
+ - self closing syntax like `<div />` is not supported, must use `<div></div>`
+ - img, input, br, hr tag must be `<img>`, `<hr>`, `<br>`, `<hr>`, NO self closing tag like `<img />`  
 
 For Angular templates:
 
  - **ng-repeat** (convert to for loop, only '`x in data`' for array supported, no "as", "track by", or no dict loop)
  - **ng-if** (to plain `if`, must be valid javascript expression)
- - **ng-class** (partially supported, express must be valid javascript expressions, and still having problem with single quote/double quote issue inside)
- - input/img/br tags assumed as no close tag.
- - partially supported interpolations, but still having problem with single/double quotes
+ - **ng-class** (partially supported, expression must be valid javascript expressions, and still having problem with single quote/double quote issue inside)
+ - supported most of interpolations
+ - supported filters inside interpolations inside text nodes
 
 supported `ng-src,ng-alt,ng-title,ng-href`. they simply removed ng- xD, after interpolate of course.
 
@@ -87,6 +92,9 @@ Some more usages
 - **loose=1** - when object property is falsy, use '', instead of showing undefined.
 - **debug=1** - you have to include non minified version of `ngDoTA.js`, because minified version stripped that down too xD
 - **watch="scope_vars"** - adding to watch for angular, it will passed to `scope.$watchCollection(scope_vars, ...` and template to auto re-render on data change. (new data must be non-falsy, *for now*);
+- **cache-dom=1** - cached rendered dom in hidden tag, and move or copy(on IE) DOM back upon reuse, only for static contents
+- **scope=1** - create new scope, use only when compile=1 or compile-all=1, when parent scope is destroy this will get destroy too or $watchers will leak
+- **loaded=false** - just to hide template with css, once render it will be loaded=true
 
 If you want to exclude rendering inside `dota-render`, you might want to use `dota-pass=1` with `compile=1`,
 
@@ -95,6 +103,8 @@ If you want to exclude rendering inside `dota-render`, you might want to use `do
    <input ng-model='item.something'>
 </div>
 ```
+
+And, if you want to continue rendering inside `dota-pass`, you can use `dota-continue`
 
 Please note that `ng-repeat="item in data"`, `item` will not available for `ng-model`, even you do `dota-pass`, because, item is not passed to angular, so you have to use like `data[$index].something` in some cases. `$index` will be converted to array index like `data[2].something`.
 
@@ -123,7 +133,7 @@ I have downloaded each plunks and tested on Chrome Timeline JS Profiler
 
 - added doTA to [ng-include rendering slowness](https://github.com/angular/angular.js/issues/9559)  - [plunk](http://plnkr.co/edit/be2h0vgxvgmkOjfafHoD?p=preview)
 
-Of course, one reason is because of doTA is one way binding, but there is a lot of case you don't need two way bindings, and doTA is easy to use it. (please note that this is not production ready, use at your own risk!)
+Of course, one reason is because of doTA itself is one way binding, but there is a lot of case you don't need two way bindings, and doTA is easy to use it. (please note that this is not production ready, use at your own risk!)
 
 All you need is just make sure you have data ready by wrapping with **ng-if** and wrap **dota-render='some_unique_name'** and **inline=1** attribute, you don't need to change every existing angular components with bind-this, bind-that or once-once-once :))))))
 
