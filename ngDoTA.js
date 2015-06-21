@@ -1,6 +1,6 @@
 (function (A) {
   'use strict';
-  
+
   var hiddenDIV = document.getElementById('dota-cache');
   if (!hiddenDIV) {
     hiddenDIV = document.createElement('div');
@@ -8,12 +8,11 @@
     hiddenDIV.style.display = 'none';
     document.body.appendChild(hiddenDIV);
   }
-  var cachedDOM = {};
   var isIE = /MSIE|Trident/.test(navigator.userAgent);
 
   A.module('doTA', [])
-    .config(['$provide',function(p) {
-      p.factory('doTA', function(){return doTA});
+    .config(['$provide',function(P) {
+      P.factory('doTA', function(){return doTA});
     }])
 
     .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', function(d, h, f, t, c) {
@@ -27,26 +26,27 @@
 
           return function(s, e, a) {
             a.loose = 1; //not to show "undefined" in templates
-            
-            if (a.cacheDom && cachedDOM[a.dotaRender]) {
-              // alert( cachedDOM[a.dotaRender].innerHTML);
-              console.log('cacheDOM: just moved cached DOM', cachedDOM[a.dotaRender]);
+            var p = {};
+
+            if (a.cacheDom && d.D[a.dotaRender]) {
+              // alert( d.D[a.dotaRender].innerHTML);
+              console.log('cacheDOM: just moved cached DOM', d.D[a.dotaRender]);
               var elem;
               if (isIE) {
-                elem = cachedDOM[a.dotaRender].cloneNode(true);
+                elem = d.D[a.dotaRender].cloneNode(true);
               } else {
-                elem = cachedDOM[a.dotaRender];
+                elem = d.D[a.dotaRender];
               }
               e[0].parentNode.replaceChild(elem, e[0]);
               return;
             }
-            
+
             function cacheDOM(){
-              console.log('cacheDOM()', a)
+              // console.log('cacheDOM()', a)
               s.$on("$destroy", function(){
                 console.log('$destroy', e);
                 // alert(['$destroy', e[0], hiddenDIV]);
-                cachedDOM[a.dotaRender] = e[0];
+                d.D[a.dotaRender] = e[0];
                 hiddenDIV.appendChild(e[0]);
               });
             }
@@ -66,36 +66,39 @@
                 throw x;
                 return;
               }
-              
+
               //compiled func into cache for later use
               if (a.dotaRender) {
-                d.cache[a.dotaRender] = r;
+                d.C[a.dotaRender] = r;
               }
 
               return r;
             }
 
             function render(func){
-              console.log(a.dotaRender,'before render');
 
-              //execute the function by passing s(data basically), and f
-              try {
-                var v = func(s, f);
-                console.log(a.dotaRender,'after render');
-              } catch (x) {
-                window['console'].log('render error', func);
-                throw x;
-                return;
+              //unless prerender
+              if (func) {
+                console.log(a.dotaRender,'before render');
+                //execute the function by passing s(data basically), and f
+                try {
+                  var v = func(s, f, p);
+                  console.log(a.dotaRender,'after render');
+                } catch (x) {
+                  window['console'].log('render error', func);
+                  throw x;
+                  return;
+                }
+
+                if(a.debug) {
+                  console.log(v);
+                }
+
+                //directly write raw html to element
+                e.html(v);
+                console.log(a.dotaRender,'after put e.html(content)');
               }
 
-              if(a.debug) {
-                console.log(v);
-              }
-
-              //directly write raw html to element
-              e.html(v);
-              console.log(a.dotaRender,'after put e.html(content)');
-              
               if (a.scope) {
                 console.log('scope', a.scope);
                 if (a.newScope) {
@@ -136,11 +139,11 @@
                   console.log(a.dotaRender, 'after scope $evalAsync scheduled');
                 });
               }
-              
+
               if (a.cacheDom) {
                 cacheDOM();
               }
-              
+
               //you can now hide raw html before rendering done 
               // with loaded=false attribute and following css
               /*
@@ -153,52 +156,61 @@
               }
             }
 
-            //when using same template with multiple data on same s
-            if(a.data) {
-              s.data = s[a.data]; //may be there is better way?
-            }
- 
-            //map data-* attributes into scope
             for (var x in a.$attr) {
-              if (!a.$attr[x].indexOf('data-')) {
-                s[x] = a[x];
-                // console.log('aa', s[x], a[x]);
+              var z = a.$attr[x];
+              //map data-* attributes into $attr (inline text)
+              if (!z.indexOf('data-')) {
+                p[x] = a[x];
+              //map scope-* attributes into $attr (first level var from scope)
+              } else if (!z.indexOf('scope-')) {
+                p[z.slice(6)] = s[a[x]];
               }
             }
+            // console.log('$attr', p, a);
 
             if(a.watch) {
               console.log(a.dotaRender, 'registering watch for', a.watch);
               s.$watchCollection(a.watch, function(newValue, oldValue){
-                if(newValue !== oldValue && d.cache.hasOwnProperty(a.dotaRender)) {
+                if(newValue !== oldValue && d.C[a.dotaRender]) {
                   console.log(a.dotaRender, 'watch before render');
                   loader();
                   console.log(a.dotaRender, 'watch after render');
                 }
               });
             }
-            
+
             function loader(){
-              if(d.cache[a.dotaRender]){
+              if(d.C[a.dotaRender]){
                 console.log(a.dotaRender,'get compile function from cache');
-                render(d.cache[a.dotaRender]);
-  
-              } else if (a.inline) { //render by template name
+                if (e[0].hasChildNodes()) {
+                  console.log('hasChildNodes', a.dotaRender);
+                  render();
+                } else {
+                  render(d.C[a.dotaRender]);
+                }
+              } else if (a.inline) {
                 // render inline by loading inner html tags,
-                // html entities encoding sometimes need for htmlparser here or you can use htmlparser2
+                // html entities encoding sometimes need for htmlparser here or you may use htmlparser2 (untested)
                 console.log(a.dotaRender,'before get elem.html()');
                 var v = e.html();
                 console.log(a.dotaRender,'after get elem.html()');
                 render(compile(v, a));
-  
+
               } else if (a.dotaRender) { //load real template
                 console.log('before h', a.dotaRender);
-                h.get(a.dotaRender, {cache: t}).success(function (v) {
-                  console.log('after h response', a.dotaRender);
-                  render(compile(v, a));
-                });
+                //server side rendering or miss to use inline attr?
+                if (e[0].hasChildNodes()) {
+                  console.log('hasChildNodes', a.dotaRender);
+                  render();
+                } else {
+                  h.get(a.dotaRender, {cache: t}).success(function (v) {
+                    console.log('after h response', a.dotaRender);
+                    render(compile(v, a));
+                  });
+                }
               }
             }
-            
+
             loader();
 
           };
