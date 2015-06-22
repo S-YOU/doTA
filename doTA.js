@@ -340,21 +340,18 @@ var doTA = {
         }
         R += ">';\n";
 
-        //expand doTA templates, not working with $compile, $watch
-        if (attr['dota-render'] && !O.lazy && !attr.lazy && !attr.watch
-          && !attr.compile && !attr["compile-all"]) {
-          if (!P || Q) {
-            var r = [];
-            for(var x in attr){
-              if (!x.indexOf('data-')) {
-                r.push('"' + x.slice(5) + '":"' + attr[x] + '"'); 
-              } else if (!x.indexOf('scope-')) {
-                r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
-              }
+        //expand doTA templates with expand=1 option
+        if (attr['dota-render'] && attr.expand) {
+          var r = [];
+          for(var x in attr){
+            if (!x.indexOf('data-')) {
+              r.push('"' + x.slice(5) + '":"' + attr[x] + '"'); 
+            } else if (!x.indexOf('scope-')) {
+              r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
             }
-            R += D(L) + 'var P={' + r.join(',') + '},U="' + attr['dota-render'] + '";\n';
-            R += D(L) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
           }
+          R += D(L) + 'var P={' + r.join(',') + '},U="' + attr['dota-render'] + '";\n';
+          R += D(L) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
         }
 
         //some tag dont have close tag
