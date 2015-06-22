@@ -312,7 +312,7 @@ var doTA = {
           var val = attr[x];
 
           if(n && x === 'class'){ //when both ng-class and class exists
-            R += D(L) + 's.push("' + val + '");\n';
+            R += D(L) + 's.push("' + val + '"); \n';
 
           } else {
             a[x] = '="' + N(val) + '"';
@@ -340,19 +340,21 @@ var doTA = {
         }
         R += ">';\n";
 
-        //expand doTA templates
-        if (attr['dota-render'] && !attr.inline && !attr.lazy) {
-          var t = '"' + attr['dota-render'] + '"';
-          var r = [];
-          for(var x in attr){
-            if (!x.indexOf('data-')) {
-              r.push('"' + x.slice(5) + '":"' + attr[x] + '"'); 
-            } else if (!x.indexOf('scope-')) {
-              r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
+        //expand doTA templates, not working with $compile, $watch
+        if (attr['dota-render'] && !O.lazy && !attr.lazy && !attr.watch
+          && !attr.compile && !attr["compile-all"]) {
+          if (!P || Q) {
+            var r = [];
+            for(var x in attr){
+              if (!x.indexOf('data-')) {
+                r.push('"' + x.slice(5) + '":"' + attr[x] + '"'); 
+              } else if (!x.indexOf('scope-')) {
+                r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
+              }
             }
+            R += D(L) + 'var P={' + r.join(',') + '},U="' + attr['dota-render'] + '";\n';
+            R += D(L) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
           }
-          R += D(L) + 'var P={' + r.join(',') + '};\n';
-          R += D(L) + 'doTA.C[' + t + ']&&!doTA.D[' + t + ']&&(R+=doTA.C[' + t + '](S,F,P)); \n';
         }
 
         //some tag dont have close tag
@@ -617,16 +619,17 @@ if (typeof module !== "undefined" && module.exports) {
               s.$watchCollection(a.watch, function(newValue, oldValue){
                 if(newValue !== oldValue && d.C[a.dotaRender]) {
                   console.log(a.dotaRender, 'watch before render');
-                  loader();
+                  loader(true);
                   console.log(a.dotaRender, 'watch after render');
                 }
               });
             }
 
-            function loader(){
+            function loader(force){
               if(d.C[a.dotaRender]){
                 console.log(a.dotaRender,'get compile function from cache');
-                if (e[0].hasChildNodes()) {
+                //watch need to redraw, also inline, because inline always hasChildNodes
+                if (e[0].hasChildNodes() && !a.inline && !force) {
                   console.log('hasChildNodes', a.dotaRender);
                   render();
                 } else {
@@ -639,7 +642,6 @@ if (typeof module !== "undefined" && module.exports) {
                 var v = e.html();
                 console.log(a.dotaRender,'after get elem.html()');
                 render(compile(v, a));
-
               } else if (a.dotaRender) { //load real template
                 console.log('before h', a.dotaRender);
                 //server side rendering or miss to use inline attr?
@@ -698,6 +700,26 @@ if (typeof module !== "undefined" && module.exports) {
               }
             });
           };
+        }
+      };
+    }])
+    .factory('dotaHttp', ['$compile', '$http', '$templateCache', '$filter', 'doTA', function($compile, $http, $templateCache, $filter, doTA) {
+      return function (name, scope, callback, options){
+        options = options || {};
+        options.loose = 1;
+        // options.debug = 1;
+        // window.console.log('options')
+
+        if (doTA.C[name]) {
+          // window.console.log('dotaHttp doTA cache', name);
+          callback(doTA.C[name](scope, $filter));
+        } else {
+          // window.console.log('dotaHttp $http', name);
+          $http.get(name, {cache: $templateCache}).success(function(data) {
+            // window.console.log('dotaHttp response', data);
+            doTA.C[name] = doTA.compile(data, options);
+            callback(doTA.C[name](scope, $filter));
+          });
         }
       };
     }]);

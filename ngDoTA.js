@@ -173,16 +173,17 @@
               s.$watchCollection(a.watch, function(newValue, oldValue){
                 if(newValue !== oldValue && d.C[a.dotaRender]) {
                   console.log(a.dotaRender, 'watch before render');
-                  loader();
+                  loader(true);
                   console.log(a.dotaRender, 'watch after render');
                 }
               });
             }
 
-            function loader(){
+            function loader(force){
               if(d.C[a.dotaRender]){
                 console.log(a.dotaRender,'get compile function from cache');
-                if (e[0].hasChildNodes()) {
+                //watch need to redraw, also inline, because inline always hasChildNodes
+                if (e[0].hasChildNodes() && !a.inline && !force) {
                   console.log('hasChildNodes', a.dotaRender);
                   render();
                 } else {
@@ -195,7 +196,6 @@
                 var v = e.html();
                 console.log(a.dotaRender,'after get elem.html()');
                 render(compile(v, a));
-
               } else if (a.dotaRender) { //load real template
                 console.log('before h', a.dotaRender);
                 //server side rendering or miss to use inline attr?
@@ -254,6 +254,26 @@
               }
             });
           };
+        }
+      };
+    }])
+    .factory('dotaHttp', ['$compile', '$http', '$templateCache', '$filter', 'doTA', function($compile, $http, $templateCache, $filter, doTA) {
+      return function (name, scope, callback, options){
+        options = options || {};
+        options.loose = 1;
+        // options.debug = 1;
+        // window.console.log('options')
+
+        if (doTA.C[name]) {
+          // window.console.log('dotaHttp doTA cache', name);
+          callback(doTA.C[name](scope, $filter));
+        } else {
+          // window.console.log('dotaHttp $http', name);
+          $http.get(name, {cache: $templateCache}).success(function(data) {
+            // window.console.log('dotaHttp response', data);
+            doTA.C[name] = doTA.compile(data, options);
+            callback(doTA.C[name](scope, $filter));
+          });
         }
       };
     }]);

@@ -312,7 +312,7 @@ var doTA = {
           var val = attr[x];
 
           if(n && x === 'class'){ //when both ng-class and class exists
-            R += D(L) + 's.push("' + val + '");\n';
+            R += D(L) + 's.push("' + val + '"); \n';
 
           } else {
             a[x] = '="' + N(val) + '"';
@@ -340,19 +340,21 @@ var doTA = {
         }
         R += ">';\n";
 
-        //expand doTA templates
-        if (attr['dota-render'] && !attr.inline && !attr.lazy) {
-          var t = '"' + attr['dota-render'] + '"';
-          var r = [];
-          for(var x in attr){
-            if (!x.indexOf('data-')) {
-              r.push('"' + x.slice(5) + '":"' + attr[x] + '"'); 
-            } else if (!x.indexOf('scope-')) {
-              r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
+        //expand doTA templates, not working with $compile, $watch
+        if (attr['dota-render'] && !O.lazy && !attr.lazy && !attr.watch
+          && !attr.compile && !attr["compile-all"]) {
+          if (!P || Q) {
+            var r = [];
+            for(var x in attr){
+              if (!x.indexOf('data-')) {
+                r.push('"' + x.slice(5) + '":"' + attr[x] + '"'); 
+              } else if (!x.indexOf('scope-')) {
+                r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
+              }
             }
+            R += D(L) + 'var P={' + r.join(',') + '},U="' + attr['dota-render'] + '";\n';
+            R += D(L) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
           }
-          R += D(L) + 'var P={' + r.join(',') + '};\n';
-          R += D(L) + 'doTA.C[' + t + ']&&!doTA.D[' + t + ']&&(R+=doTA.C[' + t + '](S,F,P)); \n';
         }
 
         //some tag dont have close tag
