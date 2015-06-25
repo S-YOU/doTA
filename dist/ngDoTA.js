@@ -444,13 +444,17 @@ if (typeof module !== "undefined" && module.exports) {
 (function (A) {
   'use strict';
 
-  var hiddenDIV = document.getElementById('dota-cache');
-  if (!hiddenDIV) {
-    hiddenDIV = document.createElement('div');
-    hiddenDIV.id = 'dota-cache';
-    hiddenDIV.style.display = 'none';
-    document.body.appendChild(hiddenDIV);
-  }
+  var hiddenDIV;
+  setTimeout(function(){
+    hiddenDIV = document.getElementById('dota-cache');
+    //add ngDoTA.min.js at the end body
+    if (!hiddenDIV && document.body) {
+      hiddenDIV = document.createElement('div');
+      hiddenDIV.id = 'dota-cache';
+      hiddenDIV.style.display = 'none';
+      document.body.appendChild(hiddenDIV);
+    }
+  });
   var isIE = /MSIE|Trident/.test(navigator.userAgent);
   var B = {0: 0, 'false': 0};
 
@@ -493,8 +497,10 @@ if (typeof module !== "undefined" && module.exports) {
               s.$on("$destroy", function(){
                 console.log('$destroy', e);
                 // alert(['$destroy', e[0], hiddenDIV]);
-                d.D[a.dotaRender] = e[0];
-                hiddenDIV.appendChild(e[0]);
+                if (hiddenDIV) {
+                  d.D[a.dotaRender] = e[0];
+                  hiddenDIV.appendChild(e[0]);
+                }
               });
             }
 
