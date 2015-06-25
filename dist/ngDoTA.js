@@ -452,6 +452,7 @@ if (typeof module !== "undefined" && module.exports) {
     document.body.appendChild(hiddenDIV);
   }
   var isIE = /MSIE|Trident/.test(navigator.userAgent);
+  var B = {0: 0, 'false': 0};
 
   A.module('doTA', [])
     .config(['$provide',function(P) {
@@ -468,7 +469,10 @@ if (typeof module !== "undefined" && module.exports) {
         compile: function() {
 
           return function(s, e, a) {
-            a.loose = 1; //not to show "undefined" in templates
+            //not to show "undefined" in templates
+            a.loose = a.loose in B ? B[a.loose] : a.loose || 1;
+            //concat continuous append into one
+            a.optimize = a.optimize in B ? B[a.optimize] : a.optimize || 1;
             var p = {};
 
             if (a.cacheDom && d.D[a.dotaRender]) {
@@ -538,8 +542,10 @@ if (typeof module !== "undefined" && module.exports) {
                 }
 
                 //directly write raw html to element
-                e.html(v);
-                console.log(a.dotaRender,'after put e.html(content)');
+                //we shouldn't have jqLite cached nodes here, 
+                // so no deallocation by jqLite needed
+                e[0].innerHTML = v;
+                console.log(a.dotaRender,'after innerHTML set to content');
               }
 
               if (a.scope) {
@@ -635,9 +641,9 @@ if (typeof module !== "undefined" && module.exports) {
               } else if (a.inline) {
                 // render inline by loading inner html tags,
                 // html entities encoding sometimes need for htmlparser here or you may use htmlparser2 (untested)
-                console.log(a.dotaRender,'before get elem.html()');
-                var v = e.html();
-                console.log(a.dotaRender,'after get elem.html()');
+                console.log(a.dotaRender,'before get innerHTML');
+                var v = e[0].innerHTML;
+                console.log(a.dotaRender,'after get innerHTML');
                 render(compile(v, a));
               } else if (a.dotaRender) { //load real template
                 console.log('before h', a.dotaRender);
