@@ -446,16 +446,18 @@ if (typeof module !== "undefined" && module.exports) {
 
   var hiddenDIV;
   setTimeout(function(){
-    hiddenDIV = document.getElementById('dota-cache');
-    //add ngDoTA.min.js at the end body
-    if (!hiddenDIV && document.body) {
-      hiddenDIV = document.createElement('div');
-      hiddenDIV.id = 'dota-cache';
-      hiddenDIV.style.display = 'none';
-      document.body.appendChild(hiddenDIV);
+    if (document.getElementById) {
+      hiddenDIV = document.getElementById('dota-cache');
+      //add ngDoTA.min.js at the end body
+      if (!hiddenDIV && document.body) {
+        hiddenDIV = document.createElement('div');
+        hiddenDIV.id = 'dota-cache';
+        hiddenDIV.style.display = 'none';
+        document.body.appendChild(hiddenDIV);
+      }
     }
   });
-  var isIE = /MSIE|Trident/.test(navigator.userAgent);
+  var isIE = typeof navigator !== 'undefined' && /MSIE|Trident/.test(navigator.userAgent);
   var B = {0: 0, 'false': 0};
 
   A.module('doTA', [])
