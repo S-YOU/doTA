@@ -26,7 +26,7 @@ module.exports = (grunt) ->
           'dist/': ['dist/*.min.js']
         options:
           replacements: [
-            pattern: /\bl\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/gm,
+            pattern: /\bD\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/gm,
             replacement: ''
           ]
 

@@ -17,9 +17,10 @@
   var isIE = typeof navigator !== 'undefined' && /MSIE|Trident/.test(navigator.userAgent);
   var B = {0: 0, 'false': 0};
 
+  /* global doTA: true */
   A.module('doTA', [])
     .config(['$provide',function(P) {
-      P.factory('doTA', function(){return doTA});
+      P.factory('doTA', function(){return doTA;});
     }])
 
     .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', function(d, h, f, t, c) {
@@ -74,7 +75,7 @@
                 var r = d.compile(template, a);
                 console.log(a.dotaRender,'after compile(no-cache)');
               } catch (x) {
-                window['console'].log('compile error', a, template);
+                /**/console.log('compile error', a, template);
                 throw x;
                 return;
               }
@@ -97,7 +98,7 @@
                   var v = func(s, f, p);
                   console.log(a.dotaRender,'after render');
                 } catch (x) {
-                  window['console'].log('render error', func);
+                  /**/console.log('render error', func);
                   throw x;
                   return;
                 }
@@ -167,6 +168,52 @@
               */
               if (a.loaded) {
                 e.attr("loaded",true);
+              }
+              
+              if (func && func.W) {
+                console.log('func.W watch', a.dotaRender, func.W);
+                var scopes = {}, watches = {};
+                for(var i = 0; i < func.W.length; i++) {
+                  var w = func.W[i];
+                  // console.log('watch', w);
+
+                  watches[w.I] = s.$watch(w.W, (function(w) {
+                    return function(newValue, oldValue){
+                      console.log(a.dotaRender, w.W, 'partial watch before render');
+                      var oldTag = document.getElementById(w.I);
+                      if (!oldTag) { return console.log('tag not found'); }
+                      var content = w.F(s, f, p);
+                      if (!content) { return console.log('no contents'); }
+                      var tag = /^<(\w+)/.test(content) && RegExp.$1;
+                      console.log('watch tag', tag, content);
+                      var newTag = document.createElement(tag);
+                      newTag.id = w.I;
+                      newTag.innerHTML = content;
+                      //scope management
+                      if (scopes[w.I]) {
+                        scopes[w.I].$destroy();
+                      }
+                      scopes[w.I] = s.$new();
+                      //compile contents
+                      if (a.compile || a.compileAll) {
+                        c(newTag)(scopes[w.I]);
+                      }
+                      //
+                      oldTag.parentNode.replaceChild(newTag, oldTag);
+                      // angular.element(oldTag).replaceWith(angular.element(newTag));
+                      // console.log('watch contents', content);
+                      // console.log('watch', s, w.I, w);
+                      // console.log('watch newVal', newValue, s[w.W])
+                      console.log(a.dotaRender, w.W, 'partial watch content written');
+                      //unregister watch if wait once
+                      if (w.O) {
+                        console.log(a.dotaRender, w.W, 'partial watch unregistered');
+                        watches[w.I]();
+                      }
+                      console.log(a.dotaRender, w.W, 'partial watch after render');
+                    };
+                  })(w));
+                }
               }
             }
 
@@ -238,7 +285,7 @@
         terminal: true,
         compile: function() {
           return function(scope, elem, attr) {
-            console.log('dotaInclude', attr.dotaInclude)
+            console.log('dotaInclude', attr.dotaInclude);
             $http.get(attr.dotaInclude, {cache: $templateCache}).success(function (data) {
               elem.html(data);
               if (attr.compile !== 'false') {
@@ -276,15 +323,15 @@
         options = options || {};
         options.loose = 1;
         // options.debug = 1;
-        // window.console.log('options')
+        // /**/console.log('options')
 
         if (doTA.C[name]) {
-          // window.console.log('dotaHttp doTA cache', name);
+          // /**/console.log('dotaHttp doTA cache', name);
           callback(doTA.C[name](scope, $filter));
         } else {
-          // window.console.log('dotaHttp $http', name);
+          // /**/console.log('dotaHttp $http', name);
           $http.get(name, {cache: $templateCache}).success(function(data) {
-            // window.console.log('dotaHttp response', data);
+            // /**/console.log('dotaHttp response', data);
             doTA.C[name] = doTA.compile(data, options);
             callback(doTA.C[name](scope, $filter));
           });

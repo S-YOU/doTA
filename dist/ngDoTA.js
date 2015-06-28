@@ -1,19 +1,12 @@
-/* for ie8? */
-if(!String.prototype.trim){
-  String.prototype.trim = function(){
-    return this.replace(/^\s+|\s+$/g,'');
-  };
-}
-var doTA = {
-  valid_chr: (function(){
-    var ret = {};
-    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$_";
-    for (var i = 0; i < chars.length; i++) {
-      ret[chars[i]] = 1;
-    }
-    return ret;
-  })(),
-  parse: function(html, func){'use strict';
+var doTA = (function(){'use strict';
+  /* for ie8? */
+  if(!String.prototype.trim){
+    String.prototype.trim = function(){
+      return this.replace(/^\s+|\s+$/g,'');
+    };
+  }
+  var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var parse = function (html, func){
     if (!html) {return;}
     var chunks = html.match(/([<>]|[^<>]+)/g), x=0;
     var html_decode = function(text) {
@@ -49,7 +42,7 @@ var doTA = {
 
               // ** attribute without value (last attribute) **
               if (eq_pos === -1) {
-                attr[cx.slice(pos)] = ""; 
+                attr[cx.slice(pos)] = "";
                 //attr required will be required="", while is valid syntax
                 //http://www.w3.org/TR/html-markup/syntax.html#syntax-attr-empty
                 break;
@@ -63,16 +56,14 @@ var doTA = {
               //   pos = sp_pos;
               //   continue;
               // }
-              
+
               //console.log(33, [eq_pos]);
-              //Note: two spaces between attributes are not supported, 
-              // clean up them first
               var attr_name = cx.slice(pos, eq_pos), attr_val;
               //console.log(331, [attr_name]);
-              
+
               var val_st = cx[eq_pos + 1], val_end_pos;
               //console.log(332, [val_st]);
-              
+
               //if attribute value is start with quote
               if(val_st === '"' || val_st === "'") {
                 val_end_pos = cx.indexOf(val_st, eq_pos + 2);
@@ -81,7 +72,7 @@ var doTA = {
                 attr[attr_name] = html_decode(attr_val);
                 pos = val_end_pos + 1;
               } else {
-                
+
                 val_end_pos = cx.indexOf(' ', eq_pos + 2);
                 //console.log(44, [val_end_pos]);
                 if(val_end_pos === -1) {
@@ -112,333 +103,355 @@ var doTA = {
       }
 
     } while(++x < chunks.length);
-  },
-  compile: function(E, O){'use strict';
-    O = O || {};
-    var val_mod = O.loose ? "||''" : '';
-    var self = this;
+  };
+  
+  var w = 0; //module level id counter
 
-    //clean up extra white spaces and line break
-    E = E.replace(/\s{2,}|\n/g,' ');
+  return {
+    compile: function(E, O){
+      O = O || {};
+      var val_mod = O.loose ? "||''" : '';
 
-    //debug = 1;
-    if(O.encode) {
-      E = E.replace(/"[^"]*"|'[^']*'/g, function($0){
-        return $0.replace(/[<>]/g, function($00){
-          return {'>': '&gt;', '<': '&lt;'}[$00];
+      //clean up extra white spaces and line break
+      E = E.replace(/\s{2,}|\n/g,' ');
+
+      //debug = 1;
+      if(O.encode) {
+        E = E.replace(/"[^"]*"|'[^']*'/g, function($0){
+          return $0.replace(/[<>]/g, function($00){
+            return {'>': '&gt;', '<': '&lt;'}[$00];
+          });
         });
-      });
-    }
-    var Y = function(V, v){
-      //console.log(V, [v]);
-      if(v) {
-        //var logg = /error/.test(v);
-        //logg && console.log(11, [v]);
-        
-        //ToDo: still buggy, this need to improve
-        var m = v.match(/'[^']+'|"[^"]+"|[\w$]+|[^\w$'"]+/g), vv = "";
-        //logg && console.log(12, m);
-        for(var i = 0; i < m.length; i++) {
-          if (self.valid_chr[m[i][0]] && !V[m[i]] && (!i || m[i-1][m[i-1].length-1] !== '.')) {
-            vv += 'S.' + m[i];
-          } else {
-            if (m[i].indexOf('$index') !== -1) {
-              //console.log([val], T[L]);
-              for(var j = L; j >= 0; j--){
-                if (I[j]) {
-                  vv += m[i].replace(/\$index/g, I[j]);
-                  break;
-                }
-              }
+      }
+      var Y = function(V, v){
+        //console.log(V, [v]);
+        if(v) {
+          //var logg = /error/.test(v);
+          //logg && console.log(11, [v]);
+
+          //ToDo: still buggy, this need to improve
+          var m = v.match(/'[^']+'|"[^"]+"|[\w$]+|[^\w$'"]+/g), vv = "";
+          //logg && console.log(12, m);
+          for(var i = 0; i < m.length; i++) {
+            if (valid_chr.indexOf(m[i].charAt(0)) >= 0 && !V[m[i]] && (!i || m[i-1][m[i-1].length-1] !== '.')) {
+              vv += 'S.' + m[i];
             } else {
-              vv += m[i];
-            }
-          }
-        }
-        //logg && console.log(55,vv);
-        return vv;
-      }
-      return v;
-    };
-    
-    //variable cache
-    var V = {$index: 1, undefined: 1, $attr:1};
-    
-    //interpolation without $filter
-    var N = function(str){
-      if (str.indexOf('{{') >= 0) {
-        var Z = str.split(/\{\{|\}\}/);
-        //outside interpolation
-        for (var i = 0; i < Z.length; i+= 2) {
-          if (Z[i].indexOf("'") >= 0) {
-            Z[i] = Z[i].replace(/'/g, "\\'");
-          }
-        }
-        //inside {{ }}
-        for (var i = 1; i < Z.length - 1; i+= 2) {
-          Z[i] = C(null, Z[i]);
-        }
-        return Z.join('');
-      } else {
-        if (str.indexOf("'") >= 0) {
-          return str.replace(/'/g, "\\'");
-        }
-        return str;
-      }
-    };
-    //interpolate regex replace
-    var M = function(str) {
-      return str.replace(/\{\{([^}]+)\}\}/g, C);
-    };
-    //interpolation with $filter
-    var C = function ($0, $1){
-      //console.log(333,$1);
-      var pos = $1.indexOf('|');
-      if(pos === -1) {
-        return "'+(" + Y(V, $1) + val_mod + ")+'";
-      } else {
-        var v = $1[pos+1] === '|' ? $1.match(/([^|]+(?:\|\|)?)+/g) : $1.split('|');
-        var val = Y(V, v[0]);
-        for(var i=1; i < v.length; i++){
-          var p = v[i].split(':');
-          // console.log(2121,v[i], val, p)
-          val = 'F(\'' + p.shift().trim() + '\')('+ val;
-          if (p.length) {
-            var pr = [];
-            for(var j=0; j<p.length; j++) {
-              pr.push(Y(V, p[j]));
-            }
-            val += ',' + pr.join(',');
-          }
-          val += ')';
-          break; //implicitly ignore multiple instance of multiple filters that are not supported now
-        }
-        return "'+(" + val + val_mod +  ")+'";
-      }
-    };
-    //Pretty Indent for debuging
-    var D = function(n, x){
-      var ret = new Array(n + 2).join('    ');
-      return x ? ret.slice(0,-2) : ret;
-    };
-    //console.log(E);
-    var L = 0, T = {}, I = {}, P, Q;
-    var R = D(L) + "var R='';\n";
-    //parse the element
-    this.parse(E, {
-      onopentag: function(name, attr){
-        // debug && console.log('onopentag', [name, attr]);
-        var a = {}, n;
-
-        //skip parsing ng-if, ng-repeat, ng-class with, dota
-        // but interpolation will still be evaluated (by-design)
-        // to avoid this behavior, use ng-bind instead of {{}}
-        //  and create new scope with scope=1 in dota-render, or $watchers will never destroy.
-        if(attr['dota-pass']){
-          P = L; Q = 0;
-        //re-enable dota parsing
-        } else if (attr['dota-continue']) {
-          Q = L;
-        }
-
-        //unless dota-pass
-        if(!P) {
-          if (attr['ng-repeat']) {
-            //console.log(21,[x], [val]);
-            T[L] = T[L] ? T[L] + 1 : 1;
-            var i = 'i' + L, l = 'l'+ L, v = attr['ng-repeat'].split(' in '), _v = Y(V, v[1]);
-
-            //store variable name to use as $index later
-            //this is ng-repeat specific, T[L] is same for ng-if too
-            I[L] = i;
-
-            //make ng-repeat as javascript loop
-            //array loop
-            if (v[0].indexOf(",") !== -1) {
-              var v01 = v[0].split(',');
-              R += D(L, 1) + 'var D' + L + '=' + _v + ';\n';
-              R += D(L, 1) + 'for(var ' + v01[0] + ' in D' + L + '){\n';
-              R += D(L, 1) + 'var ' + v01[1] + ' = ' + 'D' + L + '[' + v01[0] + ']; \n'; //"; " - space is needed for manual uglify
-              V[v01[0]] = V[v01[1]] = 1;
-
-            //dict loop, "k, v in items" syntax,
-            // without brackets as in (k, v) in angular
-            } else {
-              R += D(L, 1) + 'var D' + L + '=' + _v + ',' + i + '=-1,' + l + '=D' + L + '.length;\n';
-              R += D(L, 1) + 'while(++' + i + '<' + l + '){\n';
-              R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + ']; \n'; //"; " - space is needed for manual uglify
-              V[v[0]] = 1;
-              //,$index=' + i +'
-              // V['$index'] = 1;
-            }
-            //remote attribute not to get forwarded to angular
-            delete attr['ng-repeat'];
-          }
-        }
-
-        //unless dota-pass or with dota-continue
-        if (!P || Q) {
-          //ng-if to javascript if
-          if (attr['ng-if']) {
-            T[L] = T[L] ? T[L] + 1 : 1;
-            R += D(L,1) + 'if('+ Y(V, attr['ng-if']) +'){\n';
-            // console.log('ng-if starts here', L);
-            delete attr['ng-if'];
-          }
-          //ToDO: ng-class is complicated, this need some more work!
-          if (attr['ng-class']) {
-            R += D(L) + 'var s=[],n=' + Y(V, attr['ng-class']) + ';\n';
-            R += D(L) + 'for(var c in n){n[c]&&s.push(c);}\n';
-            n=1;
-            delete attr['ng-class'];
-          }
-          
-          //run others ng- attributes first
-          for(var x in attr) {
-            if(x.charAt(2) !== '-') { continue; }
-            //some ng-attr are just don't need it here.
-            if (/^ng-(?:src|alt|title|href)/.test(x)) {
-              //overwrite non ng-
-              attr[x.replace('ng-', '')] = attr[x];
-              //delete ng- attribute, so angular won't come in even if you $compile
-              delete attr[x];
-            }
-          }
-        }
-
-        //other attributes, expand interpolations
-        for(var x in attr){
-          //console.log(20,[x],[attr],[attr[x]])
-          var val = attr[x];
-
-          if(n && x === 'class'){ //when both ng-class and class exists
-            R += D(L) + 's.push("' + val + '"); \n';
-
-          } else {
-            a[x] = '="' + N(val) + '"';
-
-            //ng-repeat loop variables are not available!
-            // only way to acccess is to use $index like "data[$index]"
-            // instead of "item" as in "item in data"
-            if(a[x].indexOf('$index') !== -1) {
-              //console.log([val], T[L]);
-              for(var j = L; j >= 0; j--){
-                if (I[j]) {
-                  a[x] = a[x].replace(/\$index/g, "'+" + I[j] + "+'");
-                  break;
+              if (m[i].indexOf('$index') >= 0) {
+                //console.log([val], T[L]);
+                for(var j = L; j >= 0; j--){
+                  if (I[j]) {
+                    vv += m[i].replace(/\$index/g, I[j]);
+                    break;
+                  }
                 }
+              } else {
+                vv += m[i];
               }
             }
           }
+          //logg && console.log(55,vv);
+          return vv;
         }
+        return v;
+      };
 
-        //write tag back as string
-        R += D(L) + "R+='<" + name + (n ? " class=\"'+s.join(' ')+'\"" : '');
-        //other attibutes
-        for(var k in a) {
-          R += " " + k + a[k];
+      //variable cache
+      var V = {$index: 1, undefined: 1, $attr:1};
+
+      //interpolation without $filter
+      var N = function(str){
+        if (str.indexOf('{{') >= 0) {
+          var Z = str.split(/\{\{|\}\}/);
+          //outside interpolation
+          for (var i = 0; i < Z.length; i+= 2) {
+            if (Z[i].indexOf("'") >= 0) {
+              Z[i] = Z[i].replace(/'/g, "\\'");
+            }
+          }
+          //inside {{ }}
+          for (var i = 1; i < Z.length - 1; i+= 2) {
+            Z[i] = C(null, Z[i]);
+          }
+          return Z.join('');
+        } else {
+          if (str.indexOf("'") >= 0) {
+            return str.replace(/'/g, "\\'");
+          }
+          return str;
         }
-        R += ">';\n";
+      };
+      //interpolate regex replace
+      var M = function(str) {
+        return str.replace(/\{\{([^}]+)\}\}/g, C);
+      };
+      //interpolation with $filter
+      var C = function ($0, $1){
+        //console.log(333,$1);
+        var pos = $1.indexOf('|');
+        if(pos === -1) {
+          return "'+(" + Y(V, $1) + val_mod + ")+'";
+        } else {
+          var v = $1[pos+1] === '|' ? $1.match(/([^|]+(?:\|\|)?)+/g) : $1.split('|');
+          var val = Y(V, v[0]);
+          for(var i=1; i < v.length; i++){
+            var p = v[i].split(':');
+            // console.log(2121,v[i], val, p)
+            val = 'F(\'' + p.shift().trim() + '\')('+ val;
+            if (p.length) {
+              var pr = [];
+              for(var j=0; j<p.length; j++) {
+                pr.push(Y(V, p[j]));
+              }
+              val += ',' + pr.join(',');
+            }
+            val += ')';
+            break; //implicitly ignore multiple instance of multiple filters that are not supported now
+          }
+          return "'+(" + val + val_mod +  ")+'";
+        }
+      };
+      //Pretty Indent for debuging
+      var D = function(n, x){
+        var ret = new Array(n + 2).join('    ');
+        return x ? ret.slice(0,-2 * x) : ret;
+      };
+      //console.log(E);
+      var L = 0, T = {}, I = {}, W = {}, X, P, Q, F;
+      var R = D(L) + "'use strict';var R='';\n";
+      //parse the element
+      parse(E, {
+        onopentag: function(name, attr){
+          // debug && console.log('onopentag', [name, attr]);
+          var a = {}, n;
 
-        //expand doTA templates with expand=1 option
-        if (attr['dota-render'] && attr.expand) {
-          var r = [];
+          //skip parsing ng-if, ng-repeat, ng-class with, dota
+          // but interpolation will still be evaluated (by-design)
+          // to avoid this behavior, use ng-bind instead of {{}}
+          //  and create new scope with scope=1 in dota-render, or $watchers will never destroy.
+          if(attr['dota-pass']){
+            P = L; Q = 0;
+          //re-enable dota parsing
+          } else if (attr['dota-continue']) {
+            Q = L;
+          }
+
+          //unless dota-pass
+          if(!P) {
+            if (attr['ng-repeat']) {
+              //console.log(21,[x], [val]);
+              T[L] = T[L] ? T[L] + 1 : 1;
+              var i = 'i' + L, l = 'l'+ L, v = attr['ng-repeat'].split(' in '), _v = Y(V, v[1]);
+
+              //store variable name to use as $index later
+              //this is ng-repeat specific, T[L] is same for ng-if too
+              I[L] = i;
+
+              //make ng-repeat as javascript loop
+              //array loop
+              if (v[0].indexOf(",") >= 0) {
+                var v01 = v[0].split(',');
+                R += D(L, 1) + 'var D' + L + '=' + _v + ';\n';
+                R += D(L, 1) + 'for(var ' + v01[0] + ' in D' + L + '){\n';
+                R += D(L, 1) + 'var ' + v01[1] + ' = ' + 'D' + L + '[' + v01[0] + ']; \n'; //"; " - space is needed for manual uglify
+                V[v01[0]] = V[v01[1]] = 1;
+
+              //dict loop, "k, v in items" syntax,
+              // without brackets as in (k, v) in angular
+              } else {
+                R += D(L, 1) + 'var D' + L + '=' + _v + ',' + i + '=-1,' + l + '=D' + L + '.length;\n';
+                R += D(L, 1) + 'while(++' + i + '<' + l + '){\n';
+                R += D(L) + 'var ' + v[0] + '=D' + L + '[' + i + ']; \n'; //"; " - space is needed for manual uglify
+                V[v[0]] = 1;
+                //,$index=' + i +'
+                // V['$index'] = 1;
+              }
+              //remote attribute not to get forwarded to angular
+              delete attr['ng-repeat'];
+            }
+          }
+
+          //unless dota-pass or with dota-continue
+          if (!P || Q) {
+            //ng-if to javascript if
+            if (attr['ng-if']) {
+              if (attr.wait || attr.watch) {
+                ++w;
+                R += D(L,2) + (X ? '' : 'X.W=[];') + 'var W={I:"D' + w + '",W:"' + attr['ng-if'] + '"' + (attr.wait ? ',O:1' : '') + '};X.W.push(W);\n';
+                W[L] = X = 1; //'"D' + ++w + '"' + (attr.once ? ',1' : '');
+                R += D(L,2) + 'W.F=function(S,F){"use strict";var R="";\n';
+                attr['id'] = 'D' + w;
+                delete attr.watch; delete attr.wait;
+              }
+              T[L] = T[L] ? T[L] + 1 : 1;
+              R += D(L,1) + 'if('+ Y(V, attr['ng-if']) +'){\n';
+              // console.log('ng-if starts here', L);
+              delete attr['ng-if'];
+            }
+            //ToDO: ng-class is complicated, this need some more work!
+            if (attr['ng-class']) {
+              R += D(L) + 'var s=[],n=' + Y(V, attr['ng-class']) + ';\n';
+              R += D(L) + 'for(var c in n){n[c]&&s.push(c);}\n';
+              n=1;
+              delete attr['ng-class'];
+            }
+
+            //run others ng- attributes first
+            for(var x in attr) {
+              if(x.charAt(2) !== '-') { continue; }
+              //some ng-attr are just don't need it here.
+              if (/^ng-(?:src|alt|title|href)/.test(x)) {
+                //overwrite non ng-
+                attr[x.replace('ng-', '')] = attr[x];
+                //delete ng- attribute, so angular won't come in even if you $compile
+                delete attr[x];
+              }
+            }
+          }
+
+          //other attributes, expand interpolations
           for(var x in attr){
-            if (!x.indexOf('data-')) {
-              r.push('"' + x.slice(5) + '":"' + attr[x] + '"'); 
-            } else if (!x.indexOf('scope-')) {
-              r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
+            //console.log(20,[x],[attr],[attr[x]])
+            var val = attr[x];
+
+            if(n && x === 'class'){ //when both ng-class and class exists
+              R += D(L) + 's.push("' + val + '"); \n';
+
+            } else {
+              a[x] = '="' + N(val) + '"';
+
+              //ng-repeat loop variables are not available!
+              // only way to acccess is to use $index like "data[$index]"
+              // instead of "item" as in "item in data"
+              if(a[x].indexOf('$index') >= 0) {
+                //console.log([val], T[L]);
+                for(var j = L; j >= 0; j--){
+                  if (I[j]) {
+                    a[x] = a[x].replace(/\$index/g, "'+" + I[j] + "+'");
+                    break;
+                  }
+                }
+              }
             }
           }
-          R += D(L) + 'var P={' + r.join(',') + '},U="' + attr['dota-render'] + '";\n';
-          R += D(L) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
-        }
 
-        //some tag dont have close tag
-        if(!/^(?:input|img|br|hr)/i.test(name)) {
-          //there is more, but most not used or can't use with doTA, so excluding them
-          //http://webdesign.about.com/od/htmltags/qt/html-void-elements.htm
-          //Note: self closing syntax is NOT supported. Eg. <img /> or even <div />
-          L++;
+          //write tag back as string
+          R += D(L) + "R+='<" + name + (n ? " class=\"'+s.join(' ')+'\"" : '');
+          //other attibutes
+          for(var k in a) {
+            R += " " + k + a[k];
+          }
+          R += ">';\n";
 
-        //ng-repeat or ng-if on self closing tag
-        } else if (T[L] > 0) {
-          R += D(L,1) + '}\n';
-          T[L]--;
-          I[L] = 0;
-        }
-      },
-      onclosetag: function(name){
-        //just write closing tag back
-        R += D(L-1) + "R+='</" + name + ">';\n";
-        L--;
-        //close "if", "for", "while" blocks
-        while (T[L] > 0) {
-          //console.log(T[L], 'ends here at L', L);
-          R += D(L,1) + '}\n';
-          T[L]--;
-          I[L] = 0;
-        }
-        //console.log('/L',[L,P]);
+          //expand doTA templates with expand=1 option
+          if (attr['dota-render'] && attr.expand) {
+            var r = [];
+            for(var x in attr){
+              if (!x.indexOf('data-')) {
+                r.push('"' + x.slice(5) + '":"' + attr[x] + '"');
+              } else if (!x.indexOf('scope-')) {
+                r.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
+              }
+            }
+            R += D(L) + 'var P={' + r.join(',') + '},U="' + attr['dota-render'] + '";\n';
+            R += D(L) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
+          }
 
-        //end dota-pass if it is out of scope
-        if(P && P >= L) {
-          P = 0;
-        }
-      },
-      ontext: function(text){
-        //just expand interpolation on text nodes
-        if (text.indexOf('{{') !== -1){
-          //console.log(22, 'start');
-          text = M(text);
-        }
-        //remove extra spacing, and line breaks
-        R += D(L) + ('R+=\'' + text + '\';\n').replace(/\+''|''\+/g,'');
-        //console.log(111, R.slice(-50));
-      },
-      oncomment: function(data){
-        //console.log(111,[data]);
-        //just encode single code on comment tag
-        R += D(L) + "R+='<" + data.replace(/'/g,"\\'") + ">';\n";
-      }
-    });
-    R += D(0) +'return R;\n';
+          //some tag dont have close tag
+          if(!/^(?:input|img|br|hr)/i.test(name)) {
+            //there is more, but most not used or can't use with doTA, so excluding them
+            //http://webdesign.about.com/od/htmltags/qt/html-void-elements.htm
+            //Note: self closing syntax is NOT supported. Eg. <img /> or even <div />
+            L++;
 
-    //longer compile time, but faster rendering time
-    if(O.optimize){
-      //concat some lines
+          //ng-repeat or ng-if on self closing tag
+          } else if (T[L] > 0) {
+            R += D(L,1) + '}\n';
+            T[L]--;
+            I[L] = 0;
+          }
+        },
+        onclosetag: function(name){
+          //just write closing tag back
+          R += D(L-1) + "R+='</" + name + ">';\n";
+          L--;
+
+          if (W[L]) {
+            R += D(L, 1) + '} else {\n';
+            R += D(L) + 'R+=\'<' + name + ' id="D' + w + '" style="display:none"></' + name + '>\'; \n';
+          }
+
+          //close "if", "for", "while" blocks
+          while (T[L] > 0) {
+            //console.log(T[L], 'ends here at L', L);
+            R += D(L,1) + '}\n';
+            T[L]--;
+            I[L] = 0;
+          }
+          //console.log('/L',[L,P]);
+
+          if (W[L]) {
+            R += D(L, 2) + 'return R;}; \n';
+            R += D(L, 2) + 'R+=W.F(S,F); \n';
+            W[L] = 0;
+          }
+
+          //end dota-pass if it is out of scope
+          if(P && P >= L) {
+            P = 0;
+          }
+        },
+        ontext: function(text){
+          //just expand interpolation on text nodes
+          if (text.indexOf('{{') >= 0){
+            //console.log(22, 'start');
+            text = M(text);
+          }
+          //remove extra spacing, and line breaks
+          R += D(L) + ('R+=\'' + text + '\';\n').replace(/\+''|''\+/g,'');
+          //console.log(111, R.slice(-50));
+        },
+        oncomment: function(data){
+          //console.log(111,[data]);
+          //just encode single code on comment tag
+          R += D(L) + "R+='<" + data.replace(/'/g,"\\'") + ">';\n";
+        }
+      });
+      R += D(0) +'return R;\n';
+
+      //concat some lines by default for performance
       R = R.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
-    }
-    //print the whole function if debug
-    if(O.debug) {
-      console.log(R);
-    }
-    try {
-      //$scope, $filter, params
-      var F = new Function('S', 'F', '$attr', R);
-    } catch (e) {
-      if (typeof console !== "undefined") {
-        //using window["console"] not to get removed by uglify
-        window["console"].log("doTA compile error:\n" + R);
+
+      //print the whole function if debug
+      if(O.debug) {
+        /**/console.log(R);
       }
-      throw e;
-    }
-    // just for less array usage on heap profiling
-    // but this may trigger GC more
-    R = L = T = I = V = P = null; 
-    return F;
-  },
-  C: {}, //cache compiled functions
-  D: {} //cache DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
-};
+      try {
+        if (X) {
+          F = eval('[(function X(S,F,$attr){' + R + '})][0]');
+        } else {
+          //$scope, $filter
+          F = new Function('S', 'F', '$attr', R);
+        }
+      } catch (e) {
+        if (typeof console !== "undefined") {
+          /**/console.log("doTA compile error:\n" + R);
+        }
+        throw e;
+      }
+      // just for less array usage on heap profiling
+      // but this may trigger GC more
+      R = L = T = I = V = P = null;
+      return F;
+    },
+    C: {}, //cache compiled functions
+    D: {} //cache DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
+  };
+})();
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = doTA;
-  if (typeof window === "undefined") {
-    window = {console: console};
-  }
 } else if (typeof console === "undefined") {
-  window.console = {log: function(){}};
+  console = {log: function(){}};
 }
 
 (function (A) {
@@ -460,9 +473,10 @@ if (typeof module !== "undefined" && module.exports) {
   var isIE = typeof navigator !== 'undefined' && /MSIE|Trident/.test(navigator.userAgent);
   var B = {0: 0, 'false': 0};
 
+  /* global doTA: true */
   A.module('doTA', [])
     .config(['$provide',function(P) {
-      P.factory('doTA', function(){return doTA});
+      P.factory('doTA', function(){return doTA;});
     }])
 
     .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', function(d, h, f, t, c) {
@@ -517,7 +531,7 @@ if (typeof module !== "undefined" && module.exports) {
                 var r = d.compile(template, a);
                 console.log(a.dotaRender,'after compile(no-cache)');
               } catch (x) {
-                window['console'].log('compile error', a, template);
+                /**/console.log('compile error', a, template);
                 throw x;
                 return;
               }
@@ -540,7 +554,7 @@ if (typeof module !== "undefined" && module.exports) {
                   var v = func(s, f, p);
                   console.log(a.dotaRender,'after render');
                 } catch (x) {
-                  window['console'].log('render error', func);
+                  /**/console.log('render error', func);
                   throw x;
                   return;
                 }
@@ -610,6 +624,52 @@ if (typeof module !== "undefined" && module.exports) {
               */
               if (a.loaded) {
                 e.attr("loaded",true);
+              }
+              
+              if (func && func.W) {
+                console.log('func.W watch', a.dotaRender, func.W);
+                var scopes = {}, watches = {};
+                for(var i = 0; i < func.W.length; i++) {
+                  var w = func.W[i];
+                  // console.log('watch', w);
+
+                  watches[w.I] = s.$watch(w.W, (function(w) {
+                    return function(newValue, oldValue){
+                      console.log(a.dotaRender, w.W, 'partial watch before render');
+                      var oldTag = document.getElementById(w.I);
+                      if (!oldTag) { return console.log('tag not found'); }
+                      var content = w.F(s, f, p);
+                      if (!content) { return console.log('no contents'); }
+                      var tag = /^<(\w+)/.test(content) && RegExp.$1;
+                      console.log('watch tag', tag, content);
+                      var newTag = document.createElement(tag);
+                      newTag.id = w.I;
+                      newTag.innerHTML = content;
+                      //scope management
+                      if (scopes[w.I]) {
+                        scopes[w.I].$destroy();
+                      }
+                      scopes[w.I] = s.$new();
+                      //compile contents
+                      if (a.compile || a.compileAll) {
+                        c(newTag)(scopes[w.I]);
+                      }
+                      //
+                      oldTag.parentNode.replaceChild(newTag, oldTag);
+                      // angular.element(oldTag).replaceWith(angular.element(newTag));
+                      // console.log('watch contents', content);
+                      // console.log('watch', s, w.I, w);
+                      // console.log('watch newVal', newValue, s[w.W])
+                      console.log(a.dotaRender, w.W, 'partial watch content written');
+                      //unregister watch if wait once
+                      if (w.O) {
+                        console.log(a.dotaRender, w.W, 'partial watch unregistered');
+                        watches[w.I]();
+                      }
+                      console.log(a.dotaRender, w.W, 'partial watch after render');
+                    };
+                  })(w));
+                }
               }
             }
 
@@ -681,7 +741,7 @@ if (typeof module !== "undefined" && module.exports) {
         terminal: true,
         compile: function() {
           return function(scope, elem, attr) {
-            console.log('dotaInclude', attr.dotaInclude)
+            console.log('dotaInclude', attr.dotaInclude);
             $http.get(attr.dotaInclude, {cache: $templateCache}).success(function (data) {
               elem.html(data);
               if (attr.compile !== 'false') {
@@ -719,15 +779,15 @@ if (typeof module !== "undefined" && module.exports) {
         options = options || {};
         options.loose = 1;
         // options.debug = 1;
-        // window.console.log('options')
+        // /**/console.log('options')
 
         if (doTA.C[name]) {
-          // window.console.log('dotaHttp doTA cache', name);
+          // /**/console.log('dotaHttp doTA cache', name);
           callback(doTA.C[name](scope, $filter));
         } else {
-          // window.console.log('dotaHttp $http', name);
+          // /**/console.log('dotaHttp $http', name);
           $http.get(name, {cache: $templateCache}).success(function(data) {
-            // window.console.log('dotaHttp response', data);
+            // /**/console.log('dotaHttp response', data);
             doTA.C[name] = doTA.compile(data, options);
             callback(doTA.C[name](scope, $filter));
           });
