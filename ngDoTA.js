@@ -1,6 +1,6 @@
-(function (A) {
-  'use strict';
-
+/* global angular, doTA */
+(function (A) {'use strict';
+  var msie = document.documentMode;
   var hiddenDIV;
   setTimeout(function(){
     if (document.getElementById) {
@@ -14,10 +14,8 @@
       }
     }
   });
-  var isIE = typeof navigator !== 'undefined' && /MSIE|Trident/.test(navigator.userAgent);
   var B = {0: 0, 'false': 0};
 
-  /* global doTA: true */
   A.module('doTA', [])
     .config(['$provide',function(P) {
       P.factory('doTA', function(){return doTA;});
@@ -43,7 +41,7 @@
               // alert( d.D[a.dotaRender].innerHTML);
               console.log('cacheDOM: just moved cached DOM', d.D[a.dotaRender]);
               var elem;
-              if (isIE) {
+              if (msie) {
                 elem = d.D[a.dotaRender].cloneNode(true);
               } else {
                 elem = d.D[a.dotaRender];
@@ -184,12 +182,8 @@
                       if (!oldTag) { return console.log('tag not found'); }
                       var content = w.F(s, f, p);
                       if (!content) { return console.log('no contents'); }
-                      var tag = /^<(\w+)/.test(content) && RegExp.$1;
-                      //IE8 doesn't work setting tr tag, too much work to support that
-                      console.log('watch tag', tag, content);
-                      var newTag = document.createElement(tag);
-                      newTag.id = w.I;
-                      newTag.innerHTML = content;
+                      console.log('watch new content', content);
+                      var newTag = angular.element(content);
                       //scope management
                       if (scopes[w.I]) {
                         scopes[w.I].$destroy();
@@ -199,12 +193,7 @@
                       if (a.compile || a.compileAll) {
                         c(newTag)(scopes[w.I]);
                       }
-                      //
-                      oldTag.parentNode.replaceChild(newTag, oldTag);
-                      // angular.element(oldTag).replaceWith(angular.element(newTag));
-                      // console.log('watch contents', content);
-                      // console.log('watch', s, w.I, w);
-                      // console.log('watch newVal', newValue, s[w.W])
+                      angular.element(oldTag).replaceWith(newTag);
                       console.log(a.dotaRender, w.W, 'partial watch content written');
                       //unregister watch if wait once
                       if (w.O) {
