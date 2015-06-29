@@ -276,7 +276,7 @@ var doTA = (function(){'use strict';
             if (attr['ng-if']) {
               if (attr.wait || attr.watch) {
                 ++w;
-                R += D(L,2) + (X ? '' : 'X.W=[];') + 'var W={I:"D' + w + '",W:"' + attr['ng-if'] + '"' + (attr.wait ? ',O:1' : '') + '};X.W.push(W);\n';
+                R += D(L,2) + 'var W={I:"D' + w + '",W:"' + attr['ng-if'] + '"' + (attr.wait ? ',O:1' : '') + '};this.W.push(W);\n';
                 W[L] = X = 1; //'"D' + ++w + '"' + (attr.once ? ',1' : '');
                 R += D(L,2) + 'W.F=function(S,F){"use strict";var R="";\n';
                 attr['id'] = 'D' + w;
@@ -426,11 +426,14 @@ var doTA = (function(){'use strict';
         /**/console.log(R);
       }
       try {
+        // if (X) {
+        //   F = eval('({W:[],F:function(S,F,$attr){' + R + '}})');
+        // } else {
+        //$scope, $filter
+        F = new Function('S', 'F', '$attr', R);
+        // }
         if (X) {
-          F = eval('[(function X(S,F,$attr){' + R + '})][0]');
-        } else {
-          //$scope, $filter
-          F = new Function('S', 'F', '$attr', R);
+          F = {W:[], F: F};
         }
       } catch (e) {
         if (typeof console !== "undefined") {

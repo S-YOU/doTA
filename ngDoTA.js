@@ -95,7 +95,7 @@
                 console.log(a.dotaRender,'before render');
                 //execute the function by passing s(data basically), and f
                 try {
-                  var v = func(s, f, p);
+                  var v = func.F ? func.F(s, f, p) : func(s, f, p);
                   console.log(a.dotaRender,'after render');
                 } catch (x) {
                   /**/console.log('render error', func);
@@ -185,6 +185,7 @@
                       var content = w.F(s, f, p);
                       if (!content) { return console.log('no contents'); }
                       var tag = /^<(\w+)/.test(content) && RegExp.$1;
+                      //IE8 doesn't work setting tr tag, too much work to support that
                       console.log('watch tag', tag, content);
                       var newTag = document.createElement(tag);
                       newTag.id = w.I;
