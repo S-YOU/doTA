@@ -5,15 +5,10 @@
   "main": "doTA.js",
   "dependencies": {},
   "devDependencies": {
-    "grunt": "*",
-    "grunt-contrib-concat": "*",
-    "grunt-contrib-copy": "*",
-    "grunt-contrib-uglify": "*",
-    "grunt-string-replace": "*",
-    "gulp-concat": "^2.6.0",
-    "gulp-rename": "^1.2.2",
-    "gulp-replace": "^0.5.3",
-    "gulp-uglify": "^1.2.0"
+    "gulp-concat": "*",
+    "gulp-rename": "*",
+    "gulp-replace": "*",
+    "gulp-uglify": "*"
   },
   "scripts": {},
   "license": "MIT"
