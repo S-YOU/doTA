@@ -235,8 +235,9 @@ var doTA = (function(){'use strict';
             Q = L;
           }
 
-          //unless dota-pass
-          if(!P) {
+          //unless dota-pass or with dota-continue
+          if(!P || Q) {
+            //ng-repeat to while/for loop
             if (attr['ng-repeat']) {
               //console.log(21,[x], [val]);
               T[L] = T[L] ? T[L] + 1 : 1;
@@ -268,10 +269,7 @@ var doTA = (function(){'use strict';
               //remote attribute not to get forwarded to angular
               delete attr['ng-repeat'];
             }
-          }
 
-          //unless dota-pass or with dota-continue
-          if (!P || Q) {
             //ng-if to javascript if
             if (attr['ng-if']) {
               if (attr.wait || attr.watch) {
