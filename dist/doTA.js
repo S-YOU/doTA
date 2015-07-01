@@ -274,7 +274,7 @@ var doTA = (function(){'use strict';
             if (attr['ng-if']) {
               if (attr.wait || attr.watch) {
                 ++w;
-                R += D(L,2) + 'var W={I:"D' + w + '",W:"' + attr['ng-if'] + '"' + (attr.wait ? ',O:1' : '') + '};this.W.push(W);\n';
+                R += D(L,2) + (!X ? 'this.W=[];' : '') + 'var W={I:"D' + w + '",W:"' + attr['ng-if'] + '"' + (attr.wait ? ',O:1' : '') + '};this.W.push(W);\n';
                 W[L] = X = 1; //'"D' + ++w + '"' + (attr.once ? ',1' : '');
                 R += D(L,2) + 'W.F=function(S,F){"use strict";var R="";\n';
                 attr['id'] = 'D' + w;
