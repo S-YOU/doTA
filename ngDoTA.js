@@ -188,7 +188,7 @@
                       if (scopes[w.I]) {
                         scopes[w.I].$destroy();
                       }
-                      scopes[w.I] = s.$new();
+                      scopes[w.I] = (a.newScope || s).$new();
                       //compile contents
                       if (a.compile || a.compileAll) {
                         c(newTag)(scopes[w.I]);
