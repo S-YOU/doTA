@@ -20,8 +20,8 @@ gulp.task('uglify', ['copy'], function() {
   return gulp.src(['dist/*.js', '!dist/*.min.js'])
     .pipe(replace(/^\s*console\.log.*$/gm, ''))
     .pipe(replace(/\bD\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/g, ''))
-    .pipe(uglify({drop_console: true}))
-    .on('error', console.log)
+    .pipe(uglify({mangle:true,compress:{unsafe: true}}))
+    .on('error', console.error)
     .pipe(rename({
       extname: '.min.js'
     }))

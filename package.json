@@ -5,6 +5,7 @@
   "main": "doTA.js",
   "dependencies": {},
   "devDependencies": {
+    "gulp": "*",
     "gulp-concat": "*",
     "gulp-rename": "*",
     "gulp-replace": "*",
