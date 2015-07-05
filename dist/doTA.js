@@ -5,6 +5,7 @@ var doTA = (function(){'use strict';
       return this.replace(/^\s+|\s+$/g,'');
     };
   }
+  var events = ' click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
   var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   var parse = function (html, func){
     if (!html) {return;}
@@ -295,12 +296,20 @@ var doTA = (function(){'use strict';
 
             //run others ng- attributes first
             for(var x in attr) {
-              if(x.charAt(2) !== '-') { continue; }
+              if (x.substr(0,3) !== 'ng-') { continue; }
+              // if(x.charAt(2) !== '-') { continue; }
               //some ng-attr are just don't need it here.
-              if (/^ng-(?:src|alt|title|href)/.test(x)) {
+              var aname = x.substr(3);
+              if (/^(?:src|alt|title|href)/.test(aname)) {
                 //overwrite non ng-
-                attr[x.replace('ng-', '')] = attr[x];
+                attr[aname] = attr[x];
                 //delete ng- attribute, so angular won't come in even if you $compile
+                delete attr[x];
+
+              //convert ng-events to dota-events, to be bind later with native events
+              } else if (O.event && events.indexOf(' ' + aname + ' ') >= 0) {
+                attr['de'] = '1'; //dota-event
+                attr['de-' + aname] = attr[x];
                 delete attr[x];
               }
             }

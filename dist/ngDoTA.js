@@ -5,6 +5,7 @@ var doTA = (function(){'use strict';
       return this.replace(/^\s+|\s+$/g,'');
     };
   }
+  var events = ' click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
   var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   var parse = function (html, func){
     if (!html) {return;}
@@ -295,12 +296,20 @@ var doTA = (function(){'use strict';
 
             //run others ng- attributes first
             for(var x in attr) {
-              if(x.charAt(2) !== '-') { continue; }
+              if (x.substr(0,3) !== 'ng-') { continue; }
+              // if(x.charAt(2) !== '-') { continue; }
               //some ng-attr are just don't need it here.
-              if (/^ng-(?:src|alt|title|href)/.test(x)) {
+              var aname = x.substr(3);
+              if (/^(?:src|alt|title|href)/.test(aname)) {
                 //overwrite non ng-
-                attr[x.replace('ng-', '')] = attr[x];
+                attr[aname] = attr[x];
                 //delete ng- attribute, so angular won't come in even if you $compile
+                delete attr[x];
+
+              //convert ng-events to dota-events, to be bind later with native events
+              } else if (O.event && events.indexOf(' ' + aname + ' ') >= 0) {
+                attr['de'] = '1'; //dota-event
+                attr['de-' + aname] = attr[x];
                 delete attr[x];
               }
             }
@@ -473,6 +482,18 @@ if (typeof module !== "undefined" && module.exports) {
   });
   var B = {0: 0, 'false': 0};
 
+  function forEachArray(src, iter, ctx) {
+    if (src.forEach) {
+      return src.forEach(iter);
+    }
+    for (var key = 0, length = src.length; key < length; key++) {
+      if (key in src) {
+        iter.call(ctx, src[key], key);
+      }
+    }
+    return src;
+  }
+
   A.module('doTA', [])
     .config(['$provide',function(P) {
       P.factory('doTA', function(){return doTA;});
@@ -579,11 +600,33 @@ if (typeof module !== "undefined" && module.exports) {
                 console.log('newScope created', a.newScope);
               }
 
+              if(a.event) {
+                forEachArray(e[0].querySelectorAll('[de]'), function(partial){
+                  var attrs = partial.attributes;
+                  //ie8
+                  if (!partial.addEventListener) {
+                    partial.addEventListener = partial.attachEvent;
+                  }
+                  // console.log('attrs', attrs);
+                  for(var i = 0, l = attrs.length; i < l; i++){
+                    if (attrs[i].name.substr(0,3) === 'de-') {
+                      partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
+                        return function(evt){
+                          // var target = evt.target || evt.srcElement;
+                          // console.log('event', partial, partial.getAttribute('dota-click'));
+                          s.$applyAsync(attr.value);
+                        };
+                      })(partial, attrs[i]));
+                    }
+                  }
+                });
+              }
               //c html if you need ng-model or ng-something
               if(a.compile){
+
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
-                A.forEach(e[0].querySelectorAll('[dota-pass]'), function(partial){
+                forEachArray(e[0].querySelectorAll('[dota-pass]'), function(partial){
                   c(partial)(a.newScope || s);
                 });
                 console.log(a.dotaRender,'after c partial');

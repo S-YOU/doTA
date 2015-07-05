@@ -16,6 +16,18 @@
   });
   var B = {0: 0, 'false': 0};
 
+  function forEachArray(src, iter, ctx) {
+    if (src.forEach) {
+      return src.forEach(iter);
+    }
+    for (var key = 0, length = src.length; key < length; key++) {
+      if (key in src) {
+        iter.call(ctx, src[key], key);
+      }
+    }
+    return src;
+  }
+
   A.module('doTA', [])
     .config(['$provide',function(P) {
       P.factory('doTA', function(){return doTA;});
@@ -122,11 +134,33 @@
                 console.log('newScope created', a.newScope);
               }
 
+              if(a.event) {
+                forEachArray(e[0].querySelectorAll('[de]'), function(partial){
+                  var attrs = partial.attributes;
+                  //ie8
+                  if (!partial.addEventListener) {
+                    partial.addEventListener = partial.attachEvent;
+                  }
+                  // console.log('attrs', attrs);
+                  for(var i = 0, l = attrs.length; i < l; i++){
+                    if (attrs[i].name.substr(0,3) === 'de-') {
+                      partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
+                        return function(evt){
+                          // var target = evt.target || evt.srcElement;
+                          // console.log('event', partial, partial.getAttribute('dota-click'));
+                          s.$applyAsync(attr.value);
+                        };
+                      })(partial, attrs[i]));
+                    }
+                  }
+                });
+              }
               //c html if you need ng-model or ng-something
               if(a.compile){
+
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
-                A.forEach(e[0].querySelectorAll('[dota-pass]'), function(partial){
+                forEachArray(e[0].querySelectorAll('[dota-pass]'), function(partial){
                   c(partial)(a.newScope || s);
                 });
                 console.log(a.dotaRender,'after c partial');
