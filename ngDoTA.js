@@ -47,6 +47,7 @@
             a.loose = a.loose in B ? B[a.loose] : a.loose || 1;
             //concat continuous append into one
             a.optimize = a.optimize in B ? B[a.optimize] : a.optimize || 1;
+            a.event = a.event in B ? B[a.event] : a.event || 1;
             var p = {};
 
             if (a.cacheDom && d.D[a.dotaRender]) {
@@ -118,7 +119,7 @@
                 }
 
                 //directly write raw html to element
-                //we shouldn't have jqLite cached nodes here, 
+                //we shouldn't have jqLite cached nodes here,
                 // so no deallocation by jqLite needed
                 e[0].innerHTML = v;
                 console.log(a.dotaRender,'after innerHTML set to content');
@@ -191,7 +192,7 @@
                 cacheDOM();
               }
 
-              //you can now hide raw html before rendering done 
+              //you can now hide raw html before rendering done
               // with loaded=false attribute and following css
               /*
               [dota-render][loaded]:not([loaded=true]) {
@@ -201,7 +202,7 @@
               if (a.loaded) {
                 e.attr("loaded",true);
               }
-              
+
               if (func && func.W) {
                 console.log('func.W watch', a.dotaRender, func.W);
                 var scopes = {}, watches = {};
