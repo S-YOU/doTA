@@ -105,7 +105,7 @@ var doTA = (function(){'use strict';
 
     } while(++x < chunks.length);
   };
-  
+
   var w = 0; //module level id counter
 
   return {
@@ -427,18 +427,17 @@ var doTA = (function(){'use strict';
 
       //concat some lines by default for performance
       R = R.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
+      if (O.optimize) {
+        R = R.replace(/\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g,'$1$2');
+      }
 
       //print the whole function if debug
       if(O.debug) {
         /**/console.log(R);
       }
       try {
-        // if (X) {
-        //   F = eval('({W:[],F:function(S,F,$attr){' + R + '}})');
-        // } else {
         //$scope, $filter
         F = new Function('S', 'F', '$attr', R);
-        // }
         if (X) {
           F = {W:[], F: F};
         }
