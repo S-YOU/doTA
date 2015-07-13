@@ -33,7 +33,7 @@
       P.factory('doTA', function(){return doTA;});
     }])
 
-    .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', function(d, h, f, t, c) {
+    .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', '$controller', function(d, h, f, t, c, r) {
       return {
         restrict: 'A',
         priority: 1000,
@@ -83,7 +83,7 @@
               console.log(a.dotaRender,'before compile');
               //compile the template html text to function like doT does
               try {
-                var r = d.compile(template, a);
+                var f = d.compile(template, a);
                 console.log(a.dotaRender,'after compile(no-cache)');
               } catch (x) {
                 /**/console.log('compile error', a, template);
@@ -93,10 +93,10 @@
 
               //compiled func into cache for later use
               if (a.dotaRender) {
-                d.C[a.dotaRender] = r;
+                d.C[a.dotaRender] = f;
               }
 
-              return r;
+              return f;
             }
 
             function render(func){
@@ -125,14 +125,25 @@
                 console.log(a.dotaRender,'after innerHTML set to content');
               }
 
-              if (a.scope) {
+              if (a.scope || a.ngController) {
                 console.log('scope', a.scope);
                 if (a.newScope) {
                   console.log('oldScope $destroy');
                   a.newScope.$destroy();
                 }
                 a.newScope = s.$new();
-                console.log('newScope created', a.newScope);
+                console.log('newScope created', a.dotaRender, a.newScope);
+
+                if (a.ngController) {
+                  console.log('new controller', a.ngController);
+                  var l = {$scope: a.newScope}, ct = r(a.ngController, l);
+                  // if (a.controllerAs) {
+                  //   a.newScope[a.controllerAs] = controller;
+                  // }
+                  e.data('$ngControllerController', ct);
+                  // e.children().data('$ngControllerController', ct);
+                  console.log('new controller created', a.dotaRender);
+                }
               }
 
               if(a.event) {
@@ -142,16 +153,17 @@
                   if (!partial.addEventListener) {
                     partial.addEventListener = partial.attachEvent;
                   }
-                  // console.log('attrs', attrs);
+                  console.log('attrs', a.dotaRender, attrs);
                   for(var i = 0, l = attrs.length; i < l; i++){
                     if (attrs[i].name.substr(0,3) === 'de-') {
                       partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
                         return function(evt){
                           // var target = evt.target || evt.srcElement;
                           // console.log('event', partial, partial.getAttribute('dota-click'));
-                          s.$applyAsync(attr.value);
+                          (a.newScope || s).$applyAsync(attr.value);
                         };
                       })(partial, attrs[i]));
+                      console.log('event added', a.dotaRender, attrs[i].name);
                     }
                   }
                 });
