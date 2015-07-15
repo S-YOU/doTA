@@ -506,8 +506,10 @@ if (typeof module !== "undefined" && module.exports) {
         controller: A.noop,
         link: A.noop,
         compile: function() {
+          var N,S; //New scope flag, new Scope
 
           return function(s, e, a) {
+            S = s;
             //not to show "undefined" in templates
             a.loose = a.loose in B ? B[a.loose] : a.loose || 1;
             //concat continuous append into one
@@ -567,12 +569,34 @@ if (typeof module !== "undefined" && module.exports) {
 
             function render(func){
 
+              if (a.scope || a.ngController) {
+                console.log('scope', a.scope);
+                if (N) {
+                  console.log('oldScope $destroy');
+                  S.$destroy();
+                }
+                S = s.$new();
+                N = 1; //new scope created flag
+                console.log('newScope created', a.dotaRender, S);
+
+                if (a.ngController) {
+                  console.log('new controller', a.ngController);
+                  var l = {$scope: S}, ct = r(a.ngController, l);
+                  // if (a.controllerAs) {
+                  //   S[a.controllerAs] = controller;
+                  // }
+                  e.data('$ngControllerController', ct);
+                  // e.children().data('$ngControllerController', ct);
+                  console.log('new controller created', a.dotaRender);
+                }
+              }
+
               //unless prerender
               if (func) {
                 console.log(a.dotaRender,'before render');
-                //execute the function by passing s(data basically), and f
+                //execute the function by passing scope(data basically), and f
                 try {
-                  var v = func.F ? func.F(s, f, p) : func(s, f, p);
+                  var v = func.F ? func.F(S, f, p) : func(S, f, p);
                   console.log(a.dotaRender,'after render');
                 } catch (x) {
                   /**/console.log('render error', func);
@@ -591,27 +615,6 @@ if (typeof module !== "undefined" && module.exports) {
                 console.log(a.dotaRender,'after innerHTML set to content');
               }
 
-              if (a.scope || a.ngController) {
-                console.log('scope', a.scope);
-                if (a.newScope) {
-                  console.log('oldScope $destroy');
-                  a.newScope.$destroy();
-                }
-                a.newScope = s.$new();
-                console.log('newScope created', a.dotaRender, a.newScope);
-
-                if (a.ngController) {
-                  console.log('new controller', a.ngController);
-                  var l = {$scope: a.newScope}, ct = r(a.ngController, l);
-                  // if (a.controllerAs) {
-                  //   a.newScope[a.controllerAs] = controller;
-                  // }
-                  e.data('$ngControllerController', ct);
-                  // e.children().data('$ngControllerController', ct);
-                  console.log('new controller created', a.dotaRender);
-                }
-              }
-
               if(a.event) {
                 forEachArray(e[0].querySelectorAll('[de]'), function(partial){
                   var attrs = partial.attributes;
@@ -626,7 +629,7 @@ if (typeof module !== "undefined" && module.exports) {
                         return function(evt){
                           // var target = evt.target || evt.srcElement;
                           // console.log('event', partial, partial.getAttribute('dota-click'));
-                          (a.newScope || s).$applyAsync(attr.value);
+                          S.$applyAsync(attr.value);
                         };
                       })(partial, attrs[i]));
                       console.log('event added', a.dotaRender, attrs[i].name);
@@ -640,13 +643,13 @@ if (typeof module !== "undefined" && module.exports) {
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
                 forEachArray(e[0].querySelectorAll('[dota-pass]'), function(partial){
-                  c(partial)(a.newScope || s);
+                  c(partial)(S);
                 });
                 console.log(a.dotaRender,'after c partial');
 
               } else if(a.compileAll){
                 //just compile the whole template with c
-                c(e.contents())(a.newScope || s);
+                c(e.contents())(S);
                 console.log(a.dotaRender,'after c all');
               }
 
@@ -658,10 +661,10 @@ if (typeof module !== "undefined" && module.exports) {
                 });
               }
 
-              //execute s functions
+              //execute scope functions
               if(a.dotaOnloadScope) {
                 setTimeout(function() {
-                  s.$evalAsync(a.dotaOnloadScope);
+                  S.$evalAsync(a.dotaOnloadScope);
                   console.log(a.dotaRender, 'after scope $evalAsync scheduled');
                 });
               }
@@ -688,12 +691,12 @@ if (typeof module !== "undefined" && module.exports) {
                   var w = func.W[i];
                   // console.log('watch', w);
 
-                  watches[w.I] = s.$watch(w.W, (function(w) {
+                  watches[w.I] = S.$watch(w.W, (function(w) {
                     return function(newValue, oldValue){
                       console.log(a.dotaRender, w.W, 'partial watch before render');
                       var oldTag = document.getElementById(w.I);
                       if (!oldTag) { return console.log('tag not found'); }
-                      var content = w.F(s, f, p);
+                      var content = w.F(S, f, p);
                       if (!content) { return console.log('no contents'); }
                       console.log('watch new content', content);
                       var newTag = angular.element(content);
@@ -701,7 +704,7 @@ if (typeof module !== "undefined" && module.exports) {
                       if (scopes[w.I]) {
                         scopes[w.I].$destroy();
                       }
-                      scopes[w.I] = (a.newScope || s).$new();
+                      scopes[w.I] = S.$new();
                       //compile contents
                       if (a.compile || a.compileAll) {
                         c(newTag)(scopes[w.I]);
@@ -727,14 +730,14 @@ if (typeof module !== "undefined" && module.exports) {
                 p[x] = a[x];
               //map scope-* attributes into $attr (first level var from scope)
               } else if (!z.indexOf('scope-')) {
-                p[z.slice(6)] = s[a[x]];
+                p[z.slice(6)] = S[a[x]];
               }
             }
             // console.log('$attr', p, a);
 
             if(a.watch) {
               console.log(a.dotaRender, 'registering watch for', a.watch);
-              s.$watchCollection(a.watch, function(newValue, oldValue){
+              S.$watchCollection(a.watch, function(newValue, oldValue){
                 if(newValue !== oldValue && d.C[a.dotaRender]) {
                   console.log(a.dotaRender, 'watch before render');
                   loader(true);
