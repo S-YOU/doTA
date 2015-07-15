@@ -48,6 +48,7 @@
             //concat continuous append into one
             a.optimize = a.optimize in B ? B[a.optimize] : a.optimize || 1;
             a.event = a.event in B ? B[a.event] : a.event || 1;
+            a.watch = typeof a.watch === 'string' ? a.watch : 0; //Firefox throw error if does not exists
             var p = {};
 
             if (a.cacheDom && d.D[a.dotaRender]) {
