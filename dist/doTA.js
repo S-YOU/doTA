@@ -106,7 +106,8 @@ var doTA = (function(){'use strict';
     } while(++x < chunks.length);
   };
 
-  var newId = 0; //module level id counter
+  var compiledCount = 0;
+  var compiledHash = {};
 
   return {
     compile: function(template, options){
@@ -115,7 +116,11 @@ var doTA = (function(){'use strict';
       //variable cache
       var VarMap = {$index: 1, undefined: 1, $attr:1};
       var level = 0, LevelMap = {}, LevelVarMap = {}, WatchMap = {}, Watched, doTAPass, doTAContinue, compiledFn;
-      var FnText = Indent(level) + "'use strict';var R='';\n";
+      var FnText = Indent(level) + "'use strict';var N=0,R='';\n"; //ToDO: check perf on var declaration
+      //if there is identifier reset newId;
+      var uniqId = compiledHash[options.dotaRender] || compiledCount++;
+      var idHash = {};
+      compiledHash[uniqId] = uniqId;
 
       //clean up extra white spaces and line break
       template = template.replace(/\s{2,}|\n/g,' ');
@@ -279,14 +284,18 @@ var doTA = (function(){'use strict';
               delete attrs['ng-repeat'];
             }
 
+            if (options.diff) {
+              FnText += Indent(level, 1) + "N++; \n"
+              attrs['id'] = attrs['id'] || uniqId + ".'+N+'";
+            }
+
             //ng-if to javascript if
             if (attrs['ng-if']) {
               if (attrs.wait || attrs.watch) {
-                ++newId;
-                FnText += Indent(level,2) + (!Watched ? 'var T=this;T.W=[];' : '') + 'var W={I:"D' + newId + '",W:"' + attrs['ng-if'] + '"' + (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
-                WatchMap[level] = Watched = 1; //'"D' + ++newId + '"' + (attrs.once ? ',1' : '');
-                FnText += Indent(level,2) + 'W.F=function(S,F){"use strict";var R="";\n';
-                attrs['id'] = 'D' + newId;
+                attrs['id'] = idHash[uniqId + '.' + level] = attrs['id'] || uniqId + ".'+N+'";
+                FnText += Indent(level,2) + (!Watched ? 'var T=this;T.W=[];' : '') + 'var W={I:"' + uniqId + '.' + '"+ ++N,W:"' + attrs['ng-if'] + '"' + (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
+                WatchMap[level] = Watched = 1;
+                FnText += Indent(level,2) + 'W.F=function(S,F){var R="";\n'; //jshint said "use strict"; is not needed
                 delete attrs.watch; delete attrs.wait;
               }
               LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
@@ -332,7 +341,7 @@ var doTA = (function(){'use strict';
               FnText += Indent(level) + 's.push("' + val + '"); \n';
 
             } else {
-              parsedAttrs[x] = '="' + Interpolate(val) + '"';
+              parsedAttrs[x] = '="' + (x === 'id' ? val : Interpolate(val)) + '"';
 
               //ng-repeat loop variables are not available!
               // only way to acccess is to use $index like "data[$index]"
@@ -394,7 +403,7 @@ var doTA = (function(){'use strict';
 
           if (WatchMap[level]) {
             FnText += Indent(level, 1) + '} else {\n';
-            FnText += Indent(level) + 'R+=\'<' + tagName + ' id="D' + newId + '" style="display:none"></' + tagName + '>\'; \n';
+            FnText += Indent(level) + 'R+=\'<' + tagName + ' id="' + idHash[uniqId + '.' + level] + '" style="display:none"></' + tagName + '>\'; \n';
           }
 
           //close "if", "for", "while" blocks
