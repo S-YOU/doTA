@@ -1,5 +1,10 @@
 var gulp = require('gulp');
 
+gulp.task('clean', function(){
+  var del = require('del');
+  return del(['dist/*']);
+});
+
 gulp.task('copy:doTA', function() {
   return gulp.src(['doTA.js']).pipe(gulp.dest('dist'));
 });
@@ -14,13 +19,15 @@ gulp.task('copy:ngDoTA', function() {
 gulp.task('copy', ['copy:doTA', 'copy:ngDoTA']);
 
 gulp.task('uglify', ['copy'], function() {
+  var closure = require('gulp-closure-compiler-service');
   var uglify = require('gulp-uglify');
   var replace = require('gulp-replace');
   var rename = require('gulp-rename');
   return gulp.src(['dist/*.js', '!dist/*.min.js'])
     .pipe(replace(/^\s*console\.log.*$/gm, ''))
-    .pipe(replace(/\bD\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/g, ''))
-    .pipe(uglify({mangle:true,compress:{unsafe: true}}))
+    .pipe(replace(/\bIndent\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/g, ''))
+    .pipe(closure())
+    .pipe(uglify())
     .on('error', console.error)
     .pipe(rename({
       extname: '.min.js'
@@ -28,7 +35,7 @@ gulp.task('uglify', ['copy'], function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('default', ['uglify']);
+gulp.task('default', ['clean', 'uglify']);
 
 gulp.task('watch', ['uglify'], function() {
   gulp.watch(['doTA.js', 'ngDoTA.js'], ['uglify']);

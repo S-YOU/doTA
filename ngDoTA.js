@@ -1,5 +1,5 @@
 /* global angular, doTA */
-(function (A) {'use strict';
+(function (angular, document) {'use strict';
   var msie = document.documentMode;
   var hiddenDIV;
   setTimeout(function(){
@@ -14,7 +14,7 @@
       }
     }
   });
-  var B = {0: 0, 'false': 0};
+  var BoolMap = {0: 0, 'false': 0};
 
   function forEachArray(src, iter, ctx) {
     if (src.forEach) {
@@ -28,183 +28,197 @@
     return src;
   }
 
-  A.module('doTA', [])
+  angular.module('doTA', [])
     .config(['$provide',function(P) {
       P.factory('doTA', function(){return doTA;});
     }])
 
-    .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', '$controller', function(d, h, f, t, c, r) {
+    .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', '$controller',
+      function(doTA, $http, $filter, $templateCache, $compile, $controller) {
       return {
         restrict: 'A',
         priority: 1000,
         terminal: true,
-        controller: A.noop,
-        link: A.noop,
+        controller: angular.noop,
+        link: angular.noop,
         compile: function() {
-          var N,S; //New scope flag, new Scope
+          var NewScopeDefined, NewScope; //New scope flag, new Scope
 
-          return function(s, e, a) {
-            S = s;
+          return function(scope, elem, attrs) {
+            NewScope = scope;
+            //used attributes, good for minification with closure compiler;
+            var attrCacheDOM = attrs.cacheDom;
+            var attrDoTARender = attrs.dotaRender;
+            var attrScope = attrs.scope;
+            var attrNgController = attrs.ngController;
+            var attrLoose = attrs.loose;
+            var attrOptimize = attrs.optimize;
+            var attrEvent = attrs.event;
+            var attrDebug = attrs.debug;
+            var attrWatch = attrs.watch;
+            var attrEncode = attrs.encode;
+            var attrCompile = attrs.compile;
+            var attrCompileAll = attrs.compileAll;
+            var attrDoTAOnload = attrs.dotaOnload;
+            var attrDoTAOnloadScope = attrs.dotaOnloadScope;
+            var attrLoaded = attrs.loaded;
+            var attrInline = attrs.inline;
+            var origAttrMap = attrs.$attr;
+
             //not to show "undefined" in templates
-            a.loose = a.loose in B ? B[a.loose] : a.loose || 1;
+            attrLoose = attrs.loose = attrLoose in BoolMap ? BoolMap[attrLoose] : attrLoose || 1;
             //concat continuous append into one
-            a.optimize = a.optimize in B ? B[a.optimize] : a.optimize || 1;
-            a.event = a.event in B ? B[a.event] : a.event || 1;
-            a.watch = typeof a.watch === 'string' ? a.watch : 0; //Firefox throw error if does not exists
-            var p = {};
+            attrOptimize = attrs.optimize = attrOptimize in BoolMap ? BoolMap[attrOptimize] : attrOptimize || 1;
+            //ng-click to native click
+            attrEvent = attrs.event = attrEvent in BoolMap ? BoolMap[attrEvent] : attrEvent || 1;
+            attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
+            var params = {};
 
-            if (a.cacheDom && d.D[a.dotaRender]) {
-              // alert( d.D[a.dotaRender].innerHTML);
-              console.log('cacheDOM: just moved cached DOM', d.D[a.dotaRender]);
-              var elem;
-              if (msie) {
-                elem = d.D[a.dotaRender].cloneNode(true);
-              } else {
-                elem = d.D[a.dotaRender];
-              }
-              e[0].parentNode.replaceChild(elem, e[0]);
+            if (attrCacheDOM && doTA.D[attrDoTARender]) {
+              // alert( doTA.D[attrDoTARender].innerHTML);
+              console.log('cacheDOM: just moved cached DOM', doTA.D[attrDoTARender]);
+              var cachedElem = msie ? doTA.D[attrDoTARender].cloneNode(true) : doTA.D[attrDoTARender];
+              elem[0].parentNode.replaceChild(cachedElem, elem[0]);
               return;
             }
 
             function cacheDOM(){
-              // console.log('cacheDOM()', a)
-              s.$on("$destroy", function(){
-                console.log('$destroy', e);
-                // alert(['$destroy', e[0], hiddenDIV]);
+              // console.log('cacheDOM()', attrs)
+              scope.$on("$destroy", function(){
+                console.log('$destroy', elem);
+                // alert(['$destroy', elem[0], hiddenDIV]);
                 if (hiddenDIV) {
-                  d.D[a.dotaRender] = e[0];
-                  hiddenDIV.appendChild(e[0]);
+                  doTA.D[attrDoTARender] = elem[0];
+                  hiddenDIV.appendChild(elem[0]);
                 }
               });
             }
 
             function compile(template){
-              if(a.debug) {
-                console.log([a.encode], [template]);
+              if(attrDebug) {
+                console.log([attrEncode], [template]);
               }
 
-              console.log(a.dotaRender,'before compile');
+              console.log(attrDoTARender,'before compile');
               //compile the template html text to function like doT does
               try {
-                var f = d.compile(template, a);
-                console.log(a.dotaRender,'after compile(no-cache)');
+                var compiledFn = doTA.compile(template, attrs);
+                console.log(attrDoTARender,'after compile(no-cache)');
               } catch (x) {
-                /**/console.log('compile error', a, template);
+                /**/console.log('compile error', attrs, template);
                 throw x;
-                return;
               }
 
               //compiled func into cache for later use
-              if (a.dotaRender) {
-                d.C[a.dotaRender] = f;
+              if (attrDoTARender) {
+                doTA.C[attrDoTARender] = compiledFn;
               }
 
-              return f;
+              return compiledFn;
             }
 
             function render(func){
 
-              if (a.scope || a.ngController) {
-                console.log('scope', a.scope);
-                if (N) {
+              if (attrScope || attrNgController) {
+                console.log('scope', attrScope);
+                if (NewScopeDefined) {
                   console.log('oldScope $destroy');
-                  S.$destroy();
+                  NewScope.$destroy();
                 }
-                S = s.$new();
-                N = 1; //new scope created flag
-                console.log('newScope created', a.dotaRender, S);
+                NewScope = scope.$new();
+                NewScopeDefined = 1; //new scope created flag
+                console.log('newScope created', attrDoTARender, NewScope);
 
-                if (a.ngController) {
-                  console.log('new controller', a.ngController);
-                  var l = {$scope: S}, ct = r(a.ngController, l);
-                  // if (a.controllerAs) {
-                  //   S[a.controllerAs] = controller;
+                if (attrNgController) {
+                  console.log('new controller', attrNgController);
+                  var l = {$scope: NewScope}, ct = $controller(attrNgController, l);
+                  // if (attrs.controllerAs) {
+                  //   NewScope[attrs.controllerAs] = controller;
                   // }
-                  e.data('$ngControllerController', ct);
-                  // e.children().data('$ngControllerController', ct);
-                  console.log('new controller created', a.dotaRender);
+                  elem.data('$ngControllerController', ct);
+                  // elem.children().data('$ngControllerController', ct);
+                  console.log('new controller created', attrDoTARender);
                 }
               }
 
               //unless prerender
               if (func) {
-                console.log(a.dotaRender,'before render');
-                //execute the function by passing scope(data basically), and f
+                console.log(attrDoTARender,'before render');
+                //execute the function by passing scope(data basically), and $filter
                 try {
-                  var v = func.F ? func.F(S, f, p) : func(S, f, p);
-                  console.log(a.dotaRender,'after render');
+                  var v = func.F ? func.F(NewScope, $filter, params) : func(NewScope, $filter, params);
+                  console.log(attrDoTARender,'after render');
                 } catch (x) {
                   /**/console.log('render error', func);
                   throw x;
-                  return;
                 }
 
-                if(a.debug) {
+                if(attrDebug) {
                   console.log(v);
                 }
 
                 //directly write raw html to element
-                //we shouldn't have jqLite cached nodes here,
+                //we shouldn'$templateCache have jqLite cached nodes here,
                 // so no deallocation by jqLite needed
-                e[0].innerHTML = v;
-                console.log(a.dotaRender,'after innerHTML set to content');
+                elem[0].innerHTML = v;
+                console.log(attrDoTARender,'after innerHTML set to content');
               }
 
-              if(a.event) {
-                forEachArray(e[0].querySelectorAll('[de]'), function(partial){
+              if(attrEvent) {
+                forEachArray(elem[0].querySelectorAll('[de]'), function(partial){
                   var attrs = partial.attributes;
                   //ie8
                   if (!partial.addEventListener) {
                     partial.addEventListener = partial.attachEvent;
                   }
-                  console.log('attrs', a.dotaRender, attrs);
+                  console.log('attrs', attrDoTARender, attrs);
                   for(var i = 0, l = attrs.length; i < l; i++){
                     if (attrs[i].name.substr(0,3) === 'de-') {
-                      partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
+                      partial.addEventListener(attrs[i].name.substr(3), (function(target, attrs){
                         return function(evt){
                           // var target = evt.target || evt.srcElement;
                           // console.log('event', partial, partial.getAttribute('dota-click'));
-                          S.$applyAsync(attr.value);
+                          NewScope.$applyAsync(attrs.value);
                         };
                       })(partial, attrs[i]));
-                      console.log('event added', a.dotaRender, attrs[i].name);
+                      console.log('event added', attrDoTARender, attrs[i].name);
                     }
                   }
                 });
               }
-              //c html if you need ng-model or ng-something
-              if(a.compile){
+              //$compile html if you need ng-model or ng-something
+              if(attrCompile){
 
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
-                forEachArray(e[0].querySelectorAll('[dota-pass]'), function(partial){
-                  c(partial)(S);
+                forEachArray(elem[0].querySelectorAll('[dota-pass]'), function(partial){
+                  $compile(partial)(NewScope);
                 });
-                console.log(a.dotaRender,'after c partial');
+                console.log(attrDoTARender,'after $compile partial');
 
-              } else if(a.compileAll){
-                //just compile the whole template with c
-                c(e.contents())(S);
-                console.log(a.dotaRender,'after c all');
+              } else if(attrCompileAll){
+                //just compile the whole template with $compile
+                $compile(elem.contents())(NewScope);
+                console.log(attrDoTARender,'after $compile all');
               }
 
               //execute raw functions, like jQuery
-              if(a.dotaOnload){
+              if(attrDoTAOnload){
                 setTimeout(function(){
-                  eval(a.dotaOnload);
-                  console.log(a.dotaRender,'after eval');
+                  eval(attrDoTAOnload);
+                  console.log(attrDoTARender,'after eval');
                 });
               }
 
               //execute scope functions
-              if(a.dotaOnloadScope) {
+              if(attrDoTAOnloadScope) {
                 setTimeout(function() {
-                  S.$evalAsync(a.dotaOnloadScope);
-                  console.log(a.dotaRender, 'after scope $evalAsync scheduled');
+                  NewScope.$evalAsync(attrDoTAOnloadScope);
+                  console.log(attrDoTARender, 'after scope $evalAsync scheduled');
                 });
               }
 
-              if (a.cacheDom) {
+              if (attrCacheDOM) {
                 cacheDOM();
               }
 
@@ -215,23 +229,23 @@
                 display: none;
               }
               */
-              if (a.loaded) {
-                e.attr("loaded",true);
+              if (attrLoaded) {
+                elem.attr("loaded",true);
               }
 
               if (func && func.W) {
-                console.log('func.W watch', a.dotaRender, func.W);
+                console.log('func.W watch', attrDoTARender, func.W);
                 var scopes = {}, watches = {};
                 for(var i = 0; i < func.W.length; i++) {
                   var w = func.W[i];
                   // console.log('watch', w);
 
-                  watches[w.I] = S.$watch(w.W, (function(w) {
+                  watches[w.I] = NewScope.$watch(w.W, (function(w) {
                     return function(newValue, oldValue){
-                      console.log(a.dotaRender, w.W, 'partial watch before render');
+                      console.log(attrDoTARender, w.W, 'partial watch before render');
                       var oldTag = document.getElementById(w.I);
                       if (!oldTag) { return console.log('tag not found'); }
-                      var content = w.F(S, f, p);
+                      var content = w.F(NewScope, $filter, params);
                       if (!content) { return console.log('no contents'); }
                       console.log('watch new content', content);
                       var newTag = angular.element(content);
@@ -239,75 +253,75 @@
                       if (scopes[w.I]) {
                         scopes[w.I].$destroy();
                       }
-                      scopes[w.I] = S.$new();
+                      scopes[w.I] = NewScope.$new();
                       //compile contents
-                      if (a.compile || a.compileAll) {
-                        c(newTag)(scopes[w.I]);
+                      if (attrCompile || attrCompileAll) {
+                        $compile(newTag)(scopes[w.I]);
                       }
                       angular.element(oldTag).replaceWith(newTag);
-                      console.log(a.dotaRender, w.W, 'partial watch content written');
+                      console.log(attrDoTARender, w.W, 'partial watch content written');
                       //unregister watch if wait once
                       if (w.O) {
-                        console.log(a.dotaRender, w.W, 'partial watch unregistered');
+                        console.log(attrDoTARender, w.W, 'partial watch unregistered');
                         watches[w.I]();
                       }
-                      console.log(a.dotaRender, w.W, 'partial watch after render');
+                      console.log(attrDoTARender, w.W, 'partial watch after render');
                     };
                   })(w));
                 }
               }
             }
 
-            for (var x in a.$attr) {
-              var z = a.$attr[x];
-              //map data-* attributes into $attr (inline text)
+            for (var x in origAttrMap) {
+              var z = origAttrMap[x];
+              //map data-* attributes into origAttrMap (inline text)
               if (!z.indexOf('data-')) {
-                p[x] = a[x];
-              //map scope-* attributes into $attr (first level var from scope)
+                params[x] = attrs[x];
+              //map scope-* attributes into origAttrMap (first level var from scope)
               } else if (!z.indexOf('scope-')) {
-                p[z.slice(6)] = S[a[x]];
+                params[z.slice(6)] = NewScope[attrs[x]];
               }
             }
-            // console.log('$attr', p, a);
+            // console.log('origAttrMap', params, attrs);
 
-            if(a.watch) {
-              console.log(a.dotaRender, 'registering watch for', a.watch);
-              S.$watchCollection(a.watch, function(newValue, oldValue){
-                if(newValue !== oldValue && d.C[a.dotaRender]) {
-                  console.log(a.dotaRender, 'watch before render');
+            if(attrWatch) {
+              console.log(attrDoTARender, 'registering watch for', attrWatch);
+              NewScope.$watchCollection(attrWatch, function(newValue, oldValue){
+                if(newValue !== oldValue && doTA.C[attrDoTARender]) {
+                  console.log(attrDoTARender, 'watch before render');
                   loader(true);
-                  console.log(a.dotaRender, 'watch after render');
+                  console.log(attrDoTARender, 'watch after render');
                 }
               });
             }
 
             function loader(force){
-              if(d.C[a.dotaRender]){
-                console.log(a.dotaRender,'get compile function from cache');
+              if(doTA.C[attrDoTARender]){
+                console.log(attrDoTARender,'get compile function from cache');
                 //watch need to redraw, also inline, because inline always hasChildNodes
-                if (e[0].hasChildNodes() && !a.inline && !force) {
-                  console.log('hasChildNodes', a.dotaRender);
+                if (elem[0].hasChildNodes() && !attrInline && !force) {
+                  console.log('hasChildNodes', attrDoTARender);
                   render();
                 } else {
-                  render(d.C[a.dotaRender]);
+                  render(doTA.C[attrDoTARender]);
                 }
-              } else if (a.inline) {
+              } else if (attrInline) {
                 // render inline by loading inner html tags,
                 // html entities encoding sometimes need for htmlparser here or you may use htmlparser2 (untested)
-                console.log(a.dotaRender,'before get innerHTML');
-                var v = e[0].innerHTML;
-                console.log(a.dotaRender,'after get innerHTML');
-                render(compile(v, a));
-              } else if (a.dotaRender) { //load real template
-                console.log('before h', a.dotaRender);
-                //server side rendering or miss to use inline attr?
-                if (e[0].hasChildNodes()) {
-                  console.log('hasChildNodes', a.dotaRender);
+                console.log(attrDoTARender,'before get innerHTML');
+                var v = elem[0].innerHTML;
+                console.log(attrDoTARender,'after get innerHTML');
+                render(compile(v, attrs));
+              } else if (attrDoTARender) { //load real template
+                console.log('before $http', attrDoTARender);
+                //server side rendering or miss to use inline attrs?
+                if (elem[0].hasChildNodes()) {
+                  console.log('hasChildNodes', attrDoTARender);
                   render();
                 } else {
-                  h.get(a.dotaRender, {cache: t}).success(function (v) {
-                    console.log('after h response', a.dotaRender);
-                    render(compile(v, a));
+                  $http.get(attrDoTARender, {cache: $templateCache}).success(function (v) {
+                    console.log('after $http response', attrDoTARender);
+                    render(compile(v, attrs));
                   });
                 }
               }
@@ -325,11 +339,11 @@
         priority: 1000,
         terminal: true,
         compile: function() {
-          return function(scope, elem, attr) {
-            console.log('dotaInclude', attr.dotaInclude);
-            $http.get(attr.dotaInclude, {cache: $templateCache}).success(function (data) {
+          return function(scope, elem, attrs) {
+            console.log('dotaInclude', attrs.dotaInclude);
+            $http.get(attrs.dotaInclude, {cache: $templateCache}).success(function (data) {
               elem.html(data);
-              if (attr.compile !== 'false') {
+              if (attrs.compile !== 'false') {
                 $compile(elem.contents())(scope);
               }
             });
@@ -343,13 +357,13 @@
         priority: 1000,
         terminal: true,
         compile: function() {
-          return function(scope, elem, attr) {
-            scope.$watch(attr.dotaTemplate, function(newVal, oldVal) {
+          return function(scope, elem, attrs) {
+            scope.$watch(attrs.dotaTemplate, function(newVal, oldVal) {
               if (newVal) {
                 console.log('dotaTemplate', newVal);
                 $http.get(newVal, {cache: $templateCache}).success(function (data) {
                   elem.html(data);
-                  if (attr.compile !== 'false') {
+                  if (attrs.compile !== 'false') {
                     $compile(elem.contents())(scope);
                   }
                 });
@@ -359,7 +373,8 @@
         }
       };
     }])
-    .factory('dotaHttp', ['$compile', '$http', '$templateCache', '$filter', 'doTA', function($compile, $http, $templateCache, $filter, doTA) {
+    .factory('dotaHttp', ['$compile', '$http', '$templateCache', '$filter', 'doTA',
+      function($compile, $http, $templateCache, $filter, doTA) {
       return function (name, scope, callback, options){
         options = options || {};
         options.loose = 1;
@@ -380,4 +395,4 @@
       };
     }]);
 
-})(window.angular);
+})(window.angular, window.document);
