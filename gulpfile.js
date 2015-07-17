@@ -24,7 +24,7 @@ gulp.task('uglify', ['copy'], function() {
   var replace = require('gulp-replace');
   var rename = require('gulp-rename');
   return gulp.src(['dist/*.js', '!dist/*.min.js'])
-    .pipe(replace(/^\s*console\.log.*$/gm, ''))
+    .pipe(replace(/^\s*console\..*$/gm, ''))
     .pipe(replace(/\bIndent\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/g, ''))
     .pipe(closure())
     .pipe(uglify())

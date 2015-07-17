@@ -102,9 +102,9 @@
               console.log(attrDoTARender,'before compile');
               //compile the template html text to function like doT does
               try {
-                /**/console.time('compile:' + attrDoTARender);
+                console.time('compile:' + attrDoTARender);
                 var compiledFn = doTA.compile(template, attrs);
-                /**/console.timeEnd('compile:'  + attrDoTARender);
+                console.timeEnd('compile:'  + attrDoTARender);
                 console.log(attrDoTARender,'after compile(no-cache)');
               } catch (x) {
                 /**/console.log('compile error', attrs, template);
@@ -148,9 +148,9 @@
                 console.log(attrDoTARender,'before render');
                 //execute the function by passing scope(data basically), and $filter
                 try {
-                  /**/console.time('render:' + attrDoTARender);
+                  console.time('render:' + attrDoTARender);
                   var v = func.F ? func.F(NewScope, $filter, params) : func(NewScope, $filter, params);
-                  /**/console.timeEnd('render:' + attrDoTARender);
+                  console.timeEnd('render:' + attrDoTARender);
                   console.log(attrDoTARender,'after render');
                 } catch (x) {
                   /**/console.log('render error', func);
@@ -164,9 +164,9 @@
                 //directly write raw html to element
                 //we shouldn'$templateCache have jqLite cached nodes here,
                 // so no deallocation by jqLite needed
-                /**/console.time('innerHTML:' + attrDoTARender);
+                console.time('innerHTML:' + attrDoTARender);
                 elem[0].innerHTML = v;
-                /**/console.timeEnd('innerHTML:' + attrDoTARender);
+                console.timeEnd('innerHTML:' + attrDoTARender);
                 console.log(attrDoTARender,'after innerHTML set to content');
               }
 

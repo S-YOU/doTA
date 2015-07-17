@@ -478,10 +478,13 @@ var doTA = (function(){'use strict';
     C: {}, //Cached compiled functions
     D: {} //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
   };
+
 })();
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = doTA;
+//IE8
 } else if (typeof console === "undefined") {
-  console = {log: function(){}};
+  var noop = function(){};
+  console = {log: noop, time: noop, timeEnd: noop};
 }
