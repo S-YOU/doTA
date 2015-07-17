@@ -5,7 +5,14 @@ var doTA = (function(){'use strict';
       return this.replace(/^\s+|\s+$/g,'');
     };
   }
-  var events = ' click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
+  function forEach(obj, fn){
+   for (var x in obj) {
+     // if (x in obj) {
+       fn.call(obj[x], x);
+     // }
+   }
+  }
+  var events = ' change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
   var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   var parse = function (html, func){
     if (!html) {return;}
@@ -116,11 +123,13 @@ var doTA = (function(){'use strict';
       //variable cache
       var VarMap = {$index: 1, undefined: 1, $attr:1};
       var level = 0, LevelMap = {}, LevelVarMap = {}, WatchMap = {}, Watched, doTAPass, doTAContinue, compiledFn;
-      var FnText = Indent(level) + "'use strict';var N=0,R='';\n"; //ToDO: check perf on var declaration
-      //if there is identifier reset newId;
       var uniqId = compiledHash[options.dotaRender] || compiledCount++;
       var idHash = {};
       compiledHash[uniqId] = uniqId;
+
+      var FnText = Indent(level) + "'use strict';var " +
+        (options.diff ? 'N=0,H=doTA.H['+ compiledHash[uniqId] +']=doTA.H['+ compiledHash[uniqId] +']||{},' : '') +
+      "R='';\n"; //ToDO: check perf on var declaration
 
       //clean up extra white spaces and line break
       template = template.replace(/\s{2,}|\n/g,' ');
@@ -284,11 +293,6 @@ var doTA = (function(){'use strict';
               delete attrs['ng-repeat'];
             }
 
-            if (options.diff) {
-              FnText += Indent(level, 1) + "N++; \n"
-              attrs['id'] = attrs['id'] || uniqId + ".'+N+'";
-            }
-
             //ng-if to javascript if
             if (attrs['ng-if']) {
               if (attrs.wait || attrs.watch) {
@@ -341,7 +345,7 @@ var doTA = (function(){'use strict';
               FnText += Indent(level) + 's.push("' + val + '"); \n';
 
             } else {
-              parsedAttrs[x] = '="' + (x === 'id' ? val : Interpolate(val)) + '"';
+              parsedAttrs[x] = (x === 'id' ? val : Interpolate(val));
 
               //ng-repeat loop variables are not available!
               // only way to acccess is to use $index like "data[$index]"
@@ -358,25 +362,45 @@ var doTA = (function(){'use strict';
             }
           }
 
+          if (options.diff) {
+            FnText += Indent(level) + "if(H[N]){";
+              // 'if(H[N])' +
+            //   'console.log("exists")' +
+            // for(var k in parsedAttrs) {
+            //   FnText += ',' + k + ':"' + parsedAttrs[k] + '"';
+            // }
+            FnText += "}else{" + 'H[N]={tN:"'+tagName+'"';
+            for(var k in parsedAttrs) {
+              FnText += ',"' + k + '":"' + parsedAttrs[k] + '"';
+            }
+            FnText += '}}\n';
+
+            parsedAttrs['id'] = parsedAttrs['id'] || uniqId + ".'+N+'";
+          }
+
           //write tag back as string
           FnText += Indent(level) + "R+='<" + tagName + (hasNgClass ? " class=\"'+s.join(' ')+'\"" : '');
           //other attibutes
           for(var k in parsedAttrs) {
-            FnText += " " + k + parsedAttrs[k];
+            FnText += " " + k + '="' + parsedAttrs[k] + '"';
           }
           FnText += ">';\n";
 
+          if (options.diff) {
+            FnText += Indent(level) + "N++; \n"
+          }
+
           //expand doTA templates with expand=1 option
           if (attrs['dota-render'] && attrs.expand) {
-            var r = [];
+            var attrArray = [];
             for(var x in attrs){
               if (!x.indexOf('data-')) {
-                r.push('"' + x.slice(5) + '":"' + attrs[x] + '"');
+                attrArray.push('"' + x.slice(5) + '":"' + attrs[x] + '"');
               } else if (!x.indexOf('scope-')) {
-                r.push('"' + x.slice(6) + '":S["' + attrs[x] + '"]');
+                attrArray.push('"' + x.slice(6) + '":S["' + attrs[x] + '"]');
               }
             }
-            FnText += Indent(level) + 'var P={' + r.join(',') + '},U="' + attrs['dota-render'] + '";\n';
+            FnText += Indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attrs['dota-render'] + '";\n';
             FnText += Indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
           }
 
@@ -476,7 +500,8 @@ var doTA = (function(){'use strict';
       return compiledFn;
     },
     C: {}, //Cached compiled functions
-    D: {} //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
+    D: {}, //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
+    H: {} //HashMap for TextDiff
   };
 
 })();

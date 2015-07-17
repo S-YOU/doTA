@@ -37,6 +37,6 @@ gulp.task('uglify', ['copy'], function() {
 
 gulp.task('default', ['clean', 'uglify']);
 
-gulp.task('watch', ['uglify'], function() {
-  gulp.watch(['doTA.js', 'ngDoTA.js'], ['uglify']);
+gulp.task('watch', function() {
+  gulp.watch(['doTA.js', 'ngDoTA.js'], ['copy']);
 });
