@@ -5,6 +5,7 @@ var doTA = (function(){'use strict';
       return this.replace(/^\s+|\s+$/g,'');
     };
   }
+
   function forEach(obj, fn){
    for (var x in obj) {
      // if (x in obj) {
@@ -12,114 +13,216 @@ var doTA = (function(){'use strict';
      // }
    }
   }
+
+  function html_decode(text) {
+    return text.indexOf('&') === -1 ? text : text
+      .replace(/&gt;/g,'>').replace(/&lt;/g,'<')
+      .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+  }
+
+  function parseAttrs(chunk) {
+    var attrs = {}, tagName;
+    var pos = chunk.indexOf(' ');
+    //no attributes
+    if (pos === -1) {
+      tagName = chunk;
+    } else {
+      tagName = chunk.slice(0, pos);
+      var len = chunk.length;
+      //console.log(222, [pos, chunk]);
+      while(++pos < len) {
+        var eq_pos = chunk.indexOf('=', pos);
+
+        // ** attribute without value (last attribute) **
+        if (eq_pos === -1) {
+          attrs[chunk.slice(pos)] = "";
+          //attrs required will be required="", while is valid syntax
+          //http://www.w3.org/TR/html-markup/syntax.html#syntax-attrs-empty
+          break;
+        }
+
+        // uncomment this if you need no value attribute in the middle
+        // ** attribute without value (middle attribute) **
+        // var sp_pos = chunk.indexOf(' ', pos);
+        // if (sp_pos > 0 && sp_pos < eq_pos) {
+        //   attrs[chunk.slice(pos, sp_pos)] = "";
+        //   pos = sp_pos;
+        //   continue;
+        // }
+
+        //console.log(33, [eq_pos]);
+        var attrName = chunk.slice(pos, eq_pos), attrVal;
+        //console.log(331, [attrName]);
+
+        var valStart = chunk[eq_pos + 1], valEndPos;
+        //console.log(332, [valStart]);
+
+        //if attribute value is start with quote
+        if(valStart === '"' || valStart === "'") {
+          valEndPos = chunk.indexOf(valStart, eq_pos + 2);
+          attrVal =  chunk.slice(eq_pos + 2, valEndPos);
+          //console.log(311, [eq_pos, valEndPos, attrVal]);
+          attrs[attrName] = html_decode(attrVal);
+          pos = valEndPos + 1;
+        } else {
+
+          valEndPos = chunk.indexOf(' ', eq_pos + 2);
+          //console.log(44, [valEndPos]);
+          if(valEndPos === -1) {
+            attrVal =  chunk.slice(eq_pos + 1);
+            attrs[attrName] = html_decode(attrVal);
+            //console.log(442, [attrVal]);
+            break;
+
+          } else {
+            attrVal =  chunk.slice(eq_pos + 1, valEndPos);
+            attrs[attrName] = html_decode(attrVal);
+            //console.log(313, [eq_pos, valEndPos, attrVal]);
+            pos = valEndPos;
+          }
+        }
+      }
+    }
+    //console.log(111,attrs);
+    //console.log(1111,tagName, attrs, [attrs ? 1: 2]);
+    return [tagName, attrs, pos];
+  }
+
   var events = ' change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
   var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  var parse = function (html, func){
+
+  function parseHTML(html, func){
     if (!html) {return;}
-    var chunks = html.match(/([<>]|[^<>]+)/g), x=0;
-    var html_decode = function(text) {
-      return text.indexOf('&') === -1 ? text : text
-        .replace(/&gt;/g,'>').replace(/&lt;/g,'<')
-        .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
-    };
+    var chunks = html.match(/([<>]|[^<>]+)/g), idx=0, chunksLen = chunks.length;
     do {
       // console.log("chunks", [chunks[x]]);
-      if(chunks[x] === '<') {
-        x++;
+      if(chunks[idx] === '<') {
+        idx++;
         // console.log("chunks", [chunks[x]]);
-        if(chunks[x][0] === '/') {
+        if(chunks[idx][0] === '/') {
           //close tag must be like </div>
           // short hand tag like <div /> are NOT supported
-          func.onclosetag(chunks[x].slice(1));
-        } else if (chunks[x][0] === '!') {
-          func.oncomment(chunks[x]);
+          func.onclosetag(chunks[idx].slice(1));
+        } else if (chunks[idx][0] === '!') {
+          func.oncomment(chunks[idx]);
         } else {
           // console.log(11, [chunks[x]])
-          var attrs = {}, tagName, chunk = chunks[x];
-          var pos = chunk.indexOf(' ');
-
-          //no attributes
-          if (pos === -1) {
-            tagName = chunk;
-          } else {
-            tagName = chunk.slice(0, pos);
-            var len = chunk.length;
-            //console.log(222, [pos, chunk]);
-            while(++pos < len) {
-              var eq_pos = chunk.indexOf('=', pos);
-
-              // ** attribute without value (last attribute) **
-              if (eq_pos === -1) {
-                attrs[chunk.slice(pos)] = "";
-                //attrs required will be required="", while is valid syntax
-                //http://www.w3.org/TR/html-markup/syntax.html#syntax-attrs-empty
-                break;
-              }
-
-              // uncomment this if you need no value attribute in the middle
-              // ** attribute without value (middle attribute) **
-              // var sp_pos = chunk.indexOf(' ', pos);
-              // if (sp_pos > 0 && sp_pos < eq_pos) {
-              //   attrs[chunk.slice(pos, sp_pos)] = "";
-              //   pos = sp_pos;
-              //   continue;
-              // }
-
-              //console.log(33, [eq_pos]);
-              var attrName = chunk.slice(pos, eq_pos), attrVal;
-              //console.log(331, [attrName]);
-
-              var valStart = chunk[eq_pos + 1], valEndPos;
-              //console.log(332, [valStart]);
-
-              //if attribute value is start with quote
-              if(valStart === '"' || valStart === "'") {
-                valEndPos = chunk.indexOf(valStart, eq_pos + 2);
-                attrVal =  chunk.slice(eq_pos + 2, valEndPos);
-                //console.log(311, [eq_pos, valEndPos, attrVal]);
-                attrs[attrName] = html_decode(attrVal);
-                pos = valEndPos + 1;
-              } else {
-
-                valEndPos = chunk.indexOf(' ', eq_pos + 2);
-                //console.log(44, [valEndPos]);
-                if(valEndPos === -1) {
-                  attrVal =  chunk.slice(eq_pos + 1);
-                  attrs[attrName] = html_decode(attrVal);
-                  //console.log(442, [attrVal]);
-                  break;
-
-                } else {
-                  attrVal =  chunk.slice(eq_pos + 1, valEndPos);
-                  attrs[attrName] = html_decode(attrVal);
-                  //console.log(313, [eq_pos, valEndPos, attrVal]);
-                  pos = valEndPos;
-                }
-              }
-            }
-          }
-          //console.log(111,attrs);
-          //console.log(1111,tagName, attrs, [attrs ? 1: 2]);
-          func.onopentag(tagName, attrs);
+          func.onopentag.apply(this, parseAttrs(chunks[idx]));
         }
-      } else if (chunks[x] === '>' && chunks[x+1] !== '<') {
-        x++;
-        if(chunks[x]) {
+      } else if (chunks[idx] === '>' && chunks[idx+1] !== '<') {
+        idx++;
+        if(chunks[idx]) {
           // console.log(222,chunks[x])
-          func.ontext(chunks[x]);
+          func.ontext(chunks[idx]);
         }
       }
 
-    } while(++x < chunks.length);
+    } while(++idx < chunksLen);
   };
+
+  function patchAttr(prev, next, patchType) {
+    var prevObj, nextObj, tagId;
+    if (patchType === 1) { //textNode
+      var pos = prev.indexOf('<');
+      prevObj = [0, 0, pos >= 0 ? pos : prev.length];
+      // console.log('patch textNode', next, prev, nextObj, prevObj);
+    } else {
+      prevObj = parseAttrs(prev);
+      nextObj = parseAttrs(next);
+      var prevAttrs = prevObj[1];
+      var newAttrs = nextObj[1];
+      var elem;
+      tagId = newAttrs.id;
+      // console.log(prevObj, nextObj);
+      delete newAttrs.id;
+      // delete prevAttrs.id;
+      for (var x in newAttrs) {
+        if (newAttrs[x] !== prevAttrs[x]) {
+          if(!elem) {
+            elem = document.getElementById(tagId);
+            if (!elem) {
+              console.log('tag not found', [tagId]);
+              return;
+            }
+          }
+          elem.setAttribute(x, newAttrs[x]);
+          // delete prevAttrs[x];
+        }
+      }
+    }
+    // console.log('tagId', [tagId]);
+    return tagId;
+  }
+
+  function getId(partial) {
+    var pos = partial.indexOf(" id="), endPos;
+    if (pos >= 0) {
+      pos += 4;
+      var quoted = partial.charAt(pos);
+      if (quoted === "'" || quoted === '"') {
+        pos++;
+        endPos = partial.indexOf(quoted, pos + 1);
+      } else {
+        endPos = partial.indexOf(' ', pos);
+        if (endPos === -1) {
+          endPos = partial.indexOf('>', pos);
+          if (endPos === -1) {
+            endPos = partial.length;
+          }
+        }
+      }
+    }
+    return partial.substring(pos, endPos);
+  }
 
   var compiledCount = 0;
   var compiledHash = {};
 
   return {
+    diff: function(prev, next) {
+      var textAttr = "textContent" in document.body ? "textContent" : "innerText";
+      var C1 = prev.match(/([<>]|[^<>]+)/g), C1L = C1.length;
+      var C2 = next.match(/([<>]|[^<>]+)/g), C2L = C2.length;
+      var idx = 0, tagId, elem;
+      if (C1L !== C2L){
+        console.log("len not match");
+        return;
+      }
+      do {
+        // console.log(C1[x], C2[x]);
+        if(C1[idx] === "<"){
+          idx++;
+          if(C1[idx][0] === "/" || C1[idx][0] === "!"){
+            continue;
+          } else {
+            //attributes
+            if(C1[idx] !== C2[idx]){
+              tagId = patchAttr(C1[idx], C2[idx]);
+              // console.log([C1[x],C2[x]]);
+            } else {
+              // tagId = /id="?([^\s">]+)"?/.test(C1[idx]) && RegExp.$1;
+              tagId = getId(C1[idx]);
+            }
+          }
+        } else if (C1[idx] === ">" && C1[idx+1] !== "<") {
+          idx++;
+          if (C1[idx] !== C2[idx]) {
+            // console.log(C1[idx], C2[idx]);
+            elem = document.getElementById(tagId);
+            if (elem && elem.firstChild && elem.firstChild.nodeType === 3) {
+              // console.log('textApplied', [tagId, C2[idx]]);
+              elem.firstChild[textAttr] = C2[idx];
+            } else {
+              console.log('tag not found', [tagId, C1[idx], C2[idx]]);
+            }
+          }
+        }
+      } while(idx++ < C1L);
+    },
     compile: function(template, options){
       options = options || {};
       var val_mod = options.loose ? "||''" : '';
+      var isPatch = options.watchDiff;
       //variable cache
       var VarMap = {$index: 1, undefined: 1, $attr:1};
       var level = 0, LevelMap = {}, LevelVarMap = {}, WatchMap = {}, Watched, doTAPass, doTAContinue, compiledFn;
@@ -128,7 +231,11 @@ var doTA = (function(){'use strict';
       compiledHash[uniqId] = uniqId;
 
       var FnText = Indent(level) + "'use strict';var " +
-        (options.diff ? 'N=0,H=doTA.H['+ compiledHash[uniqId] +']=doTA.H['+ compiledHash[uniqId] +']||{},' : '') +
+        (isPatch ?
+          'N=0,J=' + uniqId +
+          ',H=doTA.H[J]=X?doTA.H[J]||"":""' +
+          ',P1=0,C1=0,PX=0,DX=0,X1="",X2="",' :
+        '') +
       "R='';\n"; //ToDO: check perf on var declaration
 
       //clean up extra white spaces and line break
@@ -241,7 +348,7 @@ var doTA = (function(){'use strict';
       };
 
       //parse the element
-      parse(template, {
+      parseHTML(template, {
         //open tag with attributes
         onopentag: function(tagName, attrs){
           // debug && console.log('onopentag', [tagName, attrs]);
@@ -297,9 +404,9 @@ var doTA = (function(){'use strict';
             if (attrs['ng-if']) {
               if (attrs.wait || attrs.watch) {
                 attrs['id'] = idHash[uniqId + '.' + level] = attrs['id'] || uniqId + ".'+N+'";
-                FnText += Indent(level,2) + (!Watched ? 'var T=this;T.W=[];' : '') + 'var W={I:"' + uniqId + '.' + '"+ ++N,W:"' + attrs['ng-if'] + '"' + (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
+                FnText += Indent(level,2) + (!Watched ? 'var ' + (isPatch ? '': 'N=0,') + 'T=this;T.W=[];' : '') + 'var W={I:"' + uniqId + '.' + '"+ ++N,W:"' + attrs['ng-if'] + '"' + (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
                 WatchMap[level] = Watched = 1;
-                FnText += Indent(level,2) + 'W.F=function(S,F){var R="";\n'; //jshint said "use strict"; is not needed
+                FnText += Indent(level,2) + 'W.F=function(S,F,$attr,X){var R="";\n'; //jshint said "use strict"; is not needed
                 delete attrs.watch; delete attrs.wait;
               }
               LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
@@ -362,19 +469,9 @@ var doTA = (function(){'use strict';
             }
           }
 
-          if (options.diff) {
-            FnText += Indent(level) + "if(H[N]){";
-              // 'if(H[N])' +
-            //   'console.log("exists")' +
-            // for(var k in parsedAttrs) {
-            //   FnText += ',' + k + ':"' + parsedAttrs[k] + '"';
-            // }
-            FnText += "}else{" + 'H[N]={tN:"'+tagName+'"';
-            for(var k in parsedAttrs) {
-              FnText += ',"' + k + '":"' + parsedAttrs[k] + '"';
-            }
-            FnText += '}}\n';
-
+          if (isPatch) {
+            //console.log("tag before",[P1],[C1,DX],[R.length-(C1+DX)]);
+            // FnText += Indent(level) + 'P1+=R.length-(C1+DX),C1=R.length; \n';
             parsedAttrs['id'] = parsedAttrs['id'] || uniqId + ".'+N+'";
           }
 
@@ -386,8 +483,17 @@ var doTA = (function(){'use strict';
           }
           FnText += ">';\n";
 
-          if (options.diff) {
-            FnText += Indent(level) + "N++; \n"
+          if (isPatch) {
+          //   FnText += Indent(level) + "if(H){" +
+          //     "DX=R.length-C1,X1=H.substring(P1,H.indexOf('>',P1)+1),X2=R.substr(C1,DX);\n" +
+          //     "if(X1!==X2){" +
+          //       // "console.log('" + tagName + "',[P1],[C1],[DX],[X1,X2]);" +
+          //       "P1+=doTA.patch(X1,X2);" +
+          //     "}else{P1+=DX}"+
+          //     // "PX=C1-P1,P1+=PX;" +
+          //     // "console.log('adjust','" + tagName + "',[P1],[C1],[DX]);" +
+          //   "}\n";
+            FnText += Indent(level) + "N++; \n";
           }
 
           //expand doTA templates with expand=1 option
@@ -401,7 +507,7 @@ var doTA = (function(){'use strict';
               }
             }
             FnText += Indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attrs['dota-render'] + '";\n';
-            FnText += Indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P)); \n';
+            FnText += Indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P,X)); \n';
           }
 
           //some tag dont have close tag
@@ -421,13 +527,14 @@ var doTA = (function(){'use strict';
 
         //close tag
         onclosetag: function(tagName){
-          //just write closing tag back
-          FnText += Indent(level-1) + "R+='</" + tagName + ">';\n";
           level--;
+
+          //just write closing tag back
+          FnText += Indent(level) + "R+='</" + tagName + ">';\n";
 
           if (WatchMap[level]) {
             FnText += Indent(level, 1) + '} else {\n';
-            FnText += Indent(level) + 'R+=\'<' + tagName + ' id="' + idHash[uniqId + '.' + level] + '" style="display:none"></' + tagName + '>\'; \n';
+            FnText += Indent(level) + 'R+=\'<' + tagName + ' id=' + idHash[uniqId + '.' + level] + ' style=display:none></' + tagName + '>\'; \n';
           }
 
           //close "if", "for", "while" blocks
@@ -441,7 +548,7 @@ var doTA = (function(){'use strict';
 
           if (WatchMap[level]) {
             FnText += Indent(level, 2) + 'return R;}; \n';
-            FnText += Indent(level, 2) + 'R+=W.F(S,F); \n';
+            FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X); \n';
             WatchMap[level] = 0;
           }
 
@@ -453,14 +560,16 @@ var doTA = (function(){'use strict';
 
         //text node
         ontext: function(text){
+
           //just expand interpolation on text nodes
           if (text.indexOf('{{') >= 0){
             //console.log(22, 'start');
             text = TextInterpolate(text);
           }
+
           //remove extra spacing, and line breaks
-          FnText += Indent(level) + ('R+=\'' + text + '\';\n').replace(/\+''|''\+/g,'');
-          //console.log(111, FnText.slice(-50));
+          FnText += Indent(level) + ('R+=\'' + text + '\';\n')
+            .replace(/\+''|''\+/g,'');
         },
 
         //comment node
@@ -470,6 +579,12 @@ var doTA = (function(){'use strict';
           FnText += Indent(level) + "R+='<" + data.replace(/'/g,"\\'") + ">';\n";
         }
       });
+
+      if (isPatch) {
+        FnText += Indent(0) + 'if(H){doTA.diff(H,R)}' +
+          'doTA.H[' + uniqId + ']=R;\n';
+      }
+
       FnText += Indent(0) +'return R;\n';
 
       //concat some lines by default for performance
@@ -482,9 +597,11 @@ var doTA = (function(){'use strict';
       if(options.debug) {
         /**/console.log(FnText);
       }
+      // console.log(FnText);
+
       try {
         //$scope, $filter
-        compiledFn = new Function('S', 'F', '$attr', FnText);
+        compiledFn = new Function('S', 'F', '$attr', 'X', FnText);
         if (Watched) {
           compiledFn = {W:[], F: compiledFn};
         }
@@ -494,6 +611,7 @@ var doTA = (function(){'use strict';
         }
         throw err;
       }
+
       // just for less array usage on heap profiling
       // but this may trigger GC more
       FnText = level = LevelMap = LevelVarMap = VarMap = doTAPass = null;

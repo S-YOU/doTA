@@ -15,6 +15,9 @@
     }
   });
   var BoolMap = {0: 0, 'false': 0};
+  function makeBool(attr, defaultValue){
+    return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
+  }
 
   function forEachArray(src, iter, ctx) {
     if (src.forEach) {
@@ -63,14 +66,13 @@
             var attrDoTAOnloadScope = attrs.dotaOnloadScope;
             var attrLoaded = attrs.loaded;
             var attrInline = attrs.inline;
+            var attrWatchDiff = attrs.watchDiff;
             var origAttrMap = attrs.$attr;
 
-            //not to show "undefined" in templates
-            attrLoose = attrs.loose = attrLoose in BoolMap ? BoolMap[attrLoose] : attrLoose || 1;
-            //concat continuous append into one
-            attrOptimize = attrs.optimize = attrOptimize in BoolMap ? BoolMap[attrOptimize] : attrOptimize || 1;
-            //ng-click to native click
-            attrEvent = attrs.event = attrEvent in BoolMap ? BoolMap[attrEvent] : attrEvent || 1;
+            attrLoose = attrs.loose = makeBool(attrLoose, 1); //falsy => ''
+            attrOptimize = attrs.optimize = makeBool(attrOptimize, 0);
+            attrDebug = attrs.debug = makeBool(attrDebug, 0);
+            attrEvent = attrs.event = makeBool(attrEvent, 1); //ng-click to native click
             attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
             var params = {};
 
@@ -119,7 +121,7 @@
               return compiledFn;
             }
 
-            function render(func){
+            function render(func, patch){
 
               if (attrScope || attrNgController) {
                 console.log('scope', attrScope);
@@ -149,7 +151,7 @@
                 //execute the function by passing scope(data basically), and $filter
                 try {
                   console.time('render:' + attrDoTARender);
-                  var v = func.F ? func.F(NewScope, $filter, params) : func(NewScope, $filter, params);
+                  var v = func.F ? func.F(NewScope, $filter, params, patch) : func(NewScope, $filter, params, patch);
                   console.timeEnd('render:' + attrDoTARender);
                   console.log(attrDoTARender,'after render');
                 } catch (x) {
@@ -161,8 +163,11 @@
                   console.log(v);
                 }
 
+                // console.log('patch?', [patch]);
+                if (patch) { return; }
+
                 //directly write raw html to element
-                //we shouldn'$templateCache have jqLite cached nodes here,
+                //we shouldn't have jqLite cached nodes here,
                 // so no deallocation by jqLite needed
                 console.time('innerHTML:' + attrDoTARender);
                 elem[0].innerHTML = v;
@@ -295,17 +300,28 @@
               NewScope.$watchCollection(attrWatch, function(newValue, oldValue){
                 if(newValue !== oldValue && doTA.C[attrDoTARender]) {
                   console.log(attrDoTARender, 'watch before render');
-                  loader(true);
+                  render(doTA.C[attrDoTARender]);
                   console.log(attrDoTARender, 'watch after render');
                 }
               });
             }
 
-            function loader(force){
+            if(attrWatchDiff) {
+              console.log(attrDoTARender, 'registering diff watch for', attrWatchDiff);
+              NewScope.$watchCollection(attrWatchDiff, function(newValue, oldValue){
+                if(newValue !== oldValue && doTA.C[attrDoTARender]) {
+                  console.log(attrDoTARender, 'diff watch before render');
+                  render(doTA.C[attrDoTARender], true);
+                  console.log(attrDoTARender, 'diff watch after render');
+                }
+              });
+            }
+
+            function loader(){
               if(doTA.C[attrDoTARender]){
                 console.log(attrDoTARender,'get compile function from cache');
                 //watch need to redraw, also inline, because inline always hasChildNodes
-                if (elem[0].hasChildNodes() && !attrInline && !force) {
+                if (elem[0].hasChildNodes() && !attrInline) {
                   console.log('hasChildNodes', attrDoTARender);
                   render();
                 } else {
