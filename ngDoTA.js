@@ -31,6 +31,7 @@
     return src;
   }
 
+  //hide and destroy children
   function destroyChildren(elem) {
     var child = elem.firstChild, hiddenTags = [];
     if (child) {
@@ -41,7 +42,8 @@
         hiddenTags.push(child);
       }
     }
-    //destroy children block everything, so do it later
+    //destroying children block everything
+    // so do it later, since deleting don't have to be synchronous
     setTimeout(function(){
       console.time('removeChild');
       forEachArray(hiddenTags, function(child) {
@@ -169,6 +171,11 @@
 
               //unless prerender
               if (func) {
+                //trigger destroying children
+                if (!patch && elem[0].firstChild) {
+                  destroyChildren(elem[0]);
+                }
+
                 console.log(attrDoTARender,'before render');
                 //execute the function by passing scope(data basically), and $filter
                 try {
@@ -188,24 +195,21 @@
                 // console.log('patch?', [patch]);
                 if (patch) { return; }
 
-                //destroying child is slower
-                //this has same effect on just directly setting innerHTML
                 if (elem[0].firstChild) {
                   console.time('appendChild:' + attrDoTARender);
-                  //destroy children later
-                  destroyChildren(elem[0]);
                   var newNode = document.createElement('div'), firstChild;
                   newNode.innerHTML = v;
                   while (firstChild = newNode.firstChild) {
                     elem[0].appendChild(firstChild);
                   }
                   console.timeEnd('appendChild:' + attrDoTARender);
+                  console.log(attrDoTARender, 'after appendChild');
                 } else {
                   console.time('innerHTML:' + attrDoTARender);
                   elem[0].innerHTML = v;
                   console.timeEnd('innerHTML:' + attrDoTARender);
+                  console.log(attrDoTARender, 'after innerHTML');
                 }
-                console.log(attrDoTARender, 'after innerHTML');
               }
 
               if(attrEvent) {
