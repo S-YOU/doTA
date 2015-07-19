@@ -31,6 +31,28 @@
     return src;
   }
 
+  function destroyChildren(elem) {
+    var child = elem.firstChild, hiddenTags = [];
+    if (child) {
+      child.hidden = 1;
+      hiddenTags.push(child);
+      while (child = child.nextSibling) {
+        child.hidden = 1;
+        hiddenTags.push(child);
+      }
+    }
+    //destroy children block everything, so do it later
+    setTimeout(function(){
+      console.time('removeChild');
+      forEachArray(hiddenTags, function(child) {
+        if (child && child.parentNode) {
+          child.parentNode.removeChild(child);
+        }
+      });
+      console.timeEnd('removeChild');
+    })
+  }
+
   angular.module('doTA', [])
     .config(['$provide',function(P) {
       P.factory('doTA', function(){return doTA;});
@@ -166,13 +188,24 @@
                 // console.log('patch?', [patch]);
                 if (patch) { return; }
 
-                //directly write raw html to element
-                //we shouldn't have jqLite cached nodes here,
-                // so no deallocation by jqLite needed
-                console.time('innerHTML:' + attrDoTARender);
-                elem[0].innerHTML = v;
-                console.timeEnd('innerHTML:' + attrDoTARender);
-                console.log(attrDoTARender,'after innerHTML set to content');
+                //destroying child is slower
+                //this has same effect on just directly setting innerHTML
+                if (elem[0].firstChild) {
+                  console.time('appendChild:' + attrDoTARender);
+                  //destroy children later
+                  destroyChildren(elem[0]);
+                  var newNode = document.createElement('div'), firstChild;
+                  newNode.innerHTML = v;
+                  while (firstChild = newNode.firstChild) {
+                    elem[0].appendChild(firstChild);
+                  }
+                  console.timeEnd('appendChild:' + attrDoTARender);
+                } else {
+                  console.time('innerHTML:' + attrDoTARender);
+                  elem[0].innerHTML = v;
+                  console.timeEnd('innerHTML:' + attrDoTARender);
+                }
+                console.log(attrDoTARender, 'after innerHTML');
               }
 
               if(attrEvent) {

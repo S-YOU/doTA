@@ -1,25 +1,32 @@
 var doTA = (function(){'use strict';
-  /* for ie8? */
+  /* for ie8 */
   if(!String.prototype.trim){
     String.prototype.trim = function(){
       return this.replace(/^\s+|\s+$/g,'');
     };
   }
 
-  function forEach(obj, fn){
-   for (var x in obj) {
-     // if (x in obj) {
-       fn.call(obj[x], x);
-     // }
-   }
-  }
+  //Pretty Indent for debuging
+  function Indent(n, x){
+    var ret = new Array(n + 2).join('    ');
+    return x ? ret.slice(0,-2 * x) : ret;
+  };
 
+  //obj forEach, not currently used
+  // function forEach(obj, fn){
+  //  for (var x in obj) {
+  //    fn.call(obj[x], x);
+  //  }
+  // }
+
+  //decode html entities
   function html_decode(text) {
     return text.indexOf('&') === -1 ? text : text
       .replace(/&gt;/g,'>').replace(/&lt;/g,'<')
       .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
   }
 
+  //parse attributes from html open tag and make dict object
   function parseAttrs(chunk) {
     var attrs = {}, tagName;
     var pos = chunk.indexOf(' ');
@@ -91,6 +98,7 @@ var doTA = (function(){'use strict';
   var events = ' change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
   var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+  //minimal stripped down html parser
   function parseHTML(html, func){
     if (!html) {return;}
     var chunks = html.match(/([<>]|[^<>]+)/g), idx=0, chunksLen = chunks.length;
@@ -120,6 +128,7 @@ var doTA = (function(){'use strict';
     } while(++idx < chunksLen);
   };
 
+  //parse html of open tag and patch attribute if different
   function patchAttr(prev, next, patchType) {
     var prevObj, nextObj, tagId;
     if (patchType === 1) { //textNode
@@ -154,6 +163,8 @@ var doTA = (function(){'use strict';
     return tagId;
   }
 
+  //extract value of id from part of html open tag
+  //equivalent of /id="?([^\s">]+)"?/.test(C1[idx]) && RegExp.$1;
   function getId(partial) {
     var pos = partial.indexOf(" id="), endPos;
     if (pos >= 0) {
@@ -175,50 +186,54 @@ var doTA = (function(){'use strict';
     return partial.substring(pos, endPos);
   }
 
+  function diffPatchHTML(prev, next) {
+    var textAttr = "textContent" in document.body ? "textContent" : "innerText";
+    var C1 = prev.match(/([<>]|[^<>]+)/g), C1L = C1.length;
+    var C2 = next.match(/([<>]|[^<>]+)/g), C2L = C2.length;
+    var idx = 0, tagId, elem;
+    if (C1L !== C2L){
+      console.log("len not match, not supported now");
+      return;
+    }
+    do {
+      // console.log(C1[x], C2[x]);
+      if(C1[idx] === "<"){
+        idx++;
+        if(C1[idx][0] === "/" || C1[idx][0] === "!"){
+          continue;
+        } else {
+          //attributes
+          if(C1[idx] !== C2[idx]){
+            tagId = patchAttr(C1[idx], C2[idx]);
+            // console.log([C1[x],C2[x]]);
+          } else {
+            tagId = getId(C1[idx]);
+          }
+        }
+      } else if (C1[idx] === ">" && C1[idx+1] !== "<") {
+        idx++;
+        //textNode, only support firstChild here
+        if (C1[idx] !== C2[idx]) {
+          // console.log(C1[idx], C2[idx]);
+          elem = document.getElementById(tagId);
+          if (elem) {
+            if (elem.firstChild && elem.firstChild.nodeType === 3) {
+              // console.log('textApplied', [tagId, C2[idx]]);
+              elem.firstChild[textAttr] = C2[idx];
+            } //else to log something?
+          } else {
+            console.log('tag not found', [tagId, C1[idx], C2[idx]]);
+          }
+        }
+      }
+    } while(idx++ < C1L);
+  }
+
   var compiledCount = 0;
   var compiledHash = {};
 
   return {
-    diff: function(prev, next) {
-      var textAttr = "textContent" in document.body ? "textContent" : "innerText";
-      var C1 = prev.match(/([<>]|[^<>]+)/g), C1L = C1.length;
-      var C2 = next.match(/([<>]|[^<>]+)/g), C2L = C2.length;
-      var idx = 0, tagId, elem;
-      if (C1L !== C2L){
-        console.log("len not match");
-        return;
-      }
-      do {
-        // console.log(C1[x], C2[x]);
-        if(C1[idx] === "<"){
-          idx++;
-          if(C1[idx][0] === "/" || C1[idx][0] === "!"){
-            continue;
-          } else {
-            //attributes
-            if(C1[idx] !== C2[idx]){
-              tagId = patchAttr(C1[idx], C2[idx]);
-              // console.log([C1[x],C2[x]]);
-            } else {
-              // tagId = /id="?([^\s">]+)"?/.test(C1[idx]) && RegExp.$1;
-              tagId = getId(C1[idx]);
-            }
-          }
-        } else if (C1[idx] === ">" && C1[idx+1] !== "<") {
-          idx++;
-          if (C1[idx] !== C2[idx]) {
-            // console.log(C1[idx], C2[idx]);
-            elem = document.getElementById(tagId);
-            if (elem && elem.firstChild && elem.firstChild.nodeType === 3) {
-              // console.log('textApplied', [tagId, C2[idx]]);
-              elem.firstChild[textAttr] = C2[idx];
-            } else {
-              console.log('tag not found', [tagId, C1[idx], C2[idx]]);
-            }
-          }
-        }
-      } while(idx++ < C1L);
-    },
+    diff: diffPatchHTML,
     compile: function(template, options){
       options = options || {};
       var val_mod = options.loose ? "||''" : '';
@@ -339,12 +354,6 @@ var doTA = (function(){'use strict';
           }
           return "'+(" + val + val_mod +  ")+'";
         }
-      };
-
-      //Pretty Indent for debuging
-      function Indent(n, x){
-        var ret = new Array(n + 2).join('    ');
-        return x ? ret.slice(0,-2 * x) : ret;
       };
 
       //parse the element
