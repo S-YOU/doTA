@@ -226,10 +226,21 @@ var doTA = (function() {'use strict';
     } while(idx++ < C1L);
   }
 
+  function ngClassToClass(classObj, className) {
+    className = className || '';
+    for (var name in classObj) {
+      if (classObj[name]) {
+        className += (className ? ' ' : '') + name;
+      }
+    }
+    return className
+  }
+
   var compiledCount = 0;
   var compiledHash = {};
 
   return {
+    nc: ngClassToClass,
     diff: diffPatchHTML,
     compile: function(template, options) {
       options = options || {};
@@ -421,9 +432,13 @@ var doTA = (function() {'use strict';
             }
             //ToDO: ng-class is complicated, this need some more work!
             if (attrs['ng-class']) {
-              FnText += Indent(level) + 'var s=[],n=' + AttachScope(attrs['ng-class']) + ';\n';
-              FnText += Indent(level) + 'for(var c in n){n[c]&&s.push(c);}\n';
+              // FnText += Indent(level) + 'var s="' + (attrs.class || '') +
+              //   '",n=' + AttachScope(attrs['ng-class']) + ';\n';
+              // FnText += Indent(level) + 'for(var c in n){if(n[c])s+=(s?" ":"")+c;}\n';
+              attrs.class = "'+doTA.nc(" + AttachScope(attrs['ng-class']) +
+                (attrs.class ? ",'" + attrs.class + "'": '') + ")+'";
               hasNgClass = 1;
+              // delete attrs.class;
               delete attrs['ng-class'];
             }
 
@@ -450,25 +465,16 @@ var doTA = (function() {'use strict';
 
           //other attributes, expand interpolations
           for(var x in attrs) {
-            //console.log(20,[x],[attrs],[attrs[x]])
-            var val = attrs[x];
-
-            if (hasNgClass && x === 'class') { //when both ng-class and class exists
-              FnText += Indent(level) + 's.push("' + val + '"); \n';
-
-            } else {
-              parsedAttrs[x] = (x === 'id' ? val : Interpolate(val));
-
-              //ng-repeat loop variables are not available!
-              // only way to acccess is to use $index like "data[$index]"
-              // instead of "item" as in "item in data"
-              if (parsedAttrs[x].indexOf('$index') >= 0) {
-                //console.log([val], LevelMap[level]);
-                for(var j = level; j >= 0; j--) {
-                  if (LevelVarMap[j]) {
-                    parsedAttrs[x] = parsedAttrs[x].replace(/\$index/g, "'+" + LevelVarMap[j] + "+'");
-                    break;
-                  }
+            parsedAttrs[x] = (x === 'id' || (hasNgClass && x === 'class') ? attrs[x] : Interpolate(attrs[x]));
+            //ng-repeat loop variables are not available!
+            // only way to acccess is to use $index like "data[$index]"
+            // instead of "item" as in "item in data"
+            if (parsedAttrs[x].indexOf('$index') >= 0) {
+              //console.log([val], LevelMap[level]);
+              for(var j = level; j >= 0; j--) {
+                if (LevelVarMap[j]) {
+                  parsedAttrs[x] = parsedAttrs[x].replace(/\$index/g, "'+" + LevelVarMap[j] + "+'");
+                  break;
                 }
               }
             }
@@ -479,7 +485,8 @@ var doTA = (function() {'use strict';
           }
 
           //write tag back as string
-          FnText += Indent(level) + "R+='<" + tagName + (hasNgClass ? " class=\"'+s.join(' ')+'\"" : '');
+          FnText += Indent(level) + "R+='<" + tagName;
+          //+ (hasNgClass ? " class=\"'+s+'\"" : '');
           //other attibutes
           for(var k in parsedAttrs) {
             FnText += " " + k + '="' + parsedAttrs[k] + '"';
