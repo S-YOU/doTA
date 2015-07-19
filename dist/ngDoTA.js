@@ -368,7 +368,7 @@ var doTA = (function() {'use strict';
         //open tag with attributes
         onopentag: function(tagName, attrs) {
           // debug && console.log('onopentag', [tagName, attrs]);
-          var parsedAttrs = {}, hasNgClass;
+          var parsedAttrs = {}, customId, hasNgClass;
 
           //skip parsing ng-if, ng-repeat, ng-class with, dota
           // but interpolation will still be evaluated (by-design)
@@ -419,7 +419,7 @@ var doTA = (function() {'use strict';
             //ng-if to javascript if
             if (attrs['ng-if']) {
               if (attrs.wait || attrs.watch) {
-                attrs['id'] = idHash[uniqId + '.' + level] = attrs['id'] || uniqId + ".'+N+'";
+                customId = 1;
                 FnText += Indent(level, 2) + (!Watched ? 'var ' + (isPatch ? '': 'N=0,') + 'T=this;T.W=[];' : '') + 'var W={I:"' + uniqId + '.' + '"+ ++N,W:"' + attrs['ng-if'] + '"' + (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
                 WatchMap[level] = Watched = 1;
                 FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X){var R="";\n'; //jshint said "use strict"; is not needed
@@ -465,7 +465,7 @@ var doTA = (function() {'use strict';
 
           //other attributes, expand interpolations
           for(var x in attrs) {
-            parsedAttrs[x] = (x === 'id' || (hasNgClass && x === 'class') ? attrs[x] : Interpolate(attrs[x]));
+            parsedAttrs[x] = ((hasNgClass && x === 'class') ? attrs[x] : Interpolate(attrs[x]));
             //ng-repeat loop variables are not available!
             // only way to acccess is to use $index like "data[$index]"
             // instead of "item" as in "item in data"
@@ -480,8 +480,8 @@ var doTA = (function() {'use strict';
             }
           }
 
-          if (isPatch) {
-            parsedAttrs['id'] = parsedAttrs['id'] || uniqId + ".'+N+'";
+          if (isPatch || customId) {
+            parsedAttrs['id'] = idHash[uniqId + '.' + level] = parsedAttrs['id'] || uniqId + ".'+N+'";
           }
 
           //write tag back as string
