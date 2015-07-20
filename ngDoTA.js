@@ -176,20 +176,21 @@
                   destroyChildren(elem[0]);
                 }
 
-                console.log(attrDoTARender,'before render');
+                console.log(attrDoTARender, 'before render', patch);
                 //execute the function by passing scope(data basically), and $filter
                 try {
                   console.time('render:' + attrDoTARender);
                   var v = func.F ? func.F(NewScope, $filter, params, patch) : func(NewScope, $filter, params, patch);
                   console.timeEnd('render:' + attrDoTARender);
-                  console.log(attrDoTARender,'after render');
+                  console.log(attrDoTARender,'after render', patch);
                 } catch (x) {
                   /**/console.log('render error', func);
                   throw x;
                 }
 
                 if(attrDebug) {
-                  console.log(v);
+                  console.log(attrDoTARender, v);
+                  // console.log(attrDoTARender, (func.F || func).toString());
                 }
 
                 // console.log('patch?', [patch]);
@@ -289,7 +290,7 @@
                   // console.log('watch', w);
 
                   watches[w.I] = NewScope.$watch(w.W, (function(w) {
-                    return function(newValue, oldValue){
+                    return function(newVal, oldVal){
                       console.log(attrDoTARender, w.W, 'partial watch before render');
                       var oldTag = document.getElementById(w.I);
                       if (!oldTag) { return console.log('tag not found'); }
@@ -334,8 +335,8 @@
 
             if(attrWatch) {
               console.log(attrDoTARender, 'registering watch for', attrWatch);
-              NewScope.$watchCollection(attrWatch, function(newValue, oldValue){
-                if(newValue !== oldValue && doTA.C[attrDoTARender]) {
+              NewScope.$watchCollection(attrWatch, function(newVal, oldVal){
+                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
                   console.log(attrDoTARender, 'watch before render');
                   render(doTA.C[attrDoTARender]);
                   console.log(attrDoTARender, 'watch after render');
@@ -345,8 +346,8 @@
 
             if(attrWatchDiff) {
               console.log(attrDoTARender, 'registering diff watch for', attrWatchDiff);
-              NewScope.$watchCollection(attrWatchDiff, function(newValue, oldValue){
-                if(newValue !== oldValue && doTA.C[attrDoTARender]) {
+              NewScope.$watchCollection(attrWatchDiff, function(newVal, oldVal){
+                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
                   console.log(attrDoTARender, 'diff watch before render');
                   render(doTA.C[attrDoTARender], true);
                   console.log(attrDoTARender, 'diff watch after render');

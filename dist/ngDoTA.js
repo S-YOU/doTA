@@ -20,7 +20,7 @@ var doTA = (function() {'use strict';
   // }
 
   //decode html entities
-  function html_decode(text) {
+  function decodeEntities(text) {
     return text.indexOf('&') === -1 ? text : text
       .replace(/&gt;/g,'>').replace(/&lt;/g,'<')
       .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
@@ -30,16 +30,16 @@ var doTA = (function() {'use strict';
   function parseAttrs(chunk) {
     var attrs = {}, tagName;
     var pos = chunk.indexOf(' ');
-    //no attributes
+
     if (pos !== -1) {
       tagName = chunk.slice(0, pos);
       var len = chunk.length;
       //console.log(222, [pos, chunk]);
       while (++pos < len) {
-        var eq_pos = chunk.indexOf('=', pos);
+        var eqPos = chunk.indexOf('=', pos);
 
         // ** attribute without value (last attribute) **
-        if (eq_pos === -1) {
+        if (eqPos === -1) {
           attrs[chunk.slice(pos)] = "";
           //attrs required will be required="", while is valid syntax
           //http://www.w3.org/TR/html-markup/syntax.html#syntax-attrs-empty
@@ -49,40 +49,41 @@ var doTA = (function() {'use strict';
         // uncomment this if you need no value attribute in the middle
         // ** attribute without value (middle attribute) **
         // var sp_pos = chunk.indexOf(' ', pos);
-        // if (sp_pos > 0 && sp_pos < eq_pos) {
+        // if (sp_pos > 0 && sp_pos < eqPos) {
         //   attrs[chunk.slice(pos, sp_pos)] = "";
         //   pos = sp_pos;
         //   continue;
         // }
 
-        //console.log(33, [eq_pos]);
-        var attrName = chunk.slice(pos, eq_pos), attrVal;
+        //console.log(33, [eqPos]);
+        var attrName = chunk.slice(pos, eqPos), attrVal;
         //console.log(331, [attrName]);
 
-        var valStart = chunk[eq_pos + 1], valEndPos;
+        var valStart = chunk[eqPos + 1], valEndPos;
         //console.log(332, [valStart]);
 
         //if attribute value is start with quote
         if (valStart === '"' || valStart === "'") {
-          valEndPos = chunk.indexOf(valStart, eq_pos + 2);
-          attrVal =  chunk.slice(eq_pos + 2, valEndPos);
-          //console.log(311, [eq_pos, valEndPos, attrVal]);
-          attrs[attrName] = html_decode(attrVal);
+          valEndPos = chunk.indexOf(valStart, eqPos + 2);
+          attrVal =  chunk.slice(eqPos + 2, valEndPos);
+          //console.log(311, [eqPos, valEndPos, attrVal]);
+          attrs[attrName] = decodeEntities(attrVal);
           pos = valEndPos + 1;
         } else {
 
-          valEndPos = chunk.indexOf(' ', eq_pos + 2);
-          //console.log(44, [valEndPos]);
+          valEndPos = chunk.indexOf(' ', eqPos + 2);
+
+          //when no more attributes
           if (valEndPos === -1) {
-            attrVal =  chunk.slice(eq_pos + 1);
-            attrs[attrName] = html_decode(attrVal);
+            attrVal =  chunk.slice(eqPos + 1);
+            attrs[attrName] = decodeEntities(attrVal);
             //console.log(442, [attrVal]);
             break;
 
           } else {
-            attrVal =  chunk.slice(eq_pos + 1, valEndPos);
-            attrs[attrName] = html_decode(attrVal);
-            //console.log(313, [eq_pos, valEndPos, attrVal]);
+            attrVal =  chunk.slice(eqPos + 1, valEndPos);
+            attrs[attrName] = decodeEntities(attrVal);
+            //console.log(313, [eqPos, valEndPos, attrVal]);
             pos = valEndPos;
           }
         }
@@ -90,7 +91,7 @@ var doTA = (function() {'use strict';
     } else {
       tagName = chunk;
     }
-    //console.log(111, attrs);
+
     //console.log(1111, tagName, attrs, [attrs ? 1: 2]);
     return [tagName, attrs, pos];
   }
@@ -128,35 +129,84 @@ var doTA = (function() {'use strict';
     } while(++idx < chunksLen);
   };
 
-  //parse html of open tag and patch attribute if different
-  function patchAttr(prev, next, patchType) {
-    var prevObj, nextObj, tagId;
-    if (patchType === 1) { //textNode
-      var pos = prev.indexOf('<');
-      prevObj = [0, 0, pos >= 0 ? pos : prev.length];
-      // console.log('patch textNode', next, prev, nextObj, prevObj);
-    } else {
-      prevObj = parseAttrs(prev);
-      nextObj = parseAttrs(next);
-      var prevAttrs = prevObj[1];
-      var newAttrs = nextObj[1];
-      var elem;
-      tagId = prevAttrs.id;
-      // console.log(prevObj, nextObj);
-      for (var x in newAttrs) {
-        if (newAttrs[x] !== prevAttrs[x]) {
-          if (!elem) {
-            elem = document.getElementById(tagId);
-            if (!elem) {
-              console.log('tag not found', [tagId]);
-              return;
+  //parse attributes from html open tag and make dict object
+  function parsePatchAttrs(chunk1, chunk2) {
+    var tagId, elem;
+    var pos1 = chunk1.indexOf(' ');
+    var eqPos1, eqPos2;
+    var valStart, valEndPos1, valEndPos2, posDiff = 0;
+    var attrName, attrVal1, attrVal2;
+    var len1 = chunk1.length;
+    // console.log('chunks', [chunk1, chunk2]);
+    if (pos1 !== -1) {
+      while (++pos1 < len1) {
+        eqPos1 = chunk1.indexOf('=', pos1);
+        if (eqPos1 === -1) {
+          console.log('single attr: diff not supported?', [chunk1, chunk2]);
+          break;
+        }
+
+        attrName = chunk1.slice(pos1, eqPos1);
+
+        valStart = chunk1[eqPos1 + 1];
+
+        //if attribute value is start with quote
+        if (valStart === '"' || valStart === "'") {
+          valEndPos1 = chunk1.indexOf(valStart, eqPos1 + 2);
+          attrVal1 =  chunk1.slice(eqPos1 + 2, valEndPos1);
+          if (attrName === 'id') {
+            tagId = attrVal1;
+          } else {
+            eqPos2 = eqPos1 + posDiff;
+            valEndPos2 = chunk2.indexOf(valStart, eqPos2 + 2);
+            attrVal2 =  chunk2.slice(eqPos2 + 2, valEndPos2);
+            posDiff = valEndPos2 - valEndPos1;
+            if (attrVal1 !== attrVal2) {
+              // console.log('posDiff', [valEndPos2 - valEndPos1,
+              //   valStart, valStart2,
+              //   eqPos1, eqPos2,
+              //   attrVal1, attrVal2])
+              if (!elem) {
+                elem = document.getElementById(tagId);
+                if (!elem) {
+                  console.log('tag not found', [tagId]);
+                  return;
+                }
+              }
+              elem.setAttribute(attrName, attrVal2);
             }
           }
-          elem.setAttribute(x, newAttrs[x]);
+          pos1 = valEndPos1 + 1;
+        } else {
+
+          valEndPos1 = chunk1.indexOf(' ', eqPos1 + 2);
+
+          //when no more attribute
+          if (valEndPos1 === -1) {
+            if (!tagId) {
+              attrVal1 =  chunk1.slice(eqPos1 + 1);
+              if (attrName === 'id') {
+                tagId = attrVal1;
+              } else {
+                console.log('not supported?', [attrName, attrVal1]);
+              }
+            }
+            break;
+
+          } else {
+            if (!tagId) {
+              attrVal1 =  chunk1.slice(eqPos1 + 1, valEndPos1);
+              if (attrName === 'id') {
+                tagId = attrVal1;
+              } else {
+                console.log('not supported?', [attrName, attrVal1]);
+              }
+            }
+            pos1 = valEndPos1;
+          }
         }
       }
     }
-    // console.log('tagId', [tagId]);
     return tagId;
   }
 
@@ -201,7 +251,7 @@ var doTA = (function() {'use strict';
         } else {
           //attributes
           if (C1[idx] !== C2[idx]) {
-            tagId = patchAttr(C1[idx], C2[idx]);
+            tagId = parsePatchAttrs(C1[idx], C2[idx]);
           } else {
             //record id
             tagId = getId(C1[idx]);
@@ -237,20 +287,21 @@ var doTA = (function() {'use strict';
   }
 
   var compiledCount = 0;
-  var compiledHash = {};
 
   return {
     nc: ngClassToClass,
     diff: diffPatchHTML,
+    CH: {},
+    initCH: function(x){this.CH=x},
     compile: function(template, options) {
       options = options || {};
       var val_mod = options.loose ? "||''" : '';
       var isPatch = options.watchDiff;
       var VarMap = {$index: 1, undefined: 1, $attr:1};
       var level = 0, LevelMap = {}, LevelVarMap = {}, WatchMap = {}, Watched, doTAPass, doTAContinue, compiledFn;
-      var uniqId = compiledHash[options.dotaRender] || compiledCount++;
+      var uniqId = this.CH[options.dotaRender] || compiledCount++;
       var idHash = {};
-      compiledHash[uniqId] = uniqId;
+      this.CH[options.dotaRender] = uniqId;
 
       var FnText = Indent(level) + "'use strict';var " +
         (isPatch ?
@@ -368,7 +419,7 @@ var doTA = (function() {'use strict';
         //open tag with attributes
         onopentag: function(tagName, attrs) {
           // debug && console.log('onopentag', [tagName, attrs]);
-          var parsedAttrs = {}, customId, hasNgClass;
+          var interpolatedAttrs = {}, customId, tagId, hasNgClass;
 
           //skip parsing ng-if, ng-repeat, ng-class with, dota
           // but interpolation will still be evaluated (by-design)
@@ -465,31 +516,36 @@ var doTA = (function() {'use strict';
 
           //other attributes, expand interpolations
           for(var x in attrs) {
-            parsedAttrs[x] = ((hasNgClass && x === 'class') ? attrs[x] : Interpolate(attrs[x]));
+            interpolatedAttrs[x] = ((hasNgClass && x === 'class') ? attrs[x] : Interpolate(attrs[x]));
             //ng-repeat loop variables are not available!
             // only way to acccess is to use $index like "data[$index]"
             // instead of "item" as in "item in data"
-            if (parsedAttrs[x].indexOf('$index') >= 0) {
+            if (interpolatedAttrs[x].indexOf('$index') >= 0) {
               //console.log([val], LevelMap[level]);
               for(var j = level; j >= 0; j--) {
                 if (LevelVarMap[j]) {
-                  parsedAttrs[x] = parsedAttrs[x].replace(/\$index/g, "'+" + LevelVarMap[j] + "+'");
+                  interpolatedAttrs[x] = interpolatedAttrs[x].replace(/\$index/g, "'+" + LevelVarMap[j] + "+'");
                   break;
                 }
               }
             }
           }
 
-          if (isPatch || customId) {
-            parsedAttrs['id'] = idHash[uniqId + '.' + level] = parsedAttrs['id'] || uniqId + ".'+N+'";
-          }
-
           //write tag back as string
           FnText += Indent(level) + "R+='<" + tagName;
-          //+ (hasNgClass ? " class=\"'+s+'\"" : '');
+
+          //make id attr come before anything
+          if (isPatch || customId) {
+            tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || uniqId + ".'+N+'"
+            FnText += ' id="' + tagId + '"';
+            if (interpolatedAttrs.id) {
+              delete interpolatedAttrs.id;
+            }
+          }
+
           //other attibutes
-          for(var k in parsedAttrs) {
-            FnText += " " + k + '="' + parsedAttrs[k] + '"';
+          for(var k in interpolatedAttrs) {
+            FnText += " " + k + '="' + interpolatedAttrs[k] + '"';
           }
           FnText += ">';\n";
 
@@ -811,20 +867,21 @@ if (typeof module !== "undefined" && module.exports) {
                   destroyChildren(elem[0]);
                 }
 
-                console.log(attrDoTARender,'before render');
+                console.log(attrDoTARender, 'before render', patch);
                 //execute the function by passing scope(data basically), and $filter
                 try {
                   console.time('render:' + attrDoTARender);
                   var v = func.F ? func.F(NewScope, $filter, params, patch) : func(NewScope, $filter, params, patch);
                   console.timeEnd('render:' + attrDoTARender);
-                  console.log(attrDoTARender,'after render');
+                  console.log(attrDoTARender,'after render', patch);
                 } catch (x) {
                   /**/console.log('render error', func);
                   throw x;
                 }
 
                 if(attrDebug) {
-                  console.log(v);
+                  console.log(attrDoTARender, v);
+                  // console.log(attrDoTARender, (func.F || func).toString());
                 }
 
                 // console.log('patch?', [patch]);
@@ -924,7 +981,7 @@ if (typeof module !== "undefined" && module.exports) {
                   // console.log('watch', w);
 
                   watches[w.I] = NewScope.$watch(w.W, (function(w) {
-                    return function(newValue, oldValue){
+                    return function(newVal, oldVal){
                       console.log(attrDoTARender, w.W, 'partial watch before render');
                       var oldTag = document.getElementById(w.I);
                       if (!oldTag) { return console.log('tag not found'); }
@@ -969,8 +1026,8 @@ if (typeof module !== "undefined" && module.exports) {
 
             if(attrWatch) {
               console.log(attrDoTARender, 'registering watch for', attrWatch);
-              NewScope.$watchCollection(attrWatch, function(newValue, oldValue){
-                if(newValue !== oldValue && doTA.C[attrDoTARender]) {
+              NewScope.$watchCollection(attrWatch, function(newVal, oldVal){
+                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
                   console.log(attrDoTARender, 'watch before render');
                   render(doTA.C[attrDoTARender]);
                   console.log(attrDoTARender, 'watch after render');
@@ -980,8 +1037,8 @@ if (typeof module !== "undefined" && module.exports) {
 
             if(attrWatchDiff) {
               console.log(attrDoTARender, 'registering diff watch for', attrWatchDiff);
-              NewScope.$watchCollection(attrWatchDiff, function(newValue, oldValue){
-                if(newValue !== oldValue && doTA.C[attrDoTARender]) {
+              NewScope.$watchCollection(attrWatchDiff, function(newVal, oldVal){
+                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
                   console.log(attrDoTARender, 'diff watch before render');
                   render(doTA.C[attrDoTARender], true);
                   console.log(attrDoTARender, 'diff watch after render');
