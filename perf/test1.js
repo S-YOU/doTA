@@ -1,26 +1,16 @@
 (function () {
   var fs = require('fs');
-  var doTA = require('../dist/doTA.min');
-  var timer = require('./timer');
+  global.doTA = require('../dist/doTA.min');
+  global.timer = require('./timer');
 
-  // var x = "{'active':isActive(base+'/'+item.link,item.title),'new':1}";
-  // var re = /('[^']+'|"[^"]+"|[\w$]+)\s*:\s*((?:[$.\w]+|\([^)]+\)|[^},])+)/g, match;
-  // console.log(x);
-  // var result = 'res:';
-  // while ((match = re.exec(x)) !== null) {
-  //   result += '(k,v):' + match[1] + ',' + match[2] + '\n';
-  // }
-  // console.log(result);
   timer(1);
   var content = fs.readFileSync(__dirname + '/test1.html').toString();
   // console.log(content);
-  timer(1, 'template file loaded');
-  timer(2);
-  //for (var i = 0; i < 100; i++) {
-  var compiledFn = doTA.compile(content, { watchDiff: 1 });
-  //}
-  timer(2, 'template compiled')
+  timer(1, 'template file loaded', content.length);
 
+  timer(2);
+  var compiledFn = doTA.compile(content, { watchDiff: 1 });
+  timer(2, 'template compiled')
   // console.log(compiledFn.toString())
 
   var row = 1000, col = 10;
@@ -54,16 +44,14 @@
   // ---
   // PUBLIC METHODS.
   // ---
-  global.doTA = doTA;
   timer(1);
   for (var i = 0; i < 1; i++) {
     var text = compiledFn($scope);
   }
-  timer(1, 'template rendered to text');
+  timer(1, 'template rendered to text', text.length);
   if (row <= 10) {
     console.log(text);
   }
-  console.log(text.length);
 
   // I update the visibility of the items when the filter is updated.
   function handleFilterChange(newValue, oldValue) {

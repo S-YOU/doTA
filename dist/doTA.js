@@ -9,7 +9,7 @@ var doTA = (function() {'use strict';
   //Pretty Indent for debuging
   function Indent(n, x) {
     var ret = new Array(n + 2).join('    ');
-    return x ? ret.slice(0,-2 * x) : ret;
+    return x ? ret.slice(0, -2 * x) : ret;
   };
 
   //obj forEach, not currently used
@@ -93,7 +93,7 @@ var doTA = (function() {'use strict';
     }
 
     //console.log(1111, tagName, attrs, [attrs ? 1: 2]);
-    return [tagName, attrs, pos];
+    return [tagName, attrs];
   }
 
   var events = ' change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
@@ -277,17 +277,17 @@ var doTA = (function() {'use strict';
     } while(idx++ < C1L);
   }
 
-  function ngClassToClass(classObj, className) {
-    className = className || '';
-    for (var name in classObj) {
-      if (classObj[name]) {
-        className += (className ? ' ' : '') + name;
-      }
-    }
-    return className
-  }
+  // function ngClassToClass(classObj, className) {
+  //   className = className || '';
+  //   for (var name in classObj) {
+  //     if (classObj[name]) {
+  //       className += (className ? ' ' : '') + name;
+  //     }
+  //   }
+  //   return className
+  // }
 
-  //ToDo: check compile perf with regex
+  //ToDo: check compile perf with regexes
   var ngClassRegex = /('[^']+'|"[^"]+"|[\w$]+)\s*:\s*((?:[$.\w]+|\([^)]+\)|[^},])+)/g;
   var varOrStringRegex = /'[^']+'|"[^"]+"|[\w$]+|[^\w$'"]+/g;
   var quotedStringRegex = /"[^"]*"|'[^']*'/g;
@@ -298,6 +298,8 @@ var doTA = (function() {'use strict';
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
   var XHTMLRegex = /^(?:input|img|br|hr)/i;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
+  var $indexRegex = /\$index/g;
+
   var compiledCount = 0;
 
   function compileHTML(template, options) {
@@ -311,14 +313,11 @@ var doTA = (function() {'use strict';
     this.CH[options.dotaRender] = uniqId;
 
     var FnText = Indent(level) + "'use strict';var " +
-      (isPatch ?
-        'N=0,J=' + uniqId +
-        ',' :
-      '') +
-    "R='';\n"; //ToDO: check perf on var declaration
+      (isPatch ? 'N=0,J=' + uniqId + ',' : '') +
+      "R='';\n"; //ToDO: check perf on var declaration
 
     //clean up extra white spaces and line break
-    template = template.replace(whiteSpaceRegex,' ');
+    template = template.replace(whiteSpaceRegex, ' ');
     //console.log(template);
 
     //debug = 1;
@@ -349,7 +348,7 @@ var doTA = (function() {'use strict';
               //console.log([val], LevelMap[level]);
               for(var j = level; j >= 0; j--) {
                 if (LevelVarMap[j]) {
-                  vv += matches[i].replace(/\$index/g, LevelVarMap[j]);
+                  vv += matches[i].replace($indexRegex, LevelVarMap[j]);
                   break;
                 }
               }
@@ -467,8 +466,6 @@ var doTA = (function() {'use strict';
               FnText += Indent(level, 1) + 'while(++' + i + '<' + l + '){\n';
               FnText += Indent(level) + 'var ' + v[0] + '=D' + level + '[' + i + ']; \n'; //"; " - space is needed for manual uglify
               VarMap[v[0]] = 1;
-              //,$index=' + i +'
-              // VarMap['$index'] = 1;
             }
             //remote attribute not to get forwarded to angular
             delete attrs['ng-repeat'];
@@ -480,7 +477,7 @@ var doTA = (function() {'use strict';
               customId = 1;
               FnText += Indent(level, 2) + (!Watched ? 'var ' + (isPatch ? '': 'N=0,') + 'T=this;T.W=[];' : '') + 'var W={I:"' + uniqId + '.' + '"+ ++N,W:"' + attrs['ng-if'] + '"' + (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
               WatchMap[level] = Watched = 1;
-              FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X){var R="";\n'; //jshint said "use strict"; is not needed
+              FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X){var R="";\n';
               delete attrs.watch; delete attrs.wait;
             }
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
@@ -491,7 +488,7 @@ var doTA = (function() {'use strict';
 
           if (attrs['ng-class']) {
             var ngScopedClass = AttachScope(attrs['ng-class']), match;
-            attrs.class = (attrs.class || '');
+            attrs.class = (attrs.class ? Interpolate(attrs.class) : '');
             while((match = ngClassRegex.exec(ngScopedClass)) !== null) {
               attrs.class +=
                 ("'+(" + match[2] + '?' +
@@ -536,7 +533,7 @@ var doTA = (function() {'use strict';
             //console.log([val], LevelMap[level]);
             for(var j = level; j >= 0; j--) {
               if (LevelVarMap[j]) {
-                interpolatedAttrs[x] = interpolatedAttrs[x].replace(/\$index/g, "'+" + LevelVarMap[j] + "+'");
+                interpolatedAttrs[x] = interpolatedAttrs[x].replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
                 break;
               }
             }
@@ -601,9 +598,11 @@ var doTA = (function() {'use strict';
         //just write closing tag back
         FnText += Indent(level) + "R+='</" + tagName + ">';\n";
 
+        //just write hidden tag, so we can replace later, if ng-if evalulate falsy
         if (WatchMap[level]) {
           FnText += Indent(level, 1) + '} else {\n';
-          FnText += Indent(level) + 'R+=\'<' + tagName + ' id=' + idHash[uniqId + '.' + level] + ' style=display:none></' + tagName + '>\'; \n';
+          FnText += Indent(level) + "R+='<" + tagName + ' id=' + idHash[uniqId + '.' + level] +
+            ' style=display:none></' + tagName + '>\'; \n';
         }
 
         //close "if", "for", "while" blocks
@@ -615,13 +614,14 @@ var doTA = (function() {'use strict';
         }
         //console.log('/level', [level, doTAPass]);
 
+        //finish block for sub functions
         if (WatchMap[level]) {
           FnText += Indent(level, 2) + 'return R;}; \n';
           FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X); \n';
           WatchMap[level] = 0;
         }
 
-        //end dota-pass if it is out of scope
+        //reset dota-pass when out of scope
         if (doTAPass && doTAPass >= level) {
           doTAPass = 0;
         }
@@ -688,10 +688,10 @@ var doTA = (function() {'use strict';
     return compiledFn;
   }
 
-  return {
-    nc: ngClassToClass,
+  var doTAObj = {
+    // nc: ngClassToClass,
     diff: diffPatchHTML,
-    CH: {},
+    CH: {}, //compiledHashKeys
     initCH: function(x){this.CH=x},
     compile: compileHTML,
     C: {}, //Cached compiled functions
@@ -699,6 +699,10 @@ var doTA = (function() {'use strict';
     H: {} //HashMap for TextDiff
   };
 
+  //warmup most used functions
+  doTAObj.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x">x{{x}}</div><!--x-->', {watchDiff: 1});
+
+  return doTAObj;
 })();
 
 if (typeof module !== "undefined" && module.exports) {
