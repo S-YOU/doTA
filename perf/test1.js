@@ -11,12 +11,17 @@
   //   result += '(k,v):' + match[1] + ',' + match[2] + '\n';
   // }
   // console.log(result);
+  timer(1);
+  var content = fs.readFileSync(__dirname + '/test1.html').toString();
+  // console.log(content);
+  timer(1, 'template file loaded');
+  timer(2);
+  //for (var i = 0; i < 100; i++) {
+  var compiledFn = doTA.compile(content, { watchDiff: 1 });
+  //}
+  timer(2, 'template compiled')
 
-  var compiledFn = doTA.compile(
-    fs.readFileSync(__dirname + '/test1.html').toString(),
-    { watchDiff: 1 });
-
-  console.log(compiledFn.toString())
+  // console.log(compiledFn.toString())
 
   var row = 1000, col = 10;
 
@@ -54,7 +59,7 @@
   for (var i = 0; i < 1; i++) {
     var text = compiledFn($scope);
   }
-  timer(1, 'rendered');
+  timer(1, 'template rendered to text');
   if (row <= 10) {
     console.log(text);
   }
