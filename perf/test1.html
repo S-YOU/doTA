@@ -1,0 +1,14 @@
+<table width="100%" cellspacing="2" ng-class="{ filtered: vm.form.filter }">
+  <tr ng-repeat="row in vm.grid">
+    <td>
+      {{ row.id }}
+    </td>
+    <td
+      ng-repeat="item in row.items"
+      class="item"
+      ng-class="{ hidden: item.isHiddenByFilter }"
+      >
+      {{ item.value }}
+    </td>
+  </tr>
+</table>

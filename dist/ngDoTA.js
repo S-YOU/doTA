@@ -286,6 +286,8 @@ var doTA = (function() {'use strict';
     return className
   }
 
+  //ToDO: check compile perf with this regex
+  var ngClassRegex = /('[^']+'|"[^"]+"|[\w$]+)\s*:\s*((?:[$.\w]+|\([^)]+\)|[^},])+)/g;
   var compiledCount = 0;
 
   return {
@@ -306,8 +308,7 @@ var doTA = (function() {'use strict';
       var FnText = Indent(level) + "'use strict';var " +
         (isPatch ?
           'N=0,J=' + uniqId +
-          ',H=doTA.H[J]=X?doTA.H[J]||"":""' +
-          ',P1=0,C1=0,PX=0,DX=0,X1="",X2="",' :
+          ',H=doTA.H[J]=X?doTA.H[J]||"":"",' :
         '') +
       "R='';\n"; //ToDO: check perf on var declaration
 
@@ -486,8 +487,20 @@ var doTA = (function() {'use strict';
               // FnText += Indent(level) + 'var s="' + (attrs.class || '') +
               //   '",n=' + AttachScope(attrs['ng-class']) + ';\n';
               // FnText += Indent(level) + 'for(var c in n){if(n[c])s+=(s?" ":"")+c;}\n';
-              attrs.class = "'+doTA.nc(" + AttachScope(attrs['ng-class']) +
-                (attrs.class ? ",'" + attrs.class + "'": '') + ")+'";
+              // attrs.class = "'+doTA.nc(" + AttachScope(attrs['ng-class']) +
+              //   (attrs.class ? ",'" + attrs.class + "'": '') + ")+'";
+              var ngScopedClass = AttachScope(attrs['ng-class']), match;
+              attrs.class = (attrs.class || '');
+              while((match = ngClassRegex.exec(ngScopedClass)) !== null) {
+                attrs.class +=
+                  ("'+(" + match[2] + '?' +
+                    "'" + (attrs.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
+                    "':'')+'");
+              }
+              attrs.class = attrs.class.replace(/\+''\+/g, '+');
+              // var matches = attrs['ng-class'].match(/(\S+)\s*:\s*([^,}]+)/g);
+              console.log(attrs['ng-class']);
+                // item'+ (item.isHiddenByFilter ? ' hidden': '')
               hasNgClass = 1;
               // delete attrs.class;
               delete attrs['ng-class'];
