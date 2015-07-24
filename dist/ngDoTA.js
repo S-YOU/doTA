@@ -942,6 +942,8 @@ if (typeof module !== "undefined" && module.exports) {
                         return function(evt){
                           // var target = evt.target || evt.srcElement;
                           // console.log('event', partial, partial.getAttribute('dota-click'));
+                          evt.preventDefault();
+                          evt.stopPropagation();
                           NewScope.$applyAsync(attrs.value);
                         };
                       })(partial, attrs[i]));
