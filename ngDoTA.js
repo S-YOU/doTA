@@ -328,7 +328,11 @@
                 params[x] = attrs[x];
               //map scope-* attributes into origAttrMap (first level var from scope)
               } else if (!z.indexOf('scope-')) {
-                params[z.slice(6)] = NewScope[attrs[x]];
+                if (attrs[x].indexOf('.') >= 0 || attrs[x].indexOf('[') >= 0) {
+                  params[z.slice(6)] = scope.$eval(attrs[x]);
+                } else {
+                  params[z.slice(6)] = scope[attrs[x]];
+                }
               }
             }
             // console.log('origAttrMap', params, attrs);
