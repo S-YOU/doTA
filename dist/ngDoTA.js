@@ -10,7 +10,7 @@ var doTA = (function() {'use strict';
   function Indent(n, x) {
     var ret = new Array(n + 2).join('    ');
     return x ? ret.slice(0, -2 * x) : ret;
-  };
+  }
 
   //obj forEach, not currently used
   // function forEach(obj, fn) {
@@ -127,7 +127,7 @@ var doTA = (function() {'use strict';
       }
 
     } while(++idx < chunksLen);
-  };
+  }
 
   //parse attributes from html open tag and make dict object
   function parsePatchAttrs(chunk1, chunk2) {
@@ -248,7 +248,7 @@ var doTA = (function() {'use strict';
       if (C1[idx] === "<") {
         idx++;
         if (C1[idx][0] === "/" || C1[idx][0] === "!") {
-          continue;
+          //continue;
         } else {
           //attributes
           if (C1[idx] !== C2[idx]) {
@@ -361,20 +361,21 @@ var doTA = (function() {'use strict';
         return vv;
       }
       return v;
-    };
+    }
 
     //interpolation without $filter
     function Interpolate(str) {
       if (str.indexOf('{{') >= 0) {
         var Z = str.split(interpolationRegex);
+        var i;
         //outside interpolation
-        for (var i = 0; i < Z.length; i+= 2) {
+        for (i = 0; i < Z.length; i+= 2) {
           if (Z[i].indexOf("'") >= 0) {
             Z[i] = Z[i].replace(/'/g, "\\'");
           }
         }
         //inside {{ }}
-        for (var i = 1; i < Z.length - 1; i+= 2) {
+        for (i = 1; i < Z.length - 1; i+= 2) {
           Z[i] = InterpolateWithFilter(null, Z[i]);
         }
         return Z.join('');
@@ -384,12 +385,12 @@ var doTA = (function() {'use strict';
         }
         return str;
       }
-    };
+    }
 
     //InterpolateWithFilter regex replace
     function TextInterpolate(str) {
       return str.replace(capturedInterpolationRegex, InterpolateWithFilter);
-    };
+    }
 
     //interpolation with $filter
     function InterpolateWithFilter($0, $1) {
@@ -398,26 +399,37 @@ var doTA = (function() {'use strict';
       if (pos === -1) {
         return "'+(" + AttachScope($1) + val_mod + ")+'";
       } else {
+        //ToDo: check this line later
         var v = $1[pos+1] === '|' ? $1.match(filterMatchRegex) : $1.split('|');
         var val = AttachScope(v[0]);
-        // for(var i = 1; i < v.length; i++) {
-        if (v[1]) {
-          var p = v[1].split(':');
-          // console.log(2121, v[i], val, p)
-          val = 'F(\'' + p.shift().trim() + '\')('+ val;
-          if (p.length) {
-            var pr = [];
-            for(var j = 0; j < p.length; j++) {
-              pr.push(AttachScope(p[j]));
+
+        //parse each filters
+        for(var i = 1; i < v.length; i++) {
+
+          //filter with params
+          if (v[i].indexOf(':') >= 0) {
+            var p = v[i].split(':');
+            // console.log(2121, v[i], val, p)
+            val = "F('" + p.shift().trim() + "')(" + val;
+            //this check is needed?
+            if (p.length) {
+              var pr = [];
+              for (var j = 0; j < p.length; j++) {
+                pr.push(AttachScope(p[j]));
+              }
+              val += ',' + pr.join(',');
             }
-            val += ',' + pr.join(',');
+            val += ')';
+
+          //filer with no params
+          } else {
+            val = "F('" + v[i].trim() + "')(" + val + ')';
           }
-          val += ')';
-          // break; //implicitly ignore multiple instance of multiple filters that are not supported now
+
         }
         return "'+(" + val + val_mod +  ")+'";
       }
-    };
+    }
 
     //parse the element
     parseHTML(template, {

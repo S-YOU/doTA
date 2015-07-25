@@ -1,6 +1,6 @@
 (function () {
   var fs = require('fs');
-  global.doTA = require('../dist/doTA.min');
+  global.doTA = require('../dist/doTA');
   global.timer = require('./timer');
 
   timer(1);
@@ -9,9 +9,9 @@
   timer(1, 'template file loaded', content.length);
 
   timer(2);
-  var compiledFn = doTA.compile(content, { watchDiff: 1 });
-  timer(2, 'template compiled')
-  // console.log(compiledFn.toString())
+  var compiledFn = doTA.compile(content, { watchDiff: 1, debug: 0});
+  timer(2, 'template compiled');
+  //console.log(compiledFn.toString())
 
   var row = 1000, col = 10;
 
@@ -41,12 +41,19 @@
   vm.remountGrid = remountGrid;
   vm.unmountGrid = unmountGrid;
 
+  function $filter(name) {
+    return function(key, a, b, c) {
+      return key;
+      //return name + (a || '') + (b || '') + (c || '') + '-' + key;
+    }
+  }
+
   // ---
   // PUBLIC METHODS.
   // ---
   timer(1);
   for (var i = 0; i < 1; i++) {
-    var text = compiledFn($scope);
+    var text = compiledFn($scope, $filter);
   }
   timer(1, 'template rendered to text', text.length);
   if (row <= 10) {
