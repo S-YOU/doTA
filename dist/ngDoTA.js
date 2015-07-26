@@ -22,7 +22,7 @@ var doTA = (function() {'use strict';
   //decode html entities
   function decodeEntities(text) {
     return text.indexOf('&') === -1 ? text : text
-      .replace(/&gt;/g,'>').replace(/&lt;/g,'<')
+      .replace(/&gt;/g, '>').replace(/&lt;/g, '<')
       .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
   }
 
@@ -235,7 +235,6 @@ var doTA = (function() {'use strict';
 
   function diffPatchHTML(prevKey, next) {
     var prev = doTA.H[prevKey];
-    var textAttr = "textContent" in document.body ? "textContent" : "innerText";
     var C1 = prev.match(/([<>]|[^<>]+)/g), C1L = C1.length;
     var C2 = next.match(/([<>]|[^<>]+)/g), C2L = C2.length;
     var idx = 0, tagId, elem;
@@ -267,7 +266,7 @@ var doTA = (function() {'use strict';
           if (elem) {
             if (elem.firstChild && elem.firstChild.nodeType === 3) {
               // console.log('textApplied', [tagId, C2[idx]]);
-              elem.firstChild[textAttr] = C2[idx];
+              elem.firstChild.nodeValue = C2[idx];
             } //else to log something?
           } else {
             console.log('tag not found', [tagId, C1[idx], C2[idx]]);
