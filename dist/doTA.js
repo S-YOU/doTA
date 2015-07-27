@@ -286,14 +286,36 @@ var doTA = (function() {'use strict';
   //   return className
   // }
 
+  function splitFilters(input) {
+    var pos = input.indexOf('|');
+    if (pos === -1) {
+      return [input];
+    }
+    var prevPos = 0;
+    var ret = [];
+    while (pos !== -1) {
+      if (input.charAt(pos + 1) === '|') {
+        pos += 2;
+      } else {
+        ret.push(input.substring(prevPos, pos));
+        prevPos = ++pos;
+      }
+      pos = input.indexOf('|', pos);
+    }
+    if (prevPos < input.length) {
+      ret.push(input.substring(prevPos));
+    }
+    return ret;
+  }
+
   //ToDo: check compile perf with regexes
   var ngClassRegex = /('[^']+'|"[^"]+"|[\w$]+)\s*:\s*((?:[$.\w]+|\([^)]+\)|[^},])+)/g;
-  var varOrStringRegex = /'[^']+'|"[^"]+"|[\w$]+|[^\w$'"]+/g;
+  var varOrStringRegex = /'[^']*'|"[^"]*"|[\w$]+|[^\w$'"]+/g;
   var quotedStringRegex = /"[^"]*"|'[^']*'/g;
   var whiteSpaceRegex = /\s{2,}|\n/g;
   var interpolationRegex = /\{\{|\}\}/;
   var capturedInterpolationRegex = /\{\{([^}]+)\}\}/g;
-  var filterMatchRegex = /([^|]+(?:\|\|)?)+/g;
+  // var filterMatchRegex = /([^|]+(?:\|\|)?)+/g;
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
   var XHTMLRegex = /^(?:input|img|br|hr)/i;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
@@ -399,7 +421,7 @@ var doTA = (function() {'use strict';
         return "'+(" + AttachScope($1) + val_mod + ")+'";
       } else {
         //ToDo: check this line later
-        var v = $1[pos+1] === '|' ? $1.match(filterMatchRegex) : $1.split('|');
+        var v = splitFilters($1);
         var val = AttachScope(v[0]);
 
         //parse each filters
