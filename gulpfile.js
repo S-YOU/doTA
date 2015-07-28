@@ -29,6 +29,7 @@ gulp.task('uglify', ['copy'], function() {
     .pipe(replace(/\bIndent\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/g, ''))
     .pipe(closure())
     .pipe(uglify())
+    .pipe(replace(/\bthis\.(\$event=[^,]+),/g, 'var $1;'))
     .on('error', console.error)
     .pipe(rename({
       extname: '.min.js'

@@ -319,6 +319,7 @@ var doTA = (function() {'use strict';
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
   var XHTMLRegex = /^(?:input|img|br|hr)/i;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
+  var noValAttrRegex = /^(?:checked|selected|disabled)/;
   var $indexRegex = /\$index/g;
 
   var compiledCount = 0;
@@ -457,7 +458,7 @@ var doTA = (function() {'use strict';
       //open tag with attributes
       onopentag: function(tagName, attrs) {
         // debug && console.log('onopentag', [tagName, attrs]);
-        var interpolatedAttrs = {}, customId, tagId, hasNgClass;
+        var interpolatedAttrs = {}, customId, tagId, hasNgClass, noValAttrs = '';
 
         //skip parsing ng-if, ng-repeat, ng-class with, dota
         // but interpolation will still be evaluated (by-design)
@@ -469,7 +470,6 @@ var doTA = (function() {'use strict';
         } else if (attrs['dota-continue']) {
           doTAContinue = level;
         }
-
 
         //unless dota-pass or with dota-continue
         if (!doTAPass || doTAContinue) {
@@ -551,6 +551,10 @@ var doTA = (function() {'use strict';
               attrs['de'] = '1'; //dota-event
               attrs['de-' + attrName] = attrs[x];
               delete attrs[x];
+
+            } else if (noValAttrRegex.test(attrName)) {
+              noValAttrs += "'+(" + AttachScope(attrs[x]) + "?' " + attrName + "=\"\"':'')+'";
+              delete attrs[x];
             }
           }
         }
@@ -589,7 +593,7 @@ var doTA = (function() {'use strict';
         for(var k in interpolatedAttrs) {
           FnText += " " + k + '="' + interpolatedAttrs[k] + '"';
         }
-        FnText += ">';\n";
+        FnText += noValAttrs + ">';\n";
 
         if (isPatch) {
           FnText += Indent(level) + "N++; \n";
@@ -977,7 +981,8 @@ if (typeof module !== "undefined" && module.exports) {
                           // console.log('event', partial, partial.getAttribute('dota-click'));
                           evt.preventDefault();
                           evt.stopPropagation();
-                          NewScope.$applyAsync(attrs.value);
+                          //isedom: disallow, so no $target here
+                          NewScope.$evalAsync(attrs.value, {$event: evt});
                         };
                       })(partial, attrs[i]));
                       console.log('event added', attrDoTARender, attrs[i].name);
@@ -985,6 +990,7 @@ if (typeof module !== "undefined" && module.exports) {
                   }
                 });
               }
+
               //$compile html if you need ng-model or ng-something
               if(attrCompile){
 

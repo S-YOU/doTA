@@ -229,7 +229,8 @@
                           // console.log('event', partial, partial.getAttribute('dota-click'));
                           evt.preventDefault();
                           evt.stopPropagation();
-                          NewScope.$applyAsync(attrs.value);
+                          //isedom: disallow, so no $target here
+                          NewScope.$evalAsync(attrs.value, {$event: evt});
                         };
                       })(partial, attrs[i]));
                       console.log('event added', attrDoTARender, attrs[i].name);
@@ -237,6 +238,7 @@
                   }
                 });
               }
+
               //$compile html if you need ng-model or ng-something
               if(attrCompile){
 
