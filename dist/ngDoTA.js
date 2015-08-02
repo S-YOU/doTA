@@ -545,6 +545,11 @@ var doTA = (function() {'use strict';
             delete attrs['ng-if'];
           }
 
+          if (attrs['ng-init']) {
+            FnText += Indent(level) + AttachScope(attrs["ng-init"]) + '; \n';
+            delete attrs['ng-init'];
+          }
+
           if (attrs['ng-class']) {
             var ngScopedClass = AttachScope(attrs['ng-class']), match;
             attrs.class = (attrs.class ? Interpolate(attrs.class) : '');
