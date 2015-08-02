@@ -102,31 +102,100 @@ var doTA = (function() {'use strict';
   //minimal stripped down html parser
   function parseHTML(html, func) {
     if (!html) {return;}
-    var chunks = html.match(/([<>]|[^<>]+)/g), idx = 0, chunksLen = chunks.length;
+    var prevPos = 0, pos = html.indexOf('<'); //chunks.indexOf('<');
     do {
-      // console.log("chunks", [chunks[x]]);
-      if (chunks[idx] === '<') {
-        idx++;
-        // console.log("chunks", [chunks[x]]);
-        if (chunks[idx][0] === '/') {
-          //close tag must be like </div>
-          // short hand tag like <div /> are NOT supported
-          func.onclosetag(chunks[idx].slice(1));
-        } else if (chunks[idx][0] === '!') {
-          func.oncomment(chunks[idx]);
+      if (html.charAt(pos) === '<') {
+        pos++;
+        if (html.charAt(pos) === '/') {
+          prevPos = ++pos;
+          pos = html.indexOf('>', prevPos);
+          //close tag must be like </div>, but not <div />
+          // console.log(['closetag', prevPos, pos, html.substring(prevPos, pos)])
+          func.onclosetag(html.substring(prevPos, pos));
+        } else if (html.charAt(pos) === '!') {
+          prevPos = pos;
+          pos = html.indexOf('>', prevPos);
+          // console.log(['comment', prevPos, pos, html.substring(prevPos, pos)])
+          func.oncomment(html.substring(prevPos, pos));
         } else {
-          // console.log(11, [chunks[x]])
-          func.onopentag.apply(this, parseAttrs(chunks[idx]));
+          prevPos = pos;
+          pos = html.indexOf('>', prevPos);
+          // console.log(['opentag', prevPos, pos, html.substring(prevPos, pos), parseAttrs(html.substring(prevPos, pos))])
+          func.onopentag.apply(this, parseAttrs(html.substring(prevPos, pos)));
         }
-      } else if (chunks[idx] === '>' && chunks[idx+1] !== '<') {
-        idx++;
-        if (chunks[idx]) {
-          // console.log(222, chunks[x])
-          func.ontext(chunks[idx]);
+      } else if (html.charAt(pos) === '>') { //&& html.charAt(pos + 1) !== '<'
+        prevPos = ++pos;
+        pos = html.indexOf('<', prevPos);
+        if (pos > prevPos) {
+          // console.log(['text', prevPos, pos, html.substring(prevPos, pos)])
+          func.ontext(html.substring(prevPos, pos));
         }
+      } else {
+        // console.log('done?', [pos, len, html.substring(prevPos, pos), html.slice(pos)]);
+        break;
       }
 
-    } while(++idx < chunksLen);
+    } while (pos > 0);
+  }
+
+  function diffPatchHTML(prevKey, html2) {
+    var html1 = doTA.H[prevKey];
+    var prevPos1 = 0, pos1 = html1.indexOf('<');
+    var prevPos2 = 0, pos2 = html2.indexOf('<');
+    var tagId, elem, part1, part2;
+
+    do {
+      if (html1.charAt(pos1) === "<") {
+        pos1++;
+        pos2++;
+        if (html1.charAt(pos1) === "/" || html1.charAt(pos1) === "!") {
+          //don't patch comment node and close tag.
+          pos1 = html1.indexOf('>', pos1);
+          pos2 = html2.indexOf('>', pos2);
+        } else {
+          prevPos1 = pos1;
+          prevPos2 = pos2;
+          pos1 = html1.indexOf('>', prevPos1);
+          pos2 = html2.indexOf('>', prevPos2);
+          part1 = html1.substring(prevPos1, pos1);
+          part2 = html2.substring(prevPos2, pos2);
+          //attributes
+          if (part1 !== part2) {
+            // console.log('opentag', [part1, part2])
+            tagId = parsePatchAttrs(part1, part2);
+          } else {
+            //record id
+            tagId = getId(part1);
+          }
+        }
+
+      //text node
+      } else if (html1.charAt(pos1) === '>') {
+        prevPos1 = ++pos1;
+        prevPos2 = ++pos2;
+
+        pos1 = html1.indexOf('<', prevPos1);
+        pos2 = html2.indexOf('<', prevPos2);
+        //textNode, only support firstChild here
+        if (pos2 > prevPos2) {
+          var text1 = html1.substring(prevPos1, pos1);
+          var text2 = html2.substring(prevPos2, pos2);
+          if (text1 !== text2) {
+            elem = document.getElementById(tagId);
+            if (elem) {
+              if (elem.firstChild && elem.firstChild.nodeType === 3) {
+                // console.log('textApplied', [text1, text2]);
+                elem.firstChild.nodeValue = text2;
+              } //else to log something?
+            } else {
+              console.log('tag not found', [tagId]);
+            }
+          }
+        }
+
+      }
+
+    } while(pos1 > 0);
   }
 
   //parse attributes from html open tag and make dict object
@@ -231,49 +300,6 @@ var doTA = (function() {'use strict';
       }
     }
     return partial.substring(pos, endPos);
-  }
-
-  function diffPatchHTML(prevKey, next) {
-    var prev = doTA.H[prevKey];
-    var C1 = prev.match(/([<>]|[^<>]+)/g), C1L = C1.length;
-    var C2 = next.match(/([<>]|[^<>]+)/g), C2L = C2.length;
-    var idx = 0, tagId, elem;
-    if (C1L !== C2L) {
-      console.log("len not match, not supported now");
-      return;
-    }
-    do {
-      // console.log(C1[x], C2[x]);
-      if (C1[idx] === "<") {
-        idx++;
-        if (C1[idx][0] === "/" || C1[idx][0] === "!") {
-          //continue;
-        } else {
-          //attributes
-          if (C1[idx] !== C2[idx]) {
-            tagId = parsePatchAttrs(C1[idx], C2[idx]);
-          } else {
-            //record id
-            tagId = getId(C1[idx]);
-          }
-        }
-      } else if (C1[idx] === ">" && C1[idx+1] !== "<") {
-        idx++;
-        //textNode, only support firstChild here
-        if (C1[idx] !== C2[idx]) {
-          // console.log(C1[idx], C2[idx]);
-          elem = document.getElementById(tagId);
-          if (elem) {
-            if (elem.firstChild && elem.firstChild.nodeType === 3) {
-              // console.log('textApplied', [tagId, C2[idx]]);
-              elem.firstChild.nodeValue = C2[idx];
-            } //else to log something?
-          } else {
-            console.log('tag not found', [tagId, C1[idx], C2[idx]]);
-          }
-        }
-      }
-    } while(idx++ < C1L);
   }
 
   // function ngClassToClass(classObj, className) {
