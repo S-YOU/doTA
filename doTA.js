@@ -6,6 +6,12 @@ var doTA = (function() {'use strict';
     };
   }
 
+  /* for firefox */
+  if (Object.prototype.watch) {
+    delete Object.prototype.watch;
+    delete Object.prototype.unwatch;
+  }
+
   //Pretty Indent for debuging
   function Indent(n, x) {
     var ret = new Array(n + 2).join('    ');
