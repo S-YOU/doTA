@@ -418,7 +418,7 @@ var doTA = (function() {'use strict';
           prevQuotePos = quotePos;
           quotePos = str.indexOf("'", prevQuotePos + 1);
         } while (quotePos > 0);
-        ret += str.substring(prevQuotePos, str.length);
+        ret += str.substr(prevQuotePos);
         return ret;
       } else {
         return str;
@@ -441,7 +441,7 @@ var doTA = (function() {'use strict';
           pos = str.indexOf('}}', prevPos);
 
           insideStr = str.substring(prevPos, pos);
-          ret += InterpolateWithFilter(null, insideStr);
+          ret += "'+(" + AttachFilter(insideStr) + val_mod + ")+'";
 
           //skip }} for next
           prevPos = pos + 2;
@@ -449,19 +449,19 @@ var doTA = (function() {'use strict';
         } while (pos > 0);
 
         //remaing text outside interpolation
-        ret += escapeSingleQuote(str.substring(prevPos, str.length));
+        ret += escapeSingleQuote(str.substr(prevPos));
         return ret;
       } else {
         return escapeSingleQuote(str);
       }
     }
 
-    // Interpolation with $filter
-    function InterpolateWithFilter($0, $1) {
+    // Attach $filters
+    function AttachFilter($1) {
       //console.log(333,$1);
       var pos = $1.indexOf('|');
       if (pos === -1) {
-        return "'+(" + AttachScope($1) + val_mod + ")+'";
+        return AttachScope($1);
       } else {
         //ToDo: check this line later
         var v = splitFilters($1);
@@ -491,7 +491,7 @@ var doTA = (function() {'use strict';
           }
 
         }
-        return "'+(" + val + val_mod +  ")+'";
+        return val;
       }
     }
 
@@ -519,28 +519,62 @@ var doTA = (function() {'use strict';
           if (attrs['ng-repeat']) {
             //console.log(21,[x], [val]);
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            var i = 'i' + level, l = 'l'+ level, v = attrs['ng-repeat'].split(' in '), _v = AttachScope(v[1]);
+            var i = 'i' + level, l = 'l'+ level;
+            var NG_REPEAT = attrs['ng-repeat'];
+            var inPos = NG_REPEAT.indexOf(' in ');
+            var repeatVar = NG_REPEAT.substr(0, inPos), repeatSrc = NG_REPEAT.substr(inPos + 4);
+            var commaPos = repeatVar.indexOf(',');
+            var pipePos = repeatSrc.indexOf('|'), repeatSrcNew;
+            var colonPos;
 
-            //store variable tagName to use as $index later
+            //store variable name to use for $index later
             //this is ng-repeat specific, LevelMap[level] is same for ng-if too
             LevelVarMap[level] = i;
 
-            //make ng-repeat as javascript loop
-            //array loop
-            if (v[0].indexOf(",") >= 0) {
-              var v01 = v[0].split(',');
-              FnText += Indent(level, 1) + 'var D' + level + '=' + _v + ';\n';
-              FnText += Indent(level, 1) + 'for(var ' + v01[0] + ' in D' + level + '){\n';
-              FnText += Indent(level, 1) + 'var ' + v01[1] + ' = ' + 'D' + level + '[' + v01[0] + ']; \n'; //"; " - space is needed for manual uglify
-              VarMap[v01[0]] = VarMap[v01[1]] = 1;
-
-            //dict loop, "k, v in items" syntax,
-            // without brackets as in (k, v) in angular
+            if (pipePos > 0) {
+              repeatSrcNew = AttachFilter(repeatSrc);
             } else {
-              FnText += Indent(level, 1) + 'var D' + level + '=' + _v + ',' + i + '=-1,' + l + '=D' + level + '.length;\n';
+              colonPos = repeatSrc.indexOf(':');
+              if (colonPos < 0) {
+                repeatSrcNew = AttachScope(repeatSrc);
+              }
+            }
+
+            // Range: "i in 1:10" ==> (for i = 1; i < 10; i++)
+            if (colonPos > 0) {
+              var start = repeatSrc.substr(0, colonPos), end, step;
+              var anotherColon = repeatSrc.indexOf(':', ++colonPos);
+              if (anotherColon > 0) {
+                end = repeatSrc.substring(colonPos, anotherColon);
+                step = repeatSrc.substr(anotherColon + 1);
+              } else {
+                end = repeatSrc.substr(colonPos);
+                step = 1;
+              }
+              // console.log([start, end, step])
+
+              FnText += Indent(level, 1) + 'for(var ' + repeatVar + '=' + start + ';' +
+                repeatVar + (step > 0 ? '<' : '>') + end + ';' + repeatVar + '+=' + step + '){\n';
+              VarMap[repeatVar] = 1;
+
+            // Object: "k, v in {}" ==> (for in {})
+            } else if (commaPos > 0) {
+              var key = repeatVar.substr(0, commaPos);
+              var value = repeatVar.substr(commaPos + 1);
+              FnText += Indent(level, 1) + 'var D' + level + '=' + repeatSrcNew + ';\n';
+              FnText += Indent(level, 1) + 'for(var ' + key + ' in D' + level + '){\n';
+              //                                      space is needed for manual uglify  ->  vvv
+              FnText += Indent(level) + 'var ' + value + ' = ' + 'D' + level + '[' + key + ']; \n';
+              VarMap[key] = VarMap[value] = 1;
+
+            // Array: "k in []" ==> while loop
+            } else {
+              FnText += Indent(level, 1) + 'var D' + level + '=' + repeatSrcNew + ','
+                + i + '=-1,' + l + '=D' + level + '.length;\n';
               FnText += Indent(level, 1) + 'while(++' + i + '<' + l + '){\n';
-              FnText += Indent(level) + 'var ' + v[0] + '=D' + level + '[' + i + ']; \n'; //"; " - space is needed for manual uglify
-              VarMap[v[0]] = 1;
+              //                                 space is needed for manual uglify  ->  vvv
+              FnText += Indent(level) + 'var ' + repeatVar + '=D' + level + '[' + i + ']; \n';
+              VarMap[repeatVar] = 1;
             }
             //remote attribute not to get forwarded to angular
             delete attrs['ng-repeat'];
