@@ -13,4 +13,6 @@ module.exports = {
   'withFilter': '<div ng-repeat="x in arr">{{x | json}}</div>',
   'withComment': '<div ng-repeat="x in arr">{{x | json}}<!--test--></div><!--test2-->',
   'withFilterOptions': '<div ng-repeat="x in arr">{{x | date:"YYMMDD"}}<!--test--></div><!--test2-->',
+
+  'jsperf': '<div id="{{id}}"><ul><li ng-repeat="value in data" class="test-{{id}}">{{value}}</li></ul></div>',
 }

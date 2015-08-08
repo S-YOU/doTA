@@ -404,6 +404,7 @@ var doTA = (function() {'use strict';
       return v;
     }
 
+    // Escape single quotes with backslash
     function escapeSingleQuote(str) {
       var quotePos = str.indexOf("'");
       if (quotePos >= 0) {
@@ -466,28 +467,29 @@ var doTA = (function() {'use strict';
         //ToDo: check this line later
         var v = splitFilters($1);
         var val = AttachScope(v[0]);
+        var prevColonPos = 0, colonPos;
+        var filter;
 
         //parse each filters
         for(var i = 1; i < v.length; i++) {
+          filter = v[i];
 
+          colonPos = filter.indexOf(':');
           //filter with params
-          if (v[i].indexOf(':') >= 0) {
-            var p = v[i].split(':');
-            // console.log(2121, v[i], val, p)
-            val = "F('" + p.shift().trim() + "')(" + val;
-            //this check is needed?
-            if (p.length) {
-              var pr = [];
-              for (var j = 0; j < p.length; j++) {
-                pr.push(AttachScope(p[j]));
-              }
-              val += ',' + pr.join(',');
+          if (colonPos > 0) {
+            val = "F('" + filter.slice(prevColonPos, colonPos).trim() + "')(" + val;
+            prevColonPos = ++colonPos;
+            colonPos = filter.indexOf(':', prevColonPos);
+            while (colonPos > 0) {
+              val += ',' + AttachScope(filter.slice(prevColonPos, colonPos));
+              prevColonPos = ++colonPos;
+              colonPos = filter.indexOf(':', prevColonPos);
             }
-            val += ')';
+            val += ',' + AttachScope(filter.substr(prevColonPos)) + ')';
 
-          //filer with no params
+          //filter without params
           } else {
-            val = "F('" + v[i].trim() + "')(" + val + ')';
+            val = "F('" + filter.trim() + "')(" + val + ')';
           }
 
         }
