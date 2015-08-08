@@ -55,9 +55,34 @@
     })
   }
 
+  function addEvents(elem, scope, uniqId) {
+    forEachArray(elem.querySelectorAll('[de]'), function(partial){
+      var attrs = partial.attributes;
+      console.log('attrs', uniqId, attrs);
+      for(var i = 0, l = attrs.length; i < l; i++){
+        if (attrs[i].name.substr(0,3) === 'de-') {
+          partial.addEventListener(attrs[i].name.substr(3), (function(target, attrs){
+            return function(evt){
+              // var target = evt.target || evt.srcElement;
+              // console.log('event', partial, partial.getAttribute('dota-click'));
+              evt.preventDefault();
+              evt.stopPropagation();
+              //isedom: disallow, so no $target here
+              scope.$evalAsync(attrs.value, {$event: evt});
+            };
+          })(partial, attrs[i]));
+          console.log('event added', uniqId, attrs[i].name);
+        }
+      }
+    });
+  }
+
   angular.module('doTA', [])
     .config(['$provide',function(P) {
-      P.factory('doTA', function(){return doTA;});
+      P.factory('doTA', function(){
+        doTA.addEvents = addEvents;
+        return doTA;
+      });
     }])
 
     .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', '$controller',
@@ -214,29 +239,7 @@
               }
 
               if(attrEvent) {
-                forEachArray(elem[0].querySelectorAll('[de]'), function(partial){
-                  var attrs = partial.attributes;
-                  //ie8
-                  if (!partial.addEventListener) {
-                    partial.addEventListener = partial.attachEvent;
-                  }
-                  console.log('attrs', attrDoTARender, attrs);
-                  for(var i = 0, l = attrs.length; i < l; i++){
-                    if (attrs[i].name.substr(0,3) === 'de-') {
-                      partial.addEventListener(attrs[i].name.substr(3), (function(target, attrs){
-                        return function(evt){
-                          // var target = evt.target || evt.srcElement;
-                          // console.log('event', partial, partial.getAttribute('dota-click'));
-                          evt.preventDefault();
-                          evt.stopPropagation();
-                          //isedom: disallow, so no $target here
-                          NewScope.$evalAsync(attrs.value, {$event: evt});
-                        };
-                      })(partial, attrs[i]));
-                      console.log('event added', attrDoTARender, attrs[i].name);
-                    }
-                  }
-                });
+                addEvents(elem[0], NewScope, attrDoTARender);
               }
 
               //$compile html if you need ng-model or ng-something
