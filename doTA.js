@@ -302,16 +302,6 @@ var doTA = (function() {'use strict';
     return partial.substring(pos, endPos);
   }
 
-  // function ngClassToClass(classObj, className) {
-  //   className = className || '';
-  //   for (var name in classObj) {
-  //     if (classObj[name]) {
-  //       className += (className ? ' ' : '') + name;
-  //     }
-  //   }
-  //   return className
-  // }
-
   function splitFilters(input) {
     var pos = input.indexOf('|');
     if (pos === -1) {
@@ -339,9 +329,6 @@ var doTA = (function() {'use strict';
   var varOrStringRegex = /'[^']*'|"[^"]*"|[\w$]+|[^\w$'"]+/g;
   var quotedStringRegex = /"[^"]*"|'[^']*'/g;
   var whiteSpaceRegex = /\s{2,}|\n/g;
-  var interpolationRegex = /\{\{|\}\}/;
-  var capturedInterpolationRegex = /\{\{([^}]+)\}\}/g;
-  // var filterMatchRegex = /([^|]+(?:\|\|)?)+/g;
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
   var XHTMLRegex = /^(?:input|img|br|hr)/i;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
@@ -411,36 +398,59 @@ var doTA = (function() {'use strict';
       return v;
     }
 
-    //interpolation without $filter
-    function Interpolate(str) {
-      if (str.indexOf('{{') >= 0) {
-        var Z = str.split(interpolationRegex);
-        var i;
-        //outside interpolation
-        for (i = 0; i < Z.length; i+= 2) {
-          if (Z[i].indexOf("'") >= 0) {
-            Z[i] = Z[i].replace(/'/g, "\\'");
+    function escapeSingleQuote(str) {
+      var quotePos = str.indexOf("'");
+      if (quotePos >= 0) {
+        var ret = '';
+        var prevQuotePos = 0;
+        do {
+          ret += str.substring(prevQuotePos, quotePos);
+          //escaped quote
+          if (str.charAt(quotePos - 1) !== '\\') {
+            ret += "\\";
           }
-        }
-        //inside {{ }}
-        for (i = 1; i < Z.length - 1; i+= 2) {
-          Z[i] = InterpolateWithFilter(null, Z[i]);
-        }
-        return Z.join('');
+          prevQuotePos = quotePos;
+          quotePos = str.indexOf("'", prevQuotePos + 1);
+        } while (quotePos > 0);
+        ret += str.substring(prevQuotePos, str.length);
+        return ret;
       } else {
-        if (str.indexOf("'") >= 0) {
-          return str.replace(/'/g, "\\'");
-        }
         return str;
       }
     }
 
-    //InterpolateWithFilter regex replace
-    function TextInterpolate(str) {
-      return str.replace(capturedInterpolationRegex, InterpolateWithFilter);
+    // Interpolation
+    function Interpolate(str) {
+      var pos = str.indexOf('{{');
+      if (pos >= 0) {
+        var prevPos = 0;
+        var ret = '';
+        var outsideStr, insideStr;
+        do {
+          outsideStr = str.substring(prevPos, pos);
+          ret += escapeSingleQuote(outsideStr);
+
+          //skip {{
+          prevPos = pos + 2;
+          pos = str.indexOf('}}', prevPos);
+
+          insideStr = str.substring(prevPos, pos);
+          ret += InterpolateWithFilter(null, insideStr);
+
+          //skip }} for next
+          prevPos = pos + 2;
+          pos = str.indexOf('{{', prevPos);
+        } while (pos > 0);
+
+        //remaing text outside interpolation
+        ret += escapeSingleQuote(str.substring(prevPos, str.length));
+        return ret;
+      } else {
+        return escapeSingleQuote(str);
+      }
     }
 
-    //interpolation with $filter
+    // Interpolation with $filter
     function InterpolateWithFilter($0, $1) {
       //console.log(333,$1);
       var pos = $1.indexOf('|');
@@ -697,23 +707,15 @@ var doTA = (function() {'use strict';
 
       //text node
       ontext: function(text) {
-
-        //just expand interpolation on text nodes
-        if (text.indexOf('{{') >= 0) {
-          //console.log(22, 'start');
-          text = TextInterpolate(text);
-        }
-
-        //remove extra spacing, and line breaks
-        FnText += Indent(level) + ('R+=\'' + text + '\';\n')
+        //console.log([text]);
+        FnText += Indent(level) + ('R+=\'' + Interpolate(text) + '\';\n')
           .replace(/\+''|''\+/g,'');
       },
 
       //comment node
       oncomment: function(data) {
         //console.log(111,[data]);
-        //just encode single code on comment tag
-        FnText += Indent(level) + "R+='<" + data.replace(/'/g,"\\'") + ">';\n";
+        FnText += Indent(level) + "R+='<" + Interpolate(data) + ">';\n";
       }
     });
 
@@ -724,9 +726,11 @@ var doTA = (function() {'use strict';
 
     FnText += Indent(0) +'return R;\n';
 
-    //concat some lines by default for performance
+    //Default Optimization
+    // - concat possible lines for performance
     FnText = FnText.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
 
+    //extra optimization, which might take some more CPU
     if (options.optimize) {
       FnText = FnText.replace(removeUnneededQuotesRegex,'$1$2');
     }
