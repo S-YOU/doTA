@@ -599,19 +599,19 @@ var doTA = (function() {'use strict';
             } else if (commaPos > 0) {
               var key = repeatVar.substr(0, commaPos);
               var value = repeatVar.substr(commaPos + 1);
-              FnText += Indent(level, 1) + 'var D' + level + '=' + repeatSrcNew + ';\n';
+              FnText += Indent(level, 1) + 'var ' + value + ',D' + level + '=' + repeatSrcNew + ';\n';
               FnText += Indent(level, 1) + 'for(var ' + key + ' in D' + level + '){\n';
               //                                      space is needed for manual uglify  ->  vvv
-              FnText += Indent(level) + 'var ' + value + ' = ' + 'D' + level + '[' + key + ']; \n';
+              FnText += Indent(level) + value + ' = ' + 'D' + level + '[' + key + ']; \n';
               VarMap[key] = VarMap[value] = 1;
 
             // Array: "k in []" ==> while loop
             } else {
-              FnText += Indent(level, 1) + 'var D' + level + '=' + repeatSrcNew + ','
+              FnText += Indent(level, 1) + 'var ' + repeatVar + ',D' + level + '=' + repeatSrcNew + ','
                 + i + '=-1,' + l + '=D' + level + '.length;\n';
               FnText += Indent(level, 1) + 'while(++' + i + '<' + l + '){\n';
               //                                 space is needed for manual uglify  ->  vvv
-              FnText += Indent(level) + 'var ' + repeatVar + '=D' + level + '[' + i + ']; \n';
+              FnText += Indent(level) + repeatVar + '=D' + level + '[' + i + ']; \n';
               VarMap[repeatVar] = 1;
             }
             //remote attribute not to get forwarded to angular

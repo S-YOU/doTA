@@ -2,7 +2,7 @@
 var ARGV = process.argv;
 var DEBUG = +ARGV[2] >= 2;
 var FILTER = ARGV[3] && ARGV[3].toLowerCase();
-console.log(ARGV);
+// console.log(ARGV);
 
 var doTA = require('../dist/doTA' + (DEBUG ? '' : '.min'));
 var templates = require('../fixtures/custom');
