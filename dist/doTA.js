@@ -341,17 +341,14 @@ var doTA = (function() {'use strict';
   var noValAttrRegex = /^(?:checked|selected|disabled)/;
   var $indexRegex = /\$index/g;
 
-  var compiledCount = 0;
-
   function compileHTML(template, options) {
     options = options || {};
     var val_mod = options.loose ? "||''" : '';
     var isPatch = options.watchDiff;
     var VarMap = {$index: 1, undefined: 1, $attr:1};
     var level = 0, LevelMap = {}, LevelVarMap = {}, WatchMap = {}, Watched, doTAPass, doTAContinue, compiledFn;
-    var uniqId = this.CH[options.dotaRender] || compiledCount++;
+    var uniqId = this.getId(options.dotaRender);
     var idHash = {};
-    this.CH[options.dotaRender] = uniqId;
 
     var FnText = Indent(level) + "'use strict';var " +
       (isPatch ? 'N=0,J=' + uniqId + ',' : '') +
@@ -802,11 +799,36 @@ var doTA = (function() {'use strict';
     return compiledFn;
   }
 
+  var compiledHash = {};
+  var lastId = 0;
+
+  function initCompileHash(obj) {
+    for (var x in obj) {
+      compiledHash[x] = obj[x];
+      if (obj[x] > lastId) {
+        lastId = obj[x];
+      }
+    }
+  }
+
+  function getUniqId(key) {
+    if (key) {
+      if (compiledHash[key]) {
+        return compiledHash[key];
+      } else {
+        compiledHash[key] = lastId;
+        return lastId++;
+      }
+    } else {
+      return lastId++;
+    }
+  }
+
   var doTAObj = {
     // nc: ngClassToClass,
     diff: diffPatchHTML,
-    CH: {}, //compiledHashKeys
-    initCH: function(x){this.CH=x},
+    getId: getUniqId,
+    initCH: initCompileHash,
     compile: compileHTML,
     C: {}, //Cached compiled functions
     D: {}, //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
