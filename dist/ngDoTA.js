@@ -33,20 +33,26 @@ var doTA = (function() {'use strict';
   }
 
   //parse attributes from html open tag and make dict object
-  function parseAttrs(chunk) {
+  function parseAttrs(chunk, func) {
     var attrs = {}, tagName;
     var pos = chunk.indexOf(' ');
+    var len, attrName, attrVal;
+    var valStart, valEndPos;
 
     if (pos !== -1) {
       tagName = chunk.slice(0, pos);
-      var len = chunk.length;
+      len = chunk.length;
+
       //console.log(222, [pos, chunk]);
       while (++pos < len) {
         var eqPos = chunk.indexOf('=', pos);
 
         // ** attribute without value (last attribute) **
         if (eqPos === -1) {
-          attrs[chunk.slice(pos)] = "";
+          attrName = chunk.slice(pos);
+          if (attrName !== '/') {
+            attrs[attrName] = "";
+          }
           //attrs required will be required="", while is valid syntax
           //http://www.w3.org/TR/html-markup/syntax.html#syntax-attrs-empty
           break;
@@ -62,10 +68,10 @@ var doTA = (function() {'use strict';
         // }
 
         //console.log(33, [eqPos]);
-        var attrName = chunk.slice(pos, eqPos), attrVal;
+        attrName = chunk.slice(pos, eqPos);
         //console.log(331, [attrName]);
 
-        var valStart = chunk[eqPos + 1], valEndPos;
+        valStart = chunk[eqPos + 1];
         //console.log(332, [valStart]);
 
         //if attribute value is start with quote
@@ -94,12 +100,44 @@ var doTA = (function() {'use strict';
           }
         }
       }
+
+      func.onopentag(tagName, attrs);
+
+      tagName = tagName.toLowerCase();
+      if (tagName === 'input' || tagName === 'img') {
+        //http://www.w3.org/TR/html-markup/syntax.html
+        //area, base, br, col, command, embed, hr, img, input, keygen, link, meta, param, source, track, wbr
+        func.onvoidtag();
+      } else if (attrName === '/') {
+        func.onclosetag(tagName);
+      }
+
+    //no attributes
     } else {
-      tagName = chunk;
+
+      //self closing, explicit
+      if (chunk.charAt(chunk.length - 1) === '/') {
+        tagName = chunk.slice(0, -1);
+        func.onopentag(tagName, attrs);
+
+        tagName = tagName.toLowerCase();
+        if (tagName === 'br' || tagName === 'hr') {
+          func.onvoidtag();
+        } else {
+          func.onclosetag(tagName);
+        }
+      } else {
+        tagName = chunk;
+        func.onopentag(chunk, attrs);
+
+        //self closing, implicit
+        tagName = tagName.toLowerCase();
+        if (tagName === 'br' || tagName === 'hr') {
+          func.onvoidtag();
+        }
+      }
     }
 
-    //console.log(1111, tagName, attrs, [attrs ? 1: 2]);
-    return [tagName, attrs];
   }
 
   var events = ' change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
@@ -107,8 +145,8 @@ var doTA = (function() {'use strict';
 
   //minimal stripped down html parser
   function parseHTML(html, func) {
-    if (!html) {return;}
-    var prevPos = 0, pos = html.indexOf('<'); //chunks.indexOf('<');
+    if (!html) { return; }
+    var prevPos = 0, pos = html.indexOf('<');
     do {
       if (html.charAt(pos) === '<') {
         pos++;
@@ -127,7 +165,8 @@ var doTA = (function() {'use strict';
           prevPos = pos;
           pos = html.indexOf('>', prevPos);
           // console.log(['opentag', prevPos, pos, html.substring(prevPos, pos), parseAttrs(html.substring(prevPos, pos))])
-          func.onopentag.apply(this, parseAttrs(html.substring(prevPos, pos)));
+          // func.onopentag.apply(this, parseAttrs(html.substring(prevPos, pos)));
+          parseAttrs(html.substring(prevPos, pos), func);
         }
       } else if (html.charAt(pos) === '>') { //&& html.charAt(pos + 1) !== '<'
         prevPos = ++pos;
@@ -137,7 +176,7 @@ var doTA = (function() {'use strict';
           func.ontext(html.substring(prevPos, pos));
         }
       } else {
-        // console.log('done?', [pos, len, html.substring(prevPos, pos), html.slice(pos)]);
+        console.error('Parse ERR?', [prevPos, pos, html.substring(prevPos, pos), html.slice(pos)]);
         break;
       }
 
@@ -336,7 +375,7 @@ var doTA = (function() {'use strict';
   var quotedStringRegex = /"[^"]*"|'[^']*'/g;
   var whiteSpaceRegex = /\s{2,}|\n/g;
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
-  var XHTMLRegex = /^(?:input|img|br|hr)/i;
+  // var XHTMLRegex = /^(?:input|img|br|hr)/i;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
   var noValAttrRegex = /^(?:checked|selected|disabled)/;
   var $indexRegex = /\$index/g;
@@ -693,18 +732,20 @@ var doTA = (function() {'use strict';
           FnText += Indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P,X)); \n';
         }
 
-        //some tag dont have close tag
-        if (!XHTMLRegex.test(tagName)) {
-          //there is more, but most not used or can't use with doTA, so excluding them
-          //http://webdesign.about.com/od/htmltags/qt/html-void-elements.htm
-          //Note: self closing syntax is NOT supported. Eg. <img /> or even <div />
-          level++;
+        level++;
+      },
 
-        //ng-repeat or ng-if on self closing tag
-        } else if (LevelMap[level] > 0) {
+      //void tag no need to write closing tag
+      onvoidtag: function() {
+        level--;
+        while (LevelMap[level] > 0) {
+          //console.log(LevelMap[level], 'ends here at level', level);
           FnText += Indent(level, 1) + '}\n';
           LevelMap[level]--;
           LevelVarMap[level] = 0;
+        }
+        if (doTAPass && doTAPass >= level) {
+          doTAPass = 0;
         }
       },
 

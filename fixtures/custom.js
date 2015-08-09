@@ -15,4 +15,5 @@ module.exports = {
   'withFilterOptions': '<div ng-repeat="x in arr">{{x | date:"YYMMDD"}}<!--test--></div><!--test2-->',
 
   'jsperf': '<div id="{{id}}"><ul><li ng-repeat="value in data" class="test-{{id}}">{{value}}</li></ul></div>',
+  'selfClosing': '<div/><div /><br><hr><div ng-repeat="x in data"><img src="{{x}}" /></div>',
 }
