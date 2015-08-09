@@ -57,6 +57,7 @@
 
   function addEvents(elem, scope, uniqId) {
     forEachArray(elem.querySelectorAll('[de]'), function(partial){
+      if (partial.de) { return; } //only attach events once
       var attrs = partial.attributes;
       console.log('attrs', uniqId, attrs);
       for(var i = 0, l = attrs.length; i < l; i++){
@@ -74,6 +75,7 @@
           console.log('event added', uniqId, attrs[i].name);
         }
       }
+      partial.de = 1;
     });
   }
 
