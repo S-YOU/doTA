@@ -635,13 +635,13 @@ var doTA = (function() {'use strict';
             delete attrs['ng-if'];
           }
 
-          if ('elif' in attrs) {
+          if (attrs['elif'] !== undefined) {
             FnText += Indent(level, 1) + 'else if('+ AttachScope(attrs['elif']) +'){\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             delete attrs['elif'];
           }
 
-          if ('else' in attrs) {
+          if (attrs['else'] !== undefined) {
             FnText += Indent(level, 1) + 'else{\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             delete attrs['else'];
@@ -705,6 +705,11 @@ var doTA = (function() {'use strict';
               } else if (noValAttrRegex.test(attrName)) {
                 noValAttrs += "'+(" + AttachScope(attrVal) + "?' " + attrName + "=\"\"':'')+'";
                 //noValAttrs will attach later
+                continue;
+
+              //ng-value
+              } else if (attrName === 'value') {
+                interpolatedAttrs.value = "'+(" + AttachScope(attrVal) + ")+'";
                 continue;
               }
             }

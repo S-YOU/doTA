@@ -10,7 +10,7 @@
         <div>Interpolate: <span>{{[name,select,checkbox1,checkbox2,radio]}}</span></div>
         <div>ngBind: <span ng-bind="[name,select,checkbox1,checkbox2,radio]"></span></div>
         <input ng-model="name" throttle="15">
-        <input ng-model="name">
+        <input ng-model="name2" ng-value="name3">
         <select ng-model="select">
           <option value="">default</option>
           <option value="1st">FIRST</option>
@@ -65,6 +65,7 @@
         console.timeEnd('data refresh');
       }
       $scope.refresh();
+      $scope.name = "test123";
 
   }])
   </script>

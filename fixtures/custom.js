@@ -23,4 +23,6 @@ module.exports = {
 
   'else': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div else>else</div></div>',
   'elif': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div elif="x===2">2</div><div else>else</div></div>',
+
+  'ngValue': '<div ng-repeat="x in data"><input ng-value="x"></div>',
 }
