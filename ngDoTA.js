@@ -91,7 +91,7 @@
       function(doTA, $http, $filter, $templateCache, $compile, $controller) {
       return {
         restrict: 'A',
-        priority: 1000,
+        priority: 10000,
         terminal: true,
         controller: angular.noop,
         link: angular.noop,
@@ -409,7 +409,7 @@
     .directive('dotaInclude', ['$http', '$templateCache', '$compile', function($http, $templateCache, $compile) {
       return {
         restrict: 'A',
-        priority: 1000,
+        priority: 10000,
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
@@ -427,7 +427,7 @@
     .directive('dotaTemplate', ['$http', '$templateCache', '$compile', function($http, $templateCache, $compile) {
       return {
         restrict: 'A',
-        priority: 1000,
+        priority: 10000,
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {

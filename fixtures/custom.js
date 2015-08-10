@@ -16,4 +16,8 @@ module.exports = {
 
   'jsperf': '<div id="{{id}}"><ul><li ng-repeat="value in data" class="test-{{id}}">{{value}}</li></ul></div>',
   'selfClosing': '<div/><div /><br><hr><div ng-repeat="x in data"><img src="{{x}}" /></div>',
+
+  'ngShowHide': '<div ng-repeat="x in data"><div ng-show="x">TRUE</div><div ng-hide="x">FALSE</div></div>',
+  'ngShowHideWithClass': '<div ng-repeat="x in data"><div class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old">FALSE</div></div>',
+  'ngShowHideWithNgClass': '<div ng-repeat="x in data"><div ng-class="{shiny:1}" class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old" ng-class="{darky:0}">FALSE</div></div>',
 }

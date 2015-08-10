@@ -377,7 +377,9 @@ var doTA = (function() {'use strict';
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
   // var XHTMLRegex = /^(?:input|img|br|hr)/i;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
-  var noValAttrRegex = /^(?:checked|selected|disabled)/;
+
+  // https://github.com/kangax/html-minifier/issues/63
+  var noValAttrRegex = /^(?:checked|selected|disabled|readonly|multiple|required|hidden|nowrap)/;
   var $indexRegex = /\$index/g;
 
   function compileHTML(template, options) {
@@ -538,7 +540,7 @@ var doTA = (function() {'use strict';
       //open tag with attributes
       onopentag: function(tagName, attrs) {
         // debug && console.log('onopentag', [tagName, attrs]);
-        var interpolatedAttrs = {}, customId, tagId, hasNgClass, noValAttrs = '';
+        var interpolatedAttrs = {}, customId, tagId, noValAttrs = '', attrName, attrVal;
 
         //skip parsing ng-if, ng-repeat, ng-class with, dota
         // but interpolation will still be evaluated (by-design)
@@ -640,59 +642,77 @@ var doTA = (function() {'use strict';
 
           if (attrs['ng-class']) {
             var ngScopedClass = AttachScope(attrs['ng-class']), match;
-            attrs.class = (attrs.class ? Interpolate(attrs.class) : '');
+            interpolatedAttrs.class = (attrs.class ? Interpolate(attrs.class) : '');
             while((match = ngClassRegex.exec(ngScopedClass)) !== null) {
-              attrs.class +=
+              interpolatedAttrs.class +=
                 ("'+(" + match[2] + '?' +
-                  "'" + (attrs.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
+                  "'" + (interpolatedAttrs.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
                   "':'')+'");
             }
-            attrs.class = attrs.class.replace(/\+''\+/g, '+');
-            //ToDo: Find way to remove this flag
-            hasNgClass = 1;
             delete attrs['ng-class'];
           }
 
-          //run others ng- attributes first
-          for(var x in attrs) {
-            if (x.substr(0, 3) !== 'ng-') { continue; }
+          if (attrs['ng-show']) {
+            interpolatedAttrs.class = (interpolatedAttrs.class || attrs.class || '');
+            interpolatedAttrs.class += "'+(" + AttachScope(attrs['ng-show']) +
+              "?'':'" + (interpolatedAttrs.class ? ' ' : '') + "ng-hide')+'";
+            delete attrs['ng-show'];
+          }
 
+          if (attrs['ng-hide']) {
+            interpolatedAttrs.class = (interpolatedAttrs.class || attrs.class || '');
+            interpolatedAttrs.class += "'+(" + AttachScope(attrs['ng-hide']) +
+              "?'" + (interpolatedAttrs.class ? ' ' : '') + "ng-hide':'')+'";
+            delete attrs['ng-hide'];
+          }
+
+        } //!doTAPass || doTAContinue
+
+        //remove +''+ from class, for unnecessary string concat
+        if (interpolatedAttrs.class) {
+          interpolatedAttrs.class = interpolatedAttrs.class.replace(/\+''\+/g, '+')
+          delete attrs.class;
+        }
+
+
+        // expand interpolations on attributes, and some more
+        for (var x in attrs) {
+          attrVal = attrs[x];
+
+          // some ng- attributes
+          if (x.substr(0, 3) === 'ng-') {
             //some ng-attrs are just don't need it here.
-            var attrName = x.substr(3);
+            attrName = x.substr(3);
+            //something like ng-src, ng-href, etc.
             if (lazyNgAttrRegex.test(attrName)) {
-              //overwrite non ng-
-              attrs[attrName] = attrs[x];
-              //delete above ng- attribute, so angular won't come in even if you $compile
-              delete attrs[x];
+              x = attrName;
 
             //convert ng-events to dota-events, to be bind later with native events
             } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
-              attrs['de'] = '1'; //dota-event
-              attrs['de-' + attrName] = attrs[x];
-              delete attrs[x];
+              //adding attr "de" for querySelectorAll in ngDoTA
+              interpolatedAttrs.de = '1'; //dota-event
+              x = 'de-' + attrName;
 
             } else if (noValAttrRegex.test(attrName)) {
-              noValAttrs += "'+(" + AttachScope(attrs[x]) + "?' " + attrName + "=\"\"':'')+'";
-              delete attrs[x];
+              noValAttrs += "'+(" + AttachScope(attrVal) + "?' " + attrName + "=\"\"':'')+'";
+              //noValAttrs will attach later
+              continue;
             }
           }
-        }
-
-        //other attributes, expand interpolations
-        for(var x in attrs) {
-          interpolatedAttrs[x] = ((hasNgClass && x === 'class') ? attrs[x] : Interpolate(attrs[x]));
 
           //ng-repeat loop variables are not available!
           // only way to acccess is to use $index like "data[$index]"
           // instead of "item" as in "item in data"
-          if (interpolatedAttrs[x].indexOf('$index') >= 0) {
+          if (attrVal.indexOf('$index') >= 0) {
             //console.log([val], LevelMap[level]);
             for(var j = level; j >= 0; j--) {
               if (LevelVarMap[j]) {
-                interpolatedAttrs[x] = interpolatedAttrs[x].replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
+                interpolatedAttrs[x] = Interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
                 break;
               }
             }
+          } else {
+            interpolatedAttrs[x] = Interpolate(attrVal);
           }
         }
 
@@ -708,10 +728,12 @@ var doTA = (function() {'use strict';
           }
         }
 
-        //other attibutes
+        //write back attibutes
         for(var k in interpolatedAttrs) {
           FnText += " " + k + '="' + interpolatedAttrs[k] + '"';
         }
+
+        //attach boolean attributes at last
         FnText += noValAttrs + ">';\n";
 
         if (isPatch) {
