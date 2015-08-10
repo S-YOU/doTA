@@ -1288,9 +1288,9 @@ if (typeof module !== "undefined" && module.exports) {
                 });
                 console.log(attrDoTARender,'after $compile partial');
 
-              } else if(attrCompileAll){
-                //just compile the whole template with $compile
-                $compile(rawElem)(NewScope);
+              } else if (attrCompileAll){
+                //compile child nodes
+                $compile(rawElem.contentDocument || rawElem.childNodes)(NewScope);
                 console.log(attrDoTARender,'after $compile all');
               }
             }
@@ -1302,9 +1302,6 @@ if (typeof module !== "undefined" && module.exports) {
                 if (NewScopeDefined) {
                   console.log('oldScope $destroy');
                   console.log('watchers', Watchers);
-                  while (Watchers.length) {
-                    Watchers.pop()();
-                  }
                   NewScope.$destroy();
                 }
                 NewScope = scope.$new();
@@ -1376,6 +1373,10 @@ if (typeof module !== "undefined" && module.exports) {
                   //if needed, attach events and $compile
                   attachEventsAndCompile(elem[0]);
                 }
+
+              //attach client side to prerender context
+              } else {
+                attachEventsAndCompile(elem[0]);
               }
 
               //execute raw functions, like jQuery
