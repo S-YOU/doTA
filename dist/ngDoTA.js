@@ -666,53 +666,69 @@ var doTA = (function() {'use strict';
             delete attrs['ng-hide'];
           }
 
-        } //!doTAPass || doTAContinue
+          //remove +''+ from class, for unnecessary string concat
+          if (interpolatedAttrs.class) {
+            interpolatedAttrs.class = interpolatedAttrs.class.replace(/\+''\+/g, '+')
+            delete attrs.class;
+          }
 
-        //remove +''+ from class, for unnecessary string concat
-        if (interpolatedAttrs.class) {
-          interpolatedAttrs.class = interpolatedAttrs.class.replace(/\+''\+/g, '+')
-          delete attrs.class;
-        }
+          // expand interpolations on attributes, and some more
+          for (var x in attrs) {
+            attrVal = attrs[x];
 
+            // some ng- attributes
+            if (x.substr(0, 3) === 'ng-') {
+              //some ng-attrs are just don't need it here.
+              attrName = x.substr(3);
+              //something like ng-src, ng-href, etc.
+              if (lazyNgAttrRegex.test(attrName)) {
+                x = attrName;
 
-        // expand interpolations on attributes, and some more
-        for (var x in attrs) {
-          attrVal = attrs[x];
+              //convert ng-events to dota-events, to be bind later with native events
+              } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
+                //adding attr "de" for querySelectorAll in ngDoTA
+                interpolatedAttrs.de = '1'; //dota-event
+                x = 'de-' + attrName;
 
-          // some ng- attributes
-          if (x.substr(0, 3) === 'ng-') {
-            //some ng-attrs are just don't need it here.
-            attrName = x.substr(3);
-            //something like ng-src, ng-href, etc.
-            if (lazyNgAttrRegex.test(attrName)) {
-              x = attrName;
+              } else if (noValAttrRegex.test(attrName)) {
+                noValAttrs += "'+(" + AttachScope(attrVal) + "?' " + attrName + "=\"\"':'')+'";
+                //noValAttrs will attach later
+                continue;
+              }
+            }
 
-            //convert ng-events to dota-events, to be bind later with native events
-            } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
-              //adding attr "de" for querySelectorAll in ngDoTA
-              interpolatedAttrs.de = '1'; //dota-event
-              x = 'de-' + attrName;
-
-            } else if (noValAttrRegex.test(attrName)) {
-              noValAttrs += "'+(" + AttachScope(attrVal) + "?' " + attrName + "=\"\"':'')+'";
-              //noValAttrs will attach later
-              continue;
+            //ng-repeat loop variables are not available!
+            // only way to acccess is to use $index like "data[$index]"
+            // instead of "item" as in "item in data"
+            if (attrVal.indexOf('$index') >= 0) {
+              //console.log([val], LevelMap[level]);
+              for(var j = level; j >= 0; j--) {
+                if (LevelVarMap[j]) {
+                  interpolatedAttrs[x] = Interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
+                  break;
+                }
+              }
+            } else {
+              interpolatedAttrs[x] = Interpolate(attrVal);
             }
           }
 
-          //ng-repeat loop variables are not available!
-          // only way to acccess is to use $index like "data[$index]"
-          // instead of "item" as in "item in data"
-          if (attrVal.indexOf('$index') >= 0) {
-            //console.log([val], LevelMap[level]);
-            for(var j = level; j >= 0; j--) {
-              if (LevelVarMap[j]) {
-                interpolatedAttrs[x] = Interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
-                break;
+        // pass all attributes to angular
+        } else {
+          for (x in attrs) {
+            //or just do use escapeSingleQuote
+
+            if (attrs[x].indexOf('$index') >= 0) {
+              //console.log([val], LevelMap[level]);
+              for(var j = level; j >= 0; j--) {
+                if (LevelVarMap[j]) {
+                  interpolatedAttrs[x] = Interpolate(attrs[x]).replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
+                  break;
+                }
               }
+            } else {
+              interpolatedAttrs[x] = Interpolate(attrs[x]);
             }
-          } else {
-            interpolatedAttrs[x] = Interpolate(attrVal);
           }
         }
 
@@ -1005,7 +1021,7 @@ if (typeof module !== "undefined" && module.exports) {
       function(doTA, $http, $filter, $templateCache, $compile, $controller) {
       return {
         restrict: 'A',
-        priority: 1000,
+        priority: 10000,
         terminal: true,
         controller: angular.noop,
         link: angular.noop,
@@ -1323,7 +1339,7 @@ if (typeof module !== "undefined" && module.exports) {
     .directive('dotaInclude', ['$http', '$templateCache', '$compile', function($http, $templateCache, $compile) {
       return {
         restrict: 'A',
-        priority: 1000,
+        priority: 10000,
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
@@ -1341,7 +1357,7 @@ if (typeof module !== "undefined" && module.exports) {
     .directive('dotaTemplate', ['$http', '$templateCache', '$compile', function($http, $templateCache, $compile) {
       return {
         restrict: 'A',
-        priority: 1000,
+        priority: 10000,
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
