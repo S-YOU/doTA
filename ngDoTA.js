@@ -168,6 +168,54 @@
     });
   }
 
+  function addNgModel(elem, scope, uniqId) {
+    forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
+      //override ng-model
+      var modelName = partial.getAttribute('ng-model');
+      partial.removeAttribute('ng-model');
+
+      //textbox default event is input unless IE8, all others are change event
+      var updateOn = partial.getAttribute('update-on') ||
+        (partial.type !== 'text' || msie <= 8 ? 'change' : 'input');
+      var throttleVal = +partial.getAttribute('throttle') || 100;
+
+      //use checked property for checkbox and radio
+      var bindProp = partial.getAttribute('bind-prop') ||
+        ((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
+      var curValue = resolveObject(modelName, scope) || '';
+
+      // console.log('partial', [partial.tagName, partial.type])
+      if (bindProp) {
+        //set true or false on dom properties
+        partial[bindProp] = partial.value === curValue;
+      } else {
+        partial.value = curValue;
+      }
+
+      //bind each events
+      var parsed;
+      forEachArray(updateOn.split(' '), function(evtName){
+        evtName = evtName.trim();
+        partial.addEventListener(evtName, throttle(function(evt) {
+          if (!parsed) {
+            parsed = parseObject(modelName, scope);
+          }
+          evt.preventDefault();
+          evt.stopPropagation();
+
+          // console.log('event', evtName, evt.target, [evt.target[bindProp || 'value']])
+          scope.$applyAsync((function(){
+            if (bindProp) {
+              parsed.assign(bindProp && evt.target[bindProp] ? evt.target.value : undefined);
+            } else {
+              parsed.assign(evt.target.value);
+            }
+          }))
+        }, throttleVal));
+      });
+    });
+  }
+
   angular.module('doTA', [])
     .config(['$provide',function(P) {
       P.factory('doTA', function(){
@@ -264,57 +312,14 @@
             }
 
             function attachEventsAndCompile(rawElem) {
+
+              if (attrModel) {
+                addNgModel(rawElem, NewScope, attrDoTARender);
+              }
+
               //attach events before replacing
               if (attrEvent) {
                 addEvents(rawElem, NewScope, attrDoTARender);
-              }
-
-              if (attrModel) {
-                forEachArray(rawElem.querySelectorAll('[ng-model]'), function(partial) {
-                  //override ng-model
-                  var modelName = partial.getAttribute('ng-model');
-                  partial.removeAttribute('ng-model');
-
-                  //textbox default event is input unless IE8, all others are change event
-                  var updateOn = partial.getAttribute('update-on') ||
-                    (partial.type !== 'text' || msie <= 8 ? 'change' : 'input');
-                  var throttleVal = +partial.getAttribute('throttle') || 100;
-
-                  //use checked property for checkbox and radio
-                  var bindProp = partial.getAttribute('bind-prop') ||
-                    ((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
-                  var curValue = resolveObject(modelName, NewScope) || '';
-
-                  // console.log('partial', [partial.tagName, partial.type])
-                  if (bindProp) {
-                    //set true or false on dom properties
-                    partial[bindProp] = partial.value === curValue;
-                  } else {
-                    partial.value = curValue;
-                  }
-
-                  //bind each events
-                  var parsed;
-                  forEachArray(updateOn.split(' '), function(evtName){
-                    evtName = evtName.trim();
-                    partial.addEventListener(evtName, throttle(function(evt) {
-                      if (!parsed) {
-                        parsed = parseObject(modelName, NewScope);
-                      }
-                      evt.preventDefault();
-                      evt.stopPropagation();
-
-                      // console.log('event', evtName, evt.target, [evt.target[bindProp || 'value']])
-                      NewScope.$applyAsync((function(){
-                        if (bindProp) {
-                          parsed.assign(bindProp && evt.target[bindProp] ? evt.target.value : undefined);
-                        } else {
-                          parsed.assign(evt.target.value);
-                        }
-                      }))
-                    }, throttleVal));
-                  });
-                });
               }
 
               //ng-bind
