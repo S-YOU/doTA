@@ -7,8 +7,8 @@
     <div dota-render=1 inline=1 watch=data model=1 bind=1 event=1>
       <button ng-click="refresh()">Refresh Data</button>
       <div>
-        <div>Interpolate: <span>{{[name,select,checkbox1,checkbox2,radio]}}</span></div>
-        <div>ngBind: <span ng-bind="[name,select,checkbox1,checkbox2,radio]"></span></div>
+        <div>Interpolate: <span>{{[name,name2,name3,select,checkbox1,checkbox2,radio]}}</span></div>
+        <div>ngBind: <span ng-bind="[name,name2,name3,select,checkbox1,checkbox2,radio]"></span></div>
         <input ng-model="name" throttle="15">
         <input ng-model="name2" ng-value="name3">
         <select ng-model="select">
@@ -47,7 +47,7 @@
   </div>
 
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js"></script>
-  <script src="../dist/ngDoTA.min.js"></script>
+  <script src="../dist/ngDoTA.js"></script>
   <script>
   angular.module('fasterAngular', ['doTA']).
     controller('mycontroller', ['$scope', function($scope){

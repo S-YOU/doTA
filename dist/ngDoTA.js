@@ -753,8 +753,14 @@ var doTA = (function() {'use strict';
         FnText += Indent(level) + "R+='<" + tagName;
 
         //make id attr come before anything
-        if (isPatch || customId) {
-          tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || uniqId + ".'+N+'"
+        if (isPatch) {
+          tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || uniqId + ".'+" + 'N' + "+'";
+          FnText += ' id="' + tagId + '"';
+          if (interpolatedAttrs.id) {
+            delete interpolatedAttrs.id;
+          }
+        } else if (customId) {
+          tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || "'+this.I+'";
           FnText += ' id="' + tagId + '"';
           if (interpolatedAttrs.id) {
             delete interpolatedAttrs.id;
@@ -1117,6 +1123,10 @@ if (typeof module !== "undefined" && module.exports) {
 
   function addNgModel(elem, scope, uniqId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
+      var dotaPass = partial.getAttribute('dota-pass');
+      console.log('dotaPass', [dotaPass]);
+      if (dotaPass != undefined) { return; } //null or undefined
+
       //override ng-model
       var modelName = partial.getAttribute('ng-model');
       partial.removeAttribute('ng-model');
@@ -1355,7 +1365,7 @@ if (typeof module !== "undefined" && module.exports) {
                 }
 
                 if(attrDebug) {
-                  console.log(attrDoTARender, v);
+                  /* */console.log(attrDoTARender, v);
                   // console.log(attrDoTARender, (func.F || func).toString());
                 }
 

@@ -170,6 +170,10 @@
 
   function addNgModel(elem, scope, uniqId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
+      var dotaPass = partial.getAttribute('dota-pass');
+      console.log('dotaPass', [dotaPass]);
+      if (dotaPass != undefined) { return; } //null or undefined
+
       //override ng-model
       var modelName = partial.getAttribute('ng-model');
       partial.removeAttribute('ng-model');
@@ -408,7 +412,7 @@
                 }
 
                 if(attrDebug) {
-                  console.log(attrDoTARender, v);
+                  /* */console.log(attrDoTARender, v);
                   // console.log(attrDoTARender, (func.F || func).toString());
                 }
 

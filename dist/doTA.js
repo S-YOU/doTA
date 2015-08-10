@@ -753,8 +753,14 @@ var doTA = (function() {'use strict';
         FnText += Indent(level) + "R+='<" + tagName;
 
         //make id attr come before anything
-        if (isPatch || customId) {
-          tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || uniqId + ".'+N+'"
+        if (isPatch) {
+          tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || uniqId + ".'+" + 'N' + "+'";
+          FnText += ' id="' + tagId + '"';
+          if (interpolatedAttrs.id) {
+            delete interpolatedAttrs.id;
+          }
+        } else if (customId) {
+          tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || "'+this.I+'";
           FnText += ' id="' + tagId + '"';
           if (interpolatedAttrs.id) {
             delete interpolatedAttrs.id;
