@@ -20,4 +20,7 @@ module.exports = {
   'ngShowHide': '<div ng-repeat="x in data"><div ng-show="x">TRUE</div><div ng-hide="x">FALSE</div></div>',
   'ngShowHideWithClass': '<div ng-repeat="x in data"><div class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old">FALSE</div></div>',
   'ngShowHideWithNgClass': '<div ng-repeat="x in data"><div ng-class="{shiny:1}" class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old" ng-class="{darky:0}">FALSE</div></div>',
+
+  'else': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div else>else</div></div>',
+  'elif': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div elif="x===2">2</div><div else>else</div></div>',
 }

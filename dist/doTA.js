@@ -635,6 +635,18 @@ var doTA = (function() {'use strict';
             delete attrs['ng-if'];
           }
 
+          if ('elif' in attrs) {
+            FnText += Indent(level, 1) + 'else if('+ AttachScope(attrs['elif']) +'){\n';
+            LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
+            delete attrs['elif'];
+          }
+
+          if ('else' in attrs) {
+            FnText += Indent(level, 1) + 'else{\n';
+            LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
+            delete attrs['else'];
+          }
+
           if (attrs['ng-init']) {
             FnText += Indent(level) + AttachScope(attrs["ng-init"]) + '; \n';
             delete attrs['ng-init'];
