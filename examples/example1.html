@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body ng-app="fasterAngular">
+  <h1>Faster Rendering With doTA</h1>
+  <div ng-controller="mycontroller">
+    <div dota-render=1 inline=1 watch=data model=1 bind=1 event=1>
+      <button ng-click="refresh()">Refresh Data</button>
+      <div>
+        <div>Interpolate: <span>{{[name,select,checkbox1,checkbox2,radio]}}</span></div>
+        <div>ngBind: <span ng-bind="[name,select,checkbox1,checkbox2,radio]"></span></div>
+        <input ng-model="name" update-on="input" throttle="15">
+        <select ng-model="select">
+          <option value="">default</option>
+          <option value="1st">FIRST</option>
+          <option value="2nd">SECOND</option>
+        </select>
+        <label>
+          <input type="checkbox" ng-model="checkbox1" value="c1">
+          CHK VALUE 1
+        </label>
+        <label>
+          <input type="checkbox" ng-model="checkbox2" value="c2">
+          CHK VALUE 2
+        </label>
+        <label>
+          <input name="radio" type="radio" ng-model="radio" value="r1">
+          VALUE 1
+        </label>
+        <label>
+          <input name="radio" type="radio" ng-model="radio" value="r2">
+          VALUE 2
+        </label>
+
+      </div>
+      <table>
+        <tr ng-repeat="line in data">
+          <td>{{line[0]}}</td>
+          <td>{{line[1]}}</td>
+          <td>{{line[2]}}</td>
+          <td>{{line[3]}}</td>
+          <td>{{line[4]}}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js"></script>
+  <script src="../dist/ngDoTA.min.js"></script>
+  <script>
+  angular.module('fasterAngular', ['doTA']).
+    controller('mycontroller', ['$scope', function($scope){
+      // Fill the data map with random data
+      $scope.refresh = function(){
+        console.time('data refresh')
+        var data = [];
+        for(var i = 0; i < 1500; ++i) {
+          data[i] = {};
+          for(var j = 0; j < 5; ++j) {
+            data[i][j] = Math.random();
+          }
+        }
+        $scope.data = data;
+        console.timeEnd('data refresh');
+      }
+      $scope.refresh();
+
+  }])
+  </script>
+
+</body>
+</html>

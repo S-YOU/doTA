@@ -931,6 +931,7 @@ if (typeof module !== "undefined" && module.exports) {
 /* global angular, doTA */
 (function (angular, document) {'use strict';
   var msie = document.documentMode;
+  var textContent = msie <= 8 ? 'innerText' : 'textContent';
   var hiddenDIV;
   setTimeout(function(){
     if (document.getElementById) {
@@ -959,6 +960,93 @@ if (typeof module !== "undefined" && module.exports) {
       }
     }
     return src;
+  }
+
+  //something like $eval to read value from nested objects with dots
+  function resolveObject(path, obj) {
+    return path.indexOf('.') >= 0 ? path.split('.').reduce(function (prev, curr) {
+      return prev ? prev[curr] : undefined;
+    }, obj) : obj[path];
+  }
+
+  //something like $parse
+  function parseObject(path, obj) {
+    if (path.indexOf('.') >= 0) {
+      var paths = path.split('.');
+      path = paths.splice(-1, 1)[0];
+      // console.log('path, last', paths, last)
+      obj = paths.reduce(function (prev, curr) {
+        // console.log('parseObject', [prev, curr])
+        if (!prev[curr]) {
+          prev[curr] = {};
+        }
+        return prev[curr];
+      }, obj);
+    }
+    return {
+      assign: function(val) {
+        obj[path] = val;
+      }
+    };
+  }
+
+  // var obj = {};
+  // var parsed = parseObject('name', obj);
+  // parsed.assign('test');
+  // console.log(obj);
+  // parsed = parseObject('three.one', obj);
+  // parsed.assign('haha');
+  // console.log(obj);
+
+  //debounce for events
+  // function debounce(fn, timeout) {
+  //   if (timeout === undefined) {
+  //     timeout = 200;
+  //   }
+  //   var timeoutId;
+  //   var args, thisArgs;
+  //   function debounced() {
+  //     fn.apply(thisArgs, args);
+  //   }
+  //   return function() {
+  //     args = arguments;
+  //     thisArgs = this;
+  //     if (timeoutId) {
+  //       clearTimeout(timeoutId);
+  //     }
+  //     // console.log('debounce: new timer', [timer]);
+  //     timeoutId = setTimeout(debounced, timeout);
+  //   };
+  // }
+
+  //throttle for events
+  function throttle(fn, timeout) {
+    if (timeout === undefined) {
+      timeout = 200;
+    }
+    var timeoutId;
+    var start = +new Date(), now;
+    // console.log('timeout', timeout)
+    var args, thisArgs;
+    function throttled() {
+      fn.apply(thisArgs, args);
+    }
+    return function() {
+      args = arguments;
+      thisArgs = this;
+      now = +new Date();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (now - start >= timeout) {
+        // console.log(now - start)
+        start = now;
+        throttled();
+        return;
+      }
+      // console.log('throttled: new timer', [timer]);
+      timeoutId = setTimeout(throttled, timeout);
+    };
   }
 
   //hide and destroy children
@@ -1027,7 +1115,7 @@ if (typeof module !== "undefined" && module.exports) {
         controller: angular.noop,
         link: angular.noop,
         compile: function() {
-          var NewScopeDefined, NewScope; //New scope flag, new Scope
+          var NewScopeDefined, NewScope, Watchers = [], BindValues = {}; //New scope flag, new Scope
 
           return function(scope, elem, attrs) {
             NewScope = scope;
@@ -1043,6 +1131,8 @@ if (typeof module !== "undefined" && module.exports) {
             var attrWatch = attrs.watch;
             var attrEncode = attrs.encode;
             var attrCompile = attrs.compile;
+            var attrModel = attrs.model;
+            var attrBind = attrs.bind;
             var attrCompileAll = attrs.compileAll;
             var attrDoTAOnload = attrs.dotaOnload;
             var attrDoTAOnloadScope = attrs.dotaOnloadScope;
@@ -1103,12 +1193,106 @@ if (typeof module !== "undefined" && module.exports) {
               return compiledFn;
             }
 
+            function attachEventsAndCompile(rawElem) {
+              //attach events before replacing
+              if (attrEvent) {
+                addEvents(rawElem, NewScope, attrDoTARender);
+              }
+
+              if (attrModel) {
+                forEachArray(rawElem.querySelectorAll('[ng-model]'), function(partial) {
+                  //override ng-model
+                  var modelName = partial.getAttribute('ng-model');
+                  partial.removeAttribute('ng-model');
+
+                  var updateOn = partial.getAttribute('update-on') || 'change';
+                  var throttleVal = +partial.getAttribute('throttle') || 100;
+
+                  //use checked property for checkbox and radio
+                  var bindProp = partial.getAttribute('bind-prop') ||
+                    ((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
+                  var curValue = resolveObject(modelName, NewScope) || '';
+
+                  // console.log('partial', [partial.tagName, partial.type])
+                  if (bindProp) {
+                    //set true or false on dom properties
+                    partial[bindProp] = partial.value === curValue;
+                  } else {
+                    partial.value = curValue;
+                  }
+
+                  //bind each events
+                  forEachArray(updateOn.split(' '), function(evtName){
+                    evtName = evtName.trim();
+                    partial.addEventListener(evtName, throttle(function(evt) {
+                      var parsed = parseObject(modelName, NewScope);
+                      evt.preventDefault();
+                      evt.stopPropagation();
+
+                      // console.log('event', evtName, evt.target, [evt.target[bindProp || 'value']])
+                      NewScope.$applyAsync((function(){
+                        if (bindProp) {
+                          parsed.assign(bindProp && evt.target[bindProp] ? evt.target.value : undefined);
+                        } else {
+                          parsed.assign(evt.target.value);
+                        }
+                      }))
+                    }, throttleVal));
+                  });
+                });
+              }
+
+              //ng-bind
+              if (attrBind) {
+                //remove old watchers, async
+                while (Watchers.length) {
+                  Watchers.pop()();
+                }
+
+                forEachArray(rawElem.querySelectorAll('[ng-bind]'), function(partial) {
+                  //override ng-bind
+                  var bindExpr = partial.getAttribute('ng-bind');
+                  partial.removeAttribute('ng-bind');
+
+                  if (BindValues[bindExpr]) {
+                    partial.innerHTML = BindValues[bindExpr];
+                  }
+                  Watchers.push(NewScope.$watchCollection(bindExpr, function(newVal, oldVal){
+                    if(newVal !== oldVal) {
+                      console.log(attrDoTARender, 'watch before bindExpr', console.dir(partial), '' + newVal);
+                      partial[textContent] = BindValues[bindExpr] = newVal || '';
+                      console.log(attrDoTARender, 'watch after render');
+                    }
+                  }));
+                });
+              }
+
+              //$compile html if you need ng-model or ng-something
+              if (attrCompile){
+                //partially compile each dota-pass and its childs,
+                // not sure this is suitable if you have so many dota-passes
+                forEachArray(rawElem.querySelectorAll('[dota-pass]'), function(partial){
+                  $compile(partial)(NewScope);
+                });
+                console.log(attrDoTARender,'after $compile partial');
+
+              } else if(attrCompileAll){
+                //just compile the whole template with $compile
+                $compile(rawElem)(NewScope);
+                console.log(attrDoTARender,'after $compile all');
+              }
+            }
+
             function render(func, patch){
 
               if (attrScope || attrNgController) {
                 console.log('scope', attrScope);
                 if (NewScopeDefined) {
                   console.log('oldScope $destroy');
+                  console.log('watchers', Watchers);
+                  while (Watchers.length) {
+                    Watchers.pop()();
+                  }
                   NewScope.$destroy();
                 }
                 NewScope = scope.$new();
@@ -1154,41 +1338,32 @@ if (typeof module !== "undefined" && module.exports) {
                 // console.log('patch?', [patch]);
                 if (patch) { return; }
 
+                //if node has some child, use appendChild
                 if (elem[0].firstChild) {
                   console.time('appendChild:' + attrDoTARender);
                   var newNode = document.createElement('div'), firstChild;
                   newNode.innerHTML = v;
+
+                  //if needed, attach events and $compile
+                  attachEventsAndCompile(newNode);
+
+                  //move child from temp nodes
                   while (firstChild = newNode.firstChild) {
                     elem[0].appendChild(firstChild);
                   }
                   console.timeEnd('appendChild:' + attrDoTARender);
                   console.log(attrDoTARender, 'after appendChild');
+
+                //if node is blank, use innerHTML
                 } else {
                   console.time('innerHTML:' + attrDoTARender);
                   elem[0].innerHTML = v;
                   console.timeEnd('innerHTML:' + attrDoTARender);
                   console.log(attrDoTARender, 'after innerHTML');
+
+                  //if needed, attach events and $compile
+                  attachEventsAndCompile(elem[0]);
                 }
-              }
-
-              if(attrEvent) {
-                addEvents(elem[0], NewScope, attrDoTARender);
-              }
-
-              //$compile html if you need ng-model or ng-something
-              if(attrCompile){
-
-                //partially compile each dota-pass and its childs,
-                // not sure this is suitable if you have so many dota-passes
-                forEachArray(elem[0].querySelectorAll('[dota-pass]'), function(partial){
-                  $compile(partial)(NewScope);
-                });
-                console.log(attrDoTARender,'after $compile partial');
-
-              } else if(attrCompileAll){
-                //just compile the whole template with $compile
-                $compile(elem.contents())(NewScope);
-                console.log(attrDoTARender,'after $compile all');
               }
 
               //execute raw functions, like jQuery
