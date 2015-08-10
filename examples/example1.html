@@ -9,7 +9,8 @@
       <div>
         <div>Interpolate: <span>{{[name,select,checkbox1,checkbox2,radio]}}</span></div>
         <div>ngBind: <span ng-bind="[name,select,checkbox1,checkbox2,radio]"></span></div>
-        <input ng-model="name" update-on="input" throttle="15">
+        <input ng-model="name" throttle="15">
+        <input ng-model="name">
         <select ng-model="select">
           <option value="">default</option>
           <option value="1st">FIRST</option>

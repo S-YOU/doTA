@@ -275,7 +275,9 @@
                   var modelName = partial.getAttribute('ng-model');
                   partial.removeAttribute('ng-model');
 
-                  var updateOn = partial.getAttribute('update-on') || 'change';
+                  //textbox default event is input unless IE8, all others are change event
+                  var updateOn = partial.getAttribute('update-on') ||
+                    (partial.type !== 'text' || msie <= 8 ? 'change' : 'input');
                   var throttleVal = +partial.getAttribute('throttle') || 100;
 
                   //use checked property for checkbox and radio
@@ -292,10 +294,13 @@
                   }
 
                   //bind each events
+                  var parsed;
                   forEachArray(updateOn.split(' '), function(evtName){
                     evtName = evtName.trim();
                     partial.addEventListener(evtName, throttle(function(evt) {
-                      var parsed = parseObject(modelName, NewScope);
+                      if (!parsed) {
+                        parsed = parseObject(modelName, NewScope);
+                      }
                       evt.preventDefault();
                       evt.stopPropagation();
 
