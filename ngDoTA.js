@@ -64,8 +64,9 @@
         if (attrs[i].name.substr(0,3) === 'de-') {
           partial.addEventListener(attrs[i].name.substr(3), (function(target, attrs){
             return function(evt){
-              // var target = evt.target || evt.srcElement;
-              // console.log('event', partial, partial.getAttribute('dota-click'));
+              if (!evt.target) { //make $event.target always available
+                evt.target = evt.srcElement;
+              }
               evt.preventDefault();
               evt.stopPropagation();
               //isedom: disallow, so no $target here

@@ -713,7 +713,7 @@ var doTA = (function() {'use strict';
             }
           }
 
-        // pass all attributes to angular
+        // pass all attributes to angular, except interpolation and $index
         } else {
           for (x in attrs) {
             //or just do use escapeSingleQuote

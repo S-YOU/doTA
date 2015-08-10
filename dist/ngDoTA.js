@@ -713,7 +713,7 @@ var doTA = (function() {'use strict';
             }
           }
 
-        // pass all attributes to angular
+        // pass all attributes to angular, except interpolation and $index
         } else {
           for (x in attrs) {
             //or just do use escapeSingleQuote
@@ -994,8 +994,9 @@ if (typeof module !== "undefined" && module.exports) {
         if (attrs[i].name.substr(0,3) === 'de-') {
           partial.addEventListener(attrs[i].name.substr(3), (function(target, attrs){
             return function(evt){
-              // var target = evt.target || evt.srcElement;
-              // console.log('event', partial, partial.getAttribute('dota-click'));
+              if (!evt.target) { //make $event.target always available
+                evt.target = evt.srcElement;
+              }
               evt.preventDefault();
               evt.stopPropagation();
               //isedom: disallow, so no $target here
