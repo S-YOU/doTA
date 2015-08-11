@@ -4,15 +4,15 @@
   var textContent = msie <= 8 ? 'innerText' : 'textContent';
   var hiddenDIV;
   setTimeout(function(){
-    if (document.getElementById) {
-      hiddenDIV = document.getElementById('dota-cache');
-      //add ngDoTA.min.js at the end body
-      if (!hiddenDIV && document.body) {
+    if (document.createElement) {
+      // hiddenDIV = document.getElementById('dota-cache');
+      // //add ngDoTA.min.js at the end body
+      // if (!hiddenDIV && document.body) {
         hiddenDIV = document.createElement('div');
-        hiddenDIV.id = 'dota-cache';
-        hiddenDIV.style.display = 'none';
-        document.body.appendChild(hiddenDIV);
-      }
+        // hiddenDIV.id = 'dota-cache';
+        // hiddenDIV.style.display = 'none';
+        // document.body.appendChild(hiddenDIV);
+      // }
     }
   });
   var BoolMap = {0: 0, 'false': 0};
@@ -143,35 +143,40 @@
     })
   }
 
-  function addEvents(elem, scope, uniqId) {
-    forEachArray(elem.querySelectorAll('[de]'), function(partial){
-      if (partial.de) { return; } //only attach events once
-      var attrs = partial.attributes;
-      console.log('attrs', uniqId, attrs);
-      for(var i = 0, l = attrs.length; i < l; i++){
-        if (attrs[i].name.substr(0,3) === 'de-') {
-          partial.addEventListener(attrs[i].name.substr(3), (function(target, attrs){
-            return function(evt){
-              if (!evt.target) { //make $event.target always available
-                evt.target = evt.srcElement;
-              }
-              evt.preventDefault();
-              evt.stopPropagation();
-              //isedom: disallow, so no $target here
-              scope.$evalAsync(attrs.value, {$event: evt});
-            };
-          })(partial, attrs[i]));
-          console.log('event added', uniqId, attrs[i].name);
-        }
+  function addEvent(partial, scope, uniqId) {
+    if (partial.de) { return; } //only attach events once
+    var attrs = partial.attributes;
+    // console.log('attrs', uniqId, attrs);
+    for(var i = 0, l = attrs.length; i < l; i++){
+      if (attrs[i].name.substr(0,3) === 'de-') {
+        partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
+          return function(evt){
+            if (!evt.target) { //make $event.target always available
+              evt.target = evt.srcElement;
+            }
+            evt.preventDefault();
+            evt.stopPropagation();
+            //isedom: disallow, so no $target here
+            scope.$evalAsync(attr.value, {$event: evt});
+          };
+        })(partial, attrs[i]));
+        console.log('event added', uniqId, attrs[i].name);
       }
-      partial.de = 1;
-    });
+    }
+    partial.de = 1;
+  }
+
+  function addEvents(elem, scope, uniqId) {
+    var elements = elem.querySelectorAll('[de]');
+    for (var i = 0, l = elements.length; i < l; i++) {
+      addEvent(elements[i], scope, uniqId);
+    }
   }
 
   function addNgModel(elem, scope, uniqId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
       var dotaPass = partial.getAttribute('dota-pass');
-      console.log('dotaPass', [dotaPass]);
+      // console.log('dotaPass', [dotaPass]);
       if (dotaPass != undefined) { return; } //null or undefined
 
       //override ng-model
@@ -343,7 +348,7 @@
                   }
                   Watchers.push(NewScope.$watchCollection(bindExpr, function(newVal, oldVal){
                     if(newVal !== oldVal) {
-                      console.log(attrDoTARender, 'watch before bindExpr', console.dir(partial), '' + newVal);
+                      console.log(attrDoTARender, 'watch before bindExpr', newVal);
                       partial[textContent] = BindValues[bindExpr] = newVal || '';
                       console.log(attrDoTARender, 'watch after render');
                     }
@@ -491,6 +496,7 @@
 
                   watches[w.I] = NewScope.$watch(w.W, (function(w) {
                     return function(newVal, oldVal){
+                      if (newVal === oldVal) { return; }
                       console.log(attrDoTARender, w.W, 'partial watch before render');
                       var oldTag = document.getElementById(w.I);
                       if (!oldTag) { return console.log('tag not found'); }
