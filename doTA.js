@@ -246,25 +246,23 @@ var doTA = (function() {'use strict';
     } while(pos1 > 0);
   }
 
-  function getOuterHTMLEnd(html2, pos2) {
-    var level = 1, tagPos, tagName, tagStartPos = pos2;
+  function getOuterHTMLEnd(HTML, START_POS) {
+    var LVL = 1, POS = START_POS;
     do {
-      tagStartPos = html2.indexOf('<', tagStartPos + 1);
-      if (html2.charAt(tagStartPos + 1) === '/') {
-        level--;
+      POS = HTML.indexOf('<', POS + 1);
+      if (HTML.charAt(POS + 1) === '/') {
+        LVL--;
       } else {
-        tagPos = html2.indexOf(' ', tagStartPos + 1);
-        tagName = html2.substring(tagStartPos + 1, tagPos);
-        level++;
+        LVL++;
       }
-      pos2 = html2.indexOf('>', tagStartPos);
-      if (html2.charAt(pos2 - 1) === '/') { //self closing
-        level--;
+      POS = HTML.indexOf('>', POS);
+      if (HTML.charAt(POS - 1) === '/') { //self closing
+        LVL--;
       }
-    } while (level > 0);
+    } while (LVL > 0);
 
     // console.log('getOutHTML', tagName, [tagName, pos2, pos2, ])
-    return pos2 + 1;
+    return ++POS;
   }
 
   function diffPatchChildren(prevKey, html2) {
@@ -278,6 +276,7 @@ var doTA = (function() {'use strict';
     var tagStartPos1, tagStartPos2;
     var dirty1 = 0, dirty2 = 0;
     var prevTagId2;
+    var LVL; //this is needed for fnInline
     // console.log(html1);
     // console.log(html2);
 
@@ -288,8 +287,9 @@ var doTA = (function() {'use strict';
         prevPos1 = pos1;
         pos1 = html1.indexOf('id="', prevPos1);
         if (pos1 > 0) {
-          pos1 += 4;
-          tagId1 = html1.substring(pos1, html1.indexOf('"', pos1));
+          prevPos1 = pos1 + 4;
+          pos1 = html1.indexOf('"', prevPos1);
+          tagId1 = html1.substring(prevPos1, pos1);
           tagNo1 = tagId1^0;
         }
         if (dirty2 && tagNo1 > tagNo2) {
@@ -304,8 +304,9 @@ var doTA = (function() {'use strict';
         prevPos2 = pos2;
         pos2 = html2.indexOf('id="', prevPos2);
         if (pos2 > 0) {
-          pos2 += 4;
-          tagId2 = html2.substring(pos2, html2.indexOf('"', pos2));
+          prevPos2 = pos2 + 4;
+          pos2 = html2.indexOf('"', prevPos2);
+          tagId2 = html2.substring(prevPos2, pos2);
           tagNo2 = tagId2^0;
         }
         if (dirty1 && tagNo2 > tagNo1) {
@@ -320,17 +321,38 @@ var doTA = (function() {'use strict';
 
       if (pos1 > 0 && pos2 > 0) {
         if (tagNo1 === tagNo2) {
-          tagStartPos1 = pos1;
+          //attr diff
+          tagStartPos1 = ++pos1;
           pos1 = html1.indexOf('>', pos1);
           part1 = html1.substring(tagStartPos1, pos1);
 
-          tagStartPos2 = pos2;
+          tagStartPos2 = ++pos2;
           pos2 = html2.indexOf('>', pos2);
           part2 = html2.substring(tagStartPos2, pos2);
 
           if (part1 !== part2) {
-            parsePatchAttrs(part1, part2, tagId1);
+            elem1 = document.getElementById(tagId1);
+            parsePatchAttrs(part1, part2, elem1);
             // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
+          } else {
+            elem1 = 0;
+          }
+
+          //text diff
+          prevPos1 = ++pos1;
+          pos1 = html1.indexOf('<', prevPos1);
+          part1 = html1.substring(prevPos1, pos1);
+          prevPos2 = ++pos2;
+          pos2 = html2.indexOf('<', prevPos2);
+          part2 = html2.substring(prevPos2, pos2);
+          if (part1 !== part2) {
+            if (!elem1) {
+              elem1 = document.getElementById(tagId1);
+            }
+            if (elem1.firstChild && elem1.firstChild.nodeType === 3) {
+              elem1.firstChild.nodeValue = part2;
+            }
+            // console.warn('patch text node', [tagId1, tagId2], [part1, part2])
           }
           dirty1 = dirty2 = 0;
           continue;
@@ -352,6 +374,7 @@ var doTA = (function() {'use strict';
         // console.log('dirty2', [tagNo1, tagNo2]);
         tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
         pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+
         newNode.innerHTML = html2.slice(tagStartPos2, pos2);
         // console.log('newNode', [tagId1, tagId2, prevTagId2], newNode.innerHTML, nextSibling, parentNode);
         if (nextSibling) {
@@ -402,8 +425,8 @@ var doTA = (function() {'use strict';
   }
 
   //parse attributes from html open tag and make dict object
-  function parsePatchAttrs(chunk1, chunk2, tagId) {
-    var elem;
+  function parsePatchAttrs(chunk1, chunk2, elem) {
+    var tagId;
     var pos1 = chunk1.indexOf(' ');
     var eqPos1, eqPos2;
     var valEndPos1, valEndPos2, posDiff = 0;
@@ -413,25 +436,24 @@ var doTA = (function() {'use strict';
     if (pos1 !== -1) {
       while (++pos1 < len1) {
         eqPos1 = chunk1.indexOf('="', pos1);
+        if (eqPos1 < 0) break;
         attrName = chunk1.slice(pos1, eqPos1);
 
         valEndPos1 = chunk1.indexOf('"', eqPos1 + 2);
         attrVal1 =  chunk1.slice(eqPos1 + 2, valEndPos1);
-        if (!tagId && attrName === 'id') {
+        if (!elem && attrName === 'id') {
           tagId = attrVal1;
+          elem = document.getElementById(tagId);
+          if (!elem) {
+            return console.log('tag not found', [tagId]);
+          }
         } else {
           eqPos2 = eqPos1 + posDiff;
           valEndPos2 = chunk2.indexOf('"', eqPos2 + 2);
           attrVal2 =  chunk2.slice(eqPos2 + 2, valEndPos2);
           posDiff = valEndPos2 - valEndPos1;
           if (attrVal1 !== attrVal2) {
-            if (!elem) {
-              elem = document.getElementById(tagId);
-              if (!elem) {
-                console.log('tag not found', [tagId]);
-                return;
-              }
-            }
+            // console.log('setAttribute', [attrName, attrVal1, attrVal2], [chunk1, chunk2])
             elem.setAttribute(attrName, attrVal2);
           }
         }
