@@ -101,15 +101,17 @@ var doTA = (function() {'use strict';
         }
       }
 
-      func.onopentag(tagName, attrs);
-
       tagName = tagName.toLowerCase();
       if (tagName === 'input' || tagName === 'img') {
         //http://www.w3.org/TR/html-markup/syntax.html
         //area, base, br, col, command, embed, hr, img, input, keygen, link, meta, param, source, track, wbr
+        func.onopentag(tagName, attrs, 1);
         func.onvoidtag();
       } else if (attrName === '/') {
+        func.onopentag(tagName, attrs);
         func.onclosetag(tagName);
+      } else {
+        func.onopentag(tagName, attrs);
       }
 
     //no attributes
@@ -117,23 +119,24 @@ var doTA = (function() {'use strict';
 
       //self closing, explicit
       if (chunk.charAt(chunk.length - 1) === '/') {
-        tagName = chunk.slice(0, -1);
-        func.onopentag(tagName, attrs);
+        tagName = chunk.slice(0, -1).toLowerCase();
 
-        tagName = tagName.toLowerCase();
         if (tagName === 'br' || tagName === 'hr') {
+          func.onopentag(tagName, attrs, 1);
           func.onvoidtag();
         } else {
+          func.onopentag(tagName, attrs);
           func.onclosetag(tagName);
         }
       } else {
-        tagName = chunk;
-        func.onopentag(chunk, attrs);
+        tagName = chunk.toLowerCase();
 
         //self closing, implicit
-        tagName = tagName.toLowerCase();
         if (tagName === 'br' || tagName === 'hr') {
+          func.onopentag(tagName, attrs, 1);
           func.onvoidtag();
+        } else {
+          func.onopentag(tagName, attrs);
         }
       }
     }
@@ -244,8 +247,6 @@ var doTA = (function() {'use strict';
   }
 
   function getOuterHTMLEnd(html2, pos2) {
-    // var tagPos = part2.indexOf(' ');
-    // var tagName = part2.substr(0, tagPos);
     var level = 1, tagPos, tagName, tagStartPos = pos2;
     do {
       tagStartPos = html2.indexOf('<', tagStartPos + 1);
@@ -254,12 +255,12 @@ var doTA = (function() {'use strict';
       } else {
         tagPos = html2.indexOf(' ', tagStartPos + 1);
         tagName = html2.substring(tagStartPos + 1, tagPos);
-        // console.log('tagName', [tagName]);
-        if (tagName !== 'input' && tagName !== 'img' && tagName !== 'br' && tagName !== 'hr') {
-          level++;
-        }
+        level++;
       }
       pos2 = html2.indexOf('>', tagStartPos);
+      if (html2.charAt(pos2 - 1) === '/') { //self closing
+        level--;
+      }
     } while (level > 0);
 
     // console.log('getOutHTML', tagName, [tagName, pos2, pos2, ])
@@ -270,221 +271,184 @@ var doTA = (function() {'use strict';
     var html1 = doTA.H[prevKey];
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
-    var prevTagId1, tagId1, tagId2, tagNo1, tagNo2, elem1, elem2, part1, part2;
-    var tagEndPos, newNode = document.createElement('div'), parentNode;
-    console.log('html1', html1);
-    console.log('html2', html2);
+    var tagId1, tagId2, elem1, elem2, part1, part2;
+    var tagNo1 = 0, tagNo2 = 0;
+    var newNode = document.createElement('div');
+    var parentNode, nextSibling;
+    var tagStartPos1, tagStartPos2;
+    var dirty1 = 0, dirty2 = 0;
+    var prevTagId2;
+    // console.log(html1);
+    // console.log(html2);
 
-    do {
-      // console.log('while loop', [html1.charAt(pos1), html2.charAt(pos2)]);
-      if (html2.charAt(pos2) === "<") {
-        pos1++;
-        pos2++;
-        if (html2.charAt(pos2) === "/" || html2.charAt(pos2) === "!") {
-          //don't patch comment node and close tag.
-          // if (html1.charAt(pos1) === '/' || html1.charAt(pos1) === '!') {
-            pos1 = html1.indexOf('>', pos1);
-          // }
-          pos2 = html2.indexOf('>', pos2);
-          // console.log('HUH?', [html1.substr(pos1, 5), html2.substr(pos2, 5)])
-        } else {
-          prevPos1 = pos1;
-          prevPos2 = pos2;
-          pos1 = html1.indexOf('>', prevPos1);
-          pos2 = html2.indexOf('>', prevPos2);
-          part1 = html1.substring(prevPos1, pos1);
-          part2 = html2.substring(prevPos2, pos2);
+    for(;;) {
+      // console.log('before', [dirty1, dirty2], [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
-          //attributes
-          if (part1 !== part2) {
-            console.log('attr', [part1, part2]);
-            prevTagId1 = tagId1;
-            tagId1 = getTagId(part1), tagNo1 = tagId1^0;
-            tagId2 = getTagId(part2), tagNo2 = tagId2^0;
-            if (tagNo1 === tagNo2) {
-              tagId1 = parsePatchAttrs(part1, part2);
-              console.log('patching node', tagId1);
-            } else {
-              if (tagNo1) {
-                elem1 = document.getElementById(tagId1);
-                parentNode = elem1.parentNode;
-
-                tagEndPos = getOuterHTMLEnd(html1, prevPos1);
-                // console.log('pos1', [prevPos1, tagEndPos])
-                pos1 = tagEndPos - 1;
-                // console.log('node can delete from', parentNode,
-                //   tagId1, tagId2, prevPos1, pos2, tagEndPos,
-                //   [html1.substring(prevPos1 - 1, tagEndPos)]);
-              }
-              if (tagNo2) {
-                tagEndPos = getOuterHTMLEnd(html2, prevPos2);
-                newNode.innerHTML = html2.substring(prevPos2 - 1, tagEndPos);
-                elem2 = newNode.firstChild;
-                // parentNode.appendChild(newNode.firstChild);
-                pos2 = tagEndPos - 1;
-                // console.log('created new node from', parentNode,
-                //   tagId1, tagId2, prevPos2, pos2, tagEndPos,
-                //   [html2.substring(prevPos2 - 1, tagEndPos)]);
-              }
-
-              if (tagNo1 && tagNo2) {
-                parentNode.replaceChild(elem2, elem1);
-                // console.log('replaceChild', parentNode, elem1, elem2);
-                tagId1 = undefined;
-                // console.log([html1.substr(pos1 - 15, 30), html2.substr(pos2 - 15, 30)]);
-
-              } else if (tagNo2) {
-                //new tag
-                parentNode = document.getElementById(prevTagId1);
-                // console.log('tag1 not exists, just appending', [tagNo1, tagNo2], [prevTagId1], parentNode, elem2);
-                pos2 = html2.indexOf('>', pos2 + 1);
-                // console.log([html1.substr(pos1, 5), html2.substr(pos2, 5)]);
-                parentNode.appendChild(elem2);
-              } else if (tagNo1) {
-                console.log('JUST DELETE?');
-              }
-            }
-          } else {
-            //record id
-            // console.log('WTF?', [part1, part2])
-            tagId1 = getTagId(part1);
-            tagId2 = getTagId(part2);
-          }
+      if (pos1 >= 0 && dirty2 < 2) {
+        prevPos1 = pos1;
+        pos1 = html1.indexOf('id="', prevPos1);
+        if (pos1 > 0) {
+          pos1 += 4;
+          tagId1 = html1.substring(pos1, html1.indexOf('"', pos1));
+          tagNo1 = tagId1^0;
         }
-
-      //text node
-      } else if (html2.charAt(pos2) === '>') {
-        prevPos1 = ++pos1;
-        prevPos2 = ++pos2;
-        // console.log('text', [html1.substr(pos1, 10), html2.substr(pos2, 10)]);
-
-        pos1 = html1.indexOf('<', prevPos1);
-        pos2 = html2.indexOf('<', prevPos2);
-        //textNode, only support firstChild here
-        if (pos2 > prevPos2 && tagId1) {
-          var text1 = html1.substring(prevPos1, pos1);
-          var text2 = html2.substring(prevPos2, pos2);
-          // console.log('WHY here?', [text1, text2]);
-          if (text1 !== text2) {
-            elem1 = document.getElementById(tagId1);
-            // console.log('text', [tagId1, tagId2], [text1.length, text2.length], [text1, text2], elem1);
-            if (elem1) {
-              if (elem1.firstChild && elem1.firstChild.nodeType === 3) {
-                // console.log('textApplied', [text1, text2]);
-                elem1.firstChild.nodeValue = text2;
-              } //else to log something?
-            } else {
-              console.log('tag not found - text', [tagId1]);
-            }
-          }
+        if (dirty2 && tagNo1 > tagNo2) {
+          dirty2 = 2;
         }
-
       }
 
-    } while(pos2 > 0);
+      // console.log('middle', [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
+
+      if (pos2 >= 0 && dirty1 < 2) {
+        prevTagId2 = tagId2;
+        prevPos2 = pos2;
+        pos2 = html2.indexOf('id="', prevPos2);
+        if (pos2 > 0) {
+          pos2 += 4;
+          tagId2 = html2.substring(pos2, html2.indexOf('"', pos2));
+          tagNo2 = tagId2^0;
+        }
+        if (dirty1 && tagNo2 > tagNo1) {
+          dirty1 = 2;
+        }
+      }
+
+      // console.log('after', [dirty1, dirty2], [tagId1, tagId2],
+      //   [pos1, pos2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
+
+      if (pos1 < 0 && pos2 < 0) break;
+
+      if (pos1 > 0 && pos2 > 0) {
+        if (tagNo1 === tagNo2) {
+          tagStartPos1 = pos1;
+          pos1 = html1.indexOf('>', pos1);
+          part1 = html1.substring(tagStartPos1, pos1);
+
+          tagStartPos2 = pos2;
+          pos2 = html2.indexOf('>', pos2);
+          part2 = html2.substring(tagStartPos2, pos2);
+
+          if (part1 !== part2) {
+            parsePatchAttrs(part1, part2, tagId1);
+            // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
+          }
+          dirty1 = dirty2 = 0;
+          continue;
+        }
+      }
+
+      if (dirty1 && ((tagNo1 > tagNo2 && pos2 > 0) || pos1 < 0)) {
+        // console.warn('dirty1**', [dirty1, dirty2], [tagNo1, tagNo2]);
+        dirty2 = 2;
+        dirty1 = 0;
+      }
+      if (dirty2 && ((tagNo2 > tagNo1 && pos1 > 0) || pos2 < 0)) {
+        // console.warn('dirty2**', [dirty1, dirty2], [tagNo1, tagNo2]);
+        dirty1 = 2;
+        dirty2 = 0;
+      }
+
+      if (dirty2 && (tagNo1 > tagNo2 || (pos1 < 0 && pos2 > 0))) {
+        // console.log('dirty2', [tagNo1, tagNo2]);
+        tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+        pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+        newNode.innerHTML = html2.slice(tagStartPos2, pos2);
+        // console.log('newNode', [tagId1, tagId2, prevTagId2], newNode.innerHTML, nextSibling, parentNode);
+        if (nextSibling) {
+          elem2 = parentNode.insertBefore(newNode.firstChild, nextSibling);
+        } else if (parentNode) {
+          parentNode.appendChild(newNode.firstChild);
+        } else {
+          parentNode = document.getElementById(prevTagId2);
+          parentNode.appendChild(newNode.firstChild);
+        }
+        // console.warn('add node', [tagNo1, tagNo2], elem2);
+        continue;
+      }
+
+      if (dirty1 && (tagNo2 > tagNo1 || (pos2 < 0 && pos1 > 0))) {
+        // console.log('dirty1', [tagId1, tagId2]);
+        elem1 = document.getElementById(tagId1);
+        elem1.parentNode.removeChild(elem1);
+        //skip
+        pos1 = getOuterHTMLEnd(html1, pos1);
+        // console.warn('removeChild', [tagNo1, tagNo2], elem1, [html1.substr(pos1, 15)]);
+        continue;
+      }
+
+      if (pos1 > 0 && pos2 > 0) {
+        if (tagNo1 !== tagNo2 && !dirty2 && !dirty1) {
+          // console.log('before delete', [tagId1, tagId2]);
+          elem1 = document.getElementById(tagId1);
+          nextSibling = elem1.nextSibling;
+          parentNode = elem1.parentNode;
+
+          tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+          pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+          newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+          parentNode.replaceChild(newNode.firstChild, elem1);
+
+          pos1 = getOuterHTMLEnd(html1, pos1);
+          // console.log( [pos1, newPos],[html1.substring(pos1, newPos)]);
+          // console.warn('replaced node', [tagId1, tagId2], [tagNo1, tagNo2], elem1);
+          if (tagNo1 < tagNo2) dirty2 = 1;
+          if (tagNo1 > tagNo2) dirty1 = 1;
+          continue;
+        }
+      }
+
+    };
+
   }
 
   //parse attributes from html open tag and make dict object
-  function parsePatchAttrs(chunk1, chunk2) {
-    var tagId, elem;
+  function parsePatchAttrs(chunk1, chunk2, tagId) {
+    var elem;
     var pos1 = chunk1.indexOf(' ');
     var eqPos1, eqPos2;
-    var valStart, valEndPos1, valEndPos2, posDiff = 0;
+    var valEndPos1, valEndPos2, posDiff = 0;
     var attrName, attrVal1, attrVal2;
     var len1 = chunk1.length;
     // console.log('chunks', [chunk1, chunk2]);
     if (pos1 !== -1) {
       while (++pos1 < len1) {
-        eqPos1 = chunk1.indexOf('=', pos1);
-        if (eqPos1 === -1) {
-          console.log('single attr: diff not supported?', [chunk1, chunk2]);
-          break;
-        }
-
+        eqPos1 = chunk1.indexOf('="', pos1);
         attrName = chunk1.slice(pos1, eqPos1);
 
-        valStart = chunk1[eqPos1 + 1];
-
-        //if attribute value is start with quote
-        if (valStart === '"' || valStart === "'") {
-          valEndPos1 = chunk1.indexOf(valStart, eqPos1 + 2);
-          attrVal1 =  chunk1.slice(eqPos1 + 2, valEndPos1);
-          if (attrName === 'id') {
-            tagId = attrVal1;
-          } else {
-            eqPos2 = eqPos1 + posDiff;
-            valEndPos2 = chunk2.indexOf(valStart, eqPos2 + 2);
-            attrVal2 =  chunk2.slice(eqPos2 + 2, valEndPos2);
-            posDiff = valEndPos2 - valEndPos1;
-            if (attrVal1 !== attrVal2) {
-              // console.log('posDiff', [valEndPos2 - valEndPos1,
-              //   valStart, valStart2,
-              //   eqPos1, eqPos2,
-              //   attrVal1, attrVal2])
-              if (!elem) {
-                elem = document.getElementById(tagId);
-                if (!elem) {
-                  console.log('tag not found', [tagId]);
-                  return;
-                }
-              }
-              elem.setAttribute(attrName, attrVal2);
-            }
-          }
-          pos1 = valEndPos1 + 1;
+        valEndPos1 = chunk1.indexOf('"', eqPos1 + 2);
+        attrVal1 =  chunk1.slice(eqPos1 + 2, valEndPos1);
+        if (!tagId && attrName === 'id') {
+          tagId = attrVal1;
         } else {
-
-          valEndPos1 = chunk1.indexOf(' ', eqPos1 + 2);
-
-          //when no more attribute
-          if (valEndPos1 === -1) {
-            if (!tagId) {
-              attrVal1 =  chunk1.slice(eqPos1 + 1);
-              if (attrName === 'id') {
-                tagId = attrVal1;
-              } else {
-                console.log('not supported?', [attrName, attrVal1]);
+          eqPos2 = eqPos1 + posDiff;
+          valEndPos2 = chunk2.indexOf('"', eqPos2 + 2);
+          attrVal2 =  chunk2.slice(eqPos2 + 2, valEndPos2);
+          posDiff = valEndPos2 - valEndPos1;
+          if (attrVal1 !== attrVal2) {
+            if (!elem) {
+              elem = document.getElementById(tagId);
+              if (!elem) {
+                console.log('tag not found', [tagId]);
+                return;
               }
             }
-            break;
-
-          } else {
-            if (!tagId) {
-              attrVal1 =  chunk1.slice(eqPos1 + 1, valEndPos1);
-              if (attrName === 'id') {
-                tagId = attrVal1;
-              } else {
-                console.log('not supported?', [attrName, attrVal1]);
-              }
-            }
-            pos1 = valEndPos1;
+            elem.setAttribute(attrName, attrVal2);
           }
         }
-      }
+        pos1 = valEndPos1 + 1;
+
+      } //while
     }
     return tagId;
   }
 
-  //extract value of id from part of html open tag
-  //equivalent of /id="?([^\s">]+)"?/.test(C1[idx]) && RegExp.$1;
-  function getTagId(partial) {
-    var pos = partial.indexOf(" id=");
+  //extract value of id from part of html open tag, id="xxx"
+  function getTagId(partial, start) {
+    var pos = partial.indexOf(' id="', start), endPos;
     if (pos >= 0) {
-      pos += 4;
-      var quoted = partial.charAt(pos), endPos;
-      if (quoted === '"') { //quoted === "'" ||
-        pos++;
-        endPos = partial.indexOf(quoted, pos + 1);
-      // } else {
-      //   endPos = partial.indexOf(' ', pos);
-      //   if (endPos === -1) {
-      //     endPos = partial.indexOf('>', pos);
-      //     if (endPos === -1) {
-      //       endPos = partial.length;
-      //     }
-      //   }
-        return partial.substring(pos, endPos);
-      }
+      pos += 5;
+      endPos = partial.indexOf('"', pos);
+      return partial.substring(pos, endPos);
     }
   }
 
@@ -516,7 +480,6 @@ var doTA = (function() {'use strict';
   var quotedStringRegex = /"[^"]*"|'[^']*'/g;
   var whiteSpaceRegex = /\s{2,}|\n/g;
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
-  // var XHTMLRegex = /^(?:input|img|br|hr)/i;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
 
   // https://github.com/kangax/html-minifier/issues/63
@@ -684,7 +647,7 @@ var doTA = (function() {'use strict';
     //parse the element
     parseHTML(template, {
       //open tag with attributes
-      onopentag: function(tagName, attrs) {
+      onopentag: function(tagName, attrs, selfClosing) {
         // debug && console.log('onopentag', [tagName, attrs]);
         var interpolatedAttrs = {}, customId, tagId, noValAttrs = '', attrName, attrVal;
 
@@ -705,7 +668,7 @@ var doTA = (function() {'use strict';
           if (attrs['ng-repeat']) {
             //console.log(21,[x], [val]);
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            var i = 'i' + level, l = 'l'+ level;
+            var idx = 'i' + level, l = 'l'+ level;
             var NG_REPEAT = attrs['ng-repeat'];
             var inPos = NG_REPEAT.indexOf(' in ');
             var repeatVar = NG_REPEAT.substr(0, inPos), repeatSrc = NG_REPEAT.substr(inPos + 4);
@@ -715,7 +678,7 @@ var doTA = (function() {'use strict';
 
             //store variable name to use for $index later
             //this is ng-repeat specific, LevelMap[level] is same for ng-if too
-            LevelVarMap[level] = i;
+            LevelVarMap[level] = idx;
 
             if (pipePos > 0) {
               repeatSrcNew = AttachFilter(repeatSrc);
@@ -756,10 +719,10 @@ var doTA = (function() {'use strict';
             // Array: "k in []" ==> while loop
             } else {
               FnText += Indent(level, 1) + 'var ' + repeatVar + ',D' + level + '=' + repeatSrcNew + ','
-                + i + '=-1,' + l + '=D' + level + '.length;\n';
-              FnText += Indent(level, 1) + 'while(++' + i + '<' + l + '){\n';
+                + idx + '=-1,' + l + '=D' + level + '.length;\n';
+              FnText += Indent(level, 1) + 'while(++' + idx + '<' + l + '){\n';
               //                        space is needed for manual uglify  ->  vvv
-              FnText += Indent(level) + repeatVar + '=D' + level + '[' + i + ']; \n';
+              FnText += Indent(level) + repeatVar + '=D' + level + '[' + idx + ']; \n';
               VarMap[repeatVar] = 1;
             }
             //remote attribute not to get forwarded to angular
@@ -772,10 +735,10 @@ var doTA = (function() {'use strict';
               customId = 1;
               FnText += Indent(level, 2) +
                 (!Watched ? 'var ' + (isPatch ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
-                'var W={I:N+"' + '.' + uniqId + '",W:"' + attrs['ng-if'] + '"' +
+                'var W={N:N,I:N+"' + '.' + uniqId + '",W:"' + attrs['ng-if'] + '"' +
                 (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
               WatchMap[level] = Watched = 1;
-              FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X){var R="";\n';
+              FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';
               delete attrs.watch; delete attrs.wait;
             }
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
@@ -913,12 +876,6 @@ var doTA = (function() {'use strict';
           if (interpolatedAttrs.id) {
             delete interpolatedAttrs.id;
           }
-        // } else if (isPatch) {
-        //   tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || ("'+N+'." + uniqId);
-        //   FnText += ' id="' + tagId + '"';
-        //   if (interpolatedAttrs.id) {
-        //     delete interpolatedAttrs.id;
-        //   }
         }
 
         //write back attibutes
@@ -927,13 +884,13 @@ var doTA = (function() {'use strict';
         }
 
         //attach boolean attributes at last
-        FnText += noValAttrs + ">';\n";
+        FnText += noValAttrs +  (selfClosing ? ' /' : '') + ">';\n";
 
         if (isPatch) {
           FnText += Indent(level) + "N++; \n";
           if (ngIfCounter >= 0) {
             ngIfCounter++;
-            console.log('isPath ngIfCounter', [tagName, ngIfCounter]);
+            // console.log('isPath ngIfCounter', [tagName, ngIfCounter]);
           }
         }
 
@@ -979,7 +936,7 @@ var doTA = (function() {'use strict';
         if (WatchMap[level]) {
           FnText += Indent(level, 1) + '} else {\n';
           FnText += Indent(level) + "R+='<" + tagName + ' id="' + idHash[uniqId + '.' + level] +
-            '" style=display:none></' + tagName + ">';\n";
+            '" style="display:none"></' + tagName + ">';\n";
         } else if (diffLevel && level === ngIfLevel && ngIfCounter >= 0) {
           if (ngIfCounter) {
             FnText += Indent(level, 1) + '}else{N+=' + ngIfCounter + '; \n';
@@ -1000,7 +957,7 @@ var doTA = (function() {'use strict';
         //finish block for sub functions
         if (WatchMap[level]) {
           FnText += Indent(level, 2) + 'return R;}; \n';
-          FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X);N+=' + ngIfCounter + '; \n';
+          FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X,N);N+=' + ngIfCounter + '; \n';
           WatchMap[level] = 0;
           if (diffLevel) {
             ngIfLevel = ngIfCounter = undefined;
@@ -1039,7 +996,7 @@ var doTA = (function() {'use strict';
     FnText = FnText.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
 
     //extra optimization, which might take some more CPU
-    if (options.optimize) {
+    if (options.optimize && !isPatch) {
       FnText = FnText.replace(removeUnneededQuotesRegex,'$1$2');
     }
 

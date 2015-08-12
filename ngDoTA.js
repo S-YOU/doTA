@@ -500,7 +500,7 @@
                       console.log(attrDoTARender, w.W, 'partial watch before render');
                       var oldTag = document.getElementById(w.I);
                       if (!oldTag) { return console.log('tag not found'); }
-                      var content = w.F(NewScope, $filter, params);
+                      var content = w.F(NewScope, $filter, params, null, w.N);
                       if (!content) { return console.log('no contents'); }
                       console.log('watch new content', content);
                       var newTag = angular.element(content);
