@@ -1254,7 +1254,7 @@ if (typeof module !== "undefined" && module.exports) {
   function addNgModel(elem, scope, uniqId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
       var dotaPass = partial.getAttribute('dota-pass');
-      // console.log('dotaPass', [dotaPass]);
+      console.log('dotaPass', [dotaPass]);
       if (dotaPass != undefined) { return; } //null or undefined
 
       //override ng-model
@@ -1500,7 +1500,10 @@ if (typeof module !== "undefined" && module.exports) {
                 }
 
                 // console.log('patch?', [patch]);
-                if (patch) { return; }
+                if (patch) {
+                  attachEventsAndCompile(elem[0]);
+                  return;
+                }
 
                 //if node has some child, use appendChild
                 if (elem[0].firstChild) {
