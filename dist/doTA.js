@@ -979,7 +979,7 @@ var doTA = (function() {'use strict';
         //finish block for sub functions
         if (WatchMap[level]) {
           FnText += Indent(level, 2) + 'return R;}; \n';
-          FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X,N);N+=' + ngIfCounter + '; \n';
+          FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X,N);N+=' + (ngIfCounter||1) + '; \n';
           WatchMap[level] = 0;
           if (diffLevel) {
             ngIfLevel = ngIfCounter = undefined;
