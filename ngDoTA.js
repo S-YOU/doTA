@@ -243,10 +243,9 @@
         controller: angular.noop,
         link: angular.noop,
         compile: function() {
-          var NewScopeDefined, NewScope, Watchers = [], BindValues = {}; //New scope flag, new Scope
+          var Watchers = [], BindValues = {}; //New scope flag, new Scope
 
           return function($scope, elem, attrs) {
-            NewScope = $scope;
             //used attributes, good for minification with closure compiler;
             var attrCacheDOM = attrs.cacheDom;
             var attrDoTARender = attrs.dotaRender;
@@ -268,6 +267,7 @@
             var attrInline = attrs.inline;
             var attrWatchDiff = attrs.watchDiff;
             var origAttrMap = attrs.$attr;
+            var NewScope;
 
             attrLoose = attrs.loose = makeBool(attrLoose, 1); //falsy => ''
             attrOptimize = attrs.optimize = makeBool(attrOptimize, 0);
@@ -284,6 +284,78 @@
               return;
             }
 
+            //attributes on dota-render tags to be accessiable as $attr in templates
+            for (var x in origAttrMap) {
+              var z = origAttrMap[x];
+              //map data-* attributes into origAttrMap (inline text)
+              if (!z.indexOf('data-')) {
+                params[x] = attrs[x];
+              //map scope-* attributes into origAttrMap (first level var from scope)
+              } else if (!z.indexOf('scope-')) {
+                if (attrs[x].indexOf('.') >= 0 || attrs[x].indexOf('[') >= 0) {
+                  params[z.slice(6)] = $scope.$eval(attrs[x]);
+                } else {
+                  params[z.slice(6)] = $scope[attrs[x]];
+                }
+              }
+            }
+
+            //create new scope if scope=1 or ng-controller is specified
+            if (attrScope || attrNgController) {
+              console.log('scope', attrScope);
+              NewScope = $scope.$new();
+              console.log('newScope created', attrDoTARender, NewScope);
+            } else {
+              NewScope = $scope;
+            }
+
+            //attach ng-controller, and remove attr to prevent angular running again
+            if (attrNgController) {
+              var asPos = attrNgController.indexOf(' as ');
+              if (asPos > 0) {
+                attrNgController = attrNgController.substr(0, asPos).trim();
+              }
+              console.log('new controller', attrNgController);
+              var l = {$scope: NewScope}, controller = $controller(attrNgController, l);
+              if (attrs.controllerAs || asPos > 0) {
+                NewScope[attrs.controllerAs || attrNgController.substr(asPos + 4).trim()] = controller;
+              }
+              elem[0].removeAttribute('ng-controller');
+              elem.data('$ngControllerController', controller);
+              elem.children().data('$ngControllerController', controller);
+              console.log('new controller created', attrDoTARender);
+            }
+
+            // watch and re-render the whole template when change
+            if(attrWatch) {
+              console.log(attrDoTARender, 'registering watch for', attrWatch);
+              NewScope.$watchCollection(attrWatch, function(newVal, oldVal){
+                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
+                  console.log(attrDoTARender, 'watch before render');
+                  render(doTA.C[attrDoTARender]);
+                  console.log(attrDoTARender, 'watch after render');
+                }
+              });
+            }
+
+            // watch and partially render by diffing. diff-level = 2 may be used to patch children
+            if(attrWatchDiff) {
+              console.log(attrDoTARender, 'registering diff watch for', attrWatchDiff);
+              NewScope.$watchCollection(attrWatchDiff, function(newVal, oldVal){
+                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
+                  console.log(attrDoTARender, 'diff watch before render');
+                  render(doTA.C[attrDoTARender], true);
+                  console.log(attrDoTARender, 'diff watch after render');
+                }
+              });
+            }
+
+            // run the loader
+            loader();
+
+            ////////////////////////////////////////////////////////////////////////////
+            // cache-dom for static html, $scope will not be triggered
+            ////////////////////////////////////////////////////////////////////////////
             function cacheDOM(){
               // console.log('cacheDOM()', attrs)
               $scope.$on("$destroy", function(){
@@ -296,7 +368,10 @@
               });
             }
 
-            function compile(template){
+            ////////////////////////////////////////////////////////////////////////////
+            // doTA.compile and return compiledFn
+            ////////////////////////////////////////////////////////////////////////////
+            function compile(template) {
               if(attrDebug) {
                 console.log([attrEncode], [template]);
               }
@@ -321,6 +396,9 @@
               return compiledFn;
             }
 
+            ////////////////////////////////////////////////////////////////////////////
+            // attach ng-model, events, ng-bind, and $compile
+            ////////////////////////////////////////////////////////////////////////////
             function attachEventsAndCompile(rawElem, scope) {
 
               if (attrModel) {
@@ -373,35 +451,10 @@
               }
             }
 
-            function render(func, patch){
-
-              if (attrScope || attrNgController) {
-                console.log('scope', attrScope);
-                if (NewScopeDefined) {
-                  console.log('oldScope $destroy');
-                  console.log('watchers', Watchers);
-                  NewScope.$destroy();
-                }
-                NewScope = $scope.$new();
-                NewScopeDefined = 1; //new scope created flag
-                console.log('newScope created', attrDoTARender, NewScope);
-
-                if (attrNgController) {
-                  var asPos = attrNgController.indexOf(' as ');
-                  if (asPos > 0) {
-                    attrNgController = attrNgController.substr(0, asPos).trim();
-                  }
-                  console.log('new controller', attrNgController);
-                  var l = {$scope: NewScope}, controller = $controller(attrNgController, l);
-                  if (attrs.controllerAs || asPos > 0) {
-                    NewScope[attrs.controllerAs || attrNgController.substr(asPos + 4).trim()] = controller;
-                  }
-                  elem[0].removeAttribute('ng-controller');
-                  elem.data('$ngControllerController', controller);
-                  // elem.children().data('$ngControllerController', controller);
-                  console.log('new controller created', attrDoTARender);
-                }
-              }
+            ////////////////////////////////////////////////////////////////////////////
+            // render the template, cache-dom, run onload scripts, add dynamic watches
+            ////////////////////////////////////////////////////////////////////////////
+            function render(func, patch) {
 
               //unless prerender
               if (func) {
@@ -496,6 +549,7 @@
                 elem.attr("loaded",true);
               }
 
+              //this watch may be dynamically add or remove
               if (func && func.W) {
                 console.log('func.W watch', attrDoTARender, func.W);
                 var scopes = {}, watches = {};
@@ -543,44 +597,6 @@
               }
             }
 
-            for (var x in origAttrMap) {
-              var z = origAttrMap[x];
-              //map data-* attributes into origAttrMap (inline text)
-              if (!z.indexOf('data-')) {
-                params[x] = attrs[x];
-              //map scope-* attributes into origAttrMap (first level var from scope)
-              } else if (!z.indexOf('scope-')) {
-                if (attrs[x].indexOf('.') >= 0 || attrs[x].indexOf('[') >= 0) {
-                  params[z.slice(6)] = $scope.$eval(attrs[x]);
-                } else {
-                  params[z.slice(6)] = $scope[attrs[x]];
-                }
-              }
-            }
-            // console.log('origAttrMap', params, attrs);
-
-            if(attrWatch) {
-              console.log(attrDoTARender, 'registering watch for', attrWatch);
-              NewScope.$watchCollection(attrWatch, function(newVal, oldVal){
-                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
-                  console.log(attrDoTARender, 'watch before render');
-                  render(doTA.C[attrDoTARender]);
-                  console.log(attrDoTARender, 'watch after render');
-                }
-              });
-            }
-
-            if(attrWatchDiff) {
-              console.log(attrDoTARender, 'registering diff watch for', attrWatchDiff);
-              NewScope.$watchCollection(attrWatchDiff, function(newVal, oldVal){
-                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
-                  console.log(attrDoTARender, 'diff watch before render');
-                  render(doTA.C[attrDoTARender], true);
-                  console.log(attrDoTARender, 'diff watch after render');
-                }
-              });
-            }
-
             function loader(){
               if(doTA.C[attrDoTARender]){
                 console.log(attrDoTARender,'get compile function from cache');
@@ -613,7 +629,7 @@
               }
             }
 
-            loader();
+            //////////////////////////////////////////////////
 
           };
         }
