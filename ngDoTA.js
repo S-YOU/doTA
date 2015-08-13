@@ -521,7 +521,8 @@
               //execute raw functions, like jQuery
               if(attrDoTAOnload){
                 setTimeout(function(){
-                  eval(attrDoTAOnload);
+                  var onLoadFn = new Function(attrDoTAOnload);
+                  onLoadFn.apply(elem[0]);
                   console.log(attrDoTARender,'after eval');
                 });
               }
