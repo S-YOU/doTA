@@ -671,7 +671,7 @@ var doTA = (function() {'use strict';
       //open tag with attributes
       onopentag: function(tagName, attrs, selfClosing) {
         // debug && console.log('onopentag', [tagName, attrs]);
-        var interpolatedAttrs = {}, customId, tagId, noValAttrs = '', attrName, attrVal;
+        var interpolatedAttrs = {}, customId, tagId, noValAttrs = '', attrName, attrVal, oneTimeBinding;
 
         //skip parsing ng-if, ng-repeat, ng-class with, dota
         // but interpolation will still be evaluated (by-design)
@@ -751,18 +751,21 @@ var doTA = (function() {'use strict';
             delete attrs['ng-repeat'];
           }
 
+          if (attrs.refresh) {
+            customId = 1;
+            oneTimeBinding = attrs.refresh.indexOf('::');
+            FnText += Indent(level, 2) +
+              (!Watched ? 'var ' + (isPatch ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
+              'var W={N:N,I:N+"' + '.' + uniqId + '",W:"' +
+              (oneTimeBinding >=0 ? attrs.refresh.substr(oneTimeBinding + 2) + '",O:1': attrs.refresh + '"') +
+              '};T.W.push(W);\n';
+            WatchMap[level] = Watched = 1;
+            FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';
+            delete attrs.refresh;
+          }
+
           //ng-if to javascript if
           if (attrs['ng-if']) {
-            if (attrs.wait || attrs.watch) {
-              customId = 1;
-              FnText += Indent(level, 2) +
-                (!Watched ? 'var ' + (isPatch ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
-                'var W={N:N,I:N+"' + '.' + uniqId + '",W:"' + attrs['ng-if'] + '"' +
-                (attrs.wait ? ',O:1' : '') + '};T.W.push(W);\n';
-              WatchMap[level] = Watched = 1;
-              FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';
-              delete attrs.watch; delete attrs.wait;
-            }
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             FnText += Indent(level, 1) + 'if('+ AttachScope(attrs['ng-if']) +'){\n';
 
@@ -936,12 +939,14 @@ var doTA = (function() {'use strict';
       //void tag no need to write closing tag
       onvoidtag: function() {
         level--;
+        //close "if", "for", "while" blocks
         while (LevelMap[level] > 0) {
-          //console.log(LevelMap[level], 'ends here at level', level);
           FnText += Indent(level, 1) + '}\n';
           LevelMap[level]--;
         }
+        //clear ng-repeat $index
         LevelVarMap[level] = 0;
+        //reset dota-pass when out of scope
         if (doTAPass && doTAPass >= level) {
           doTAPass = 0;
         }
@@ -954,12 +959,8 @@ var doTA = (function() {'use strict';
         //just write closing tag back
         FnText += Indent(level) + "R+='</" + tagName + ">';\n";
 
-        //just write hidden tag, so we can replace later, if ng-if evalulate falsy
-        if (WatchMap[level]) {
-          FnText += Indent(level, 1) + '} else {\n';
-          FnText += Indent(level) + "R+='<" + tagName + ' id="' + idHash[uniqId + '.' + level] +
-            '" style="display:none"></' + tagName + ">';\n";
-        } else if (diffLevel && level === ngIfLevel && ngIfCounter >= 0) {
+        //ngIfCounter for most possible uniqId generation; don't work with loop inside!
+        if (diffLevel && level === ngIfLevel && ngIfCounter >= 0) {
           if (ngIfCounter) {
             FnText += Indent(level, 1) + '}else{N+=' + ngIfCounter + '; \n';
           }
@@ -968,22 +969,21 @@ var doTA = (function() {'use strict';
 
         //close "if", "for", "while" blocks
         while (LevelMap[level] > 0) {
-          //console.log(LevelMap[level], 'ends here at level', level);
           FnText += Indent(level, 1) + '}\n';
           LevelMap[level]--;
         }
+
+        //clear ng-repeat $index
         LevelVarMap[level] = 0;
 
-        //console.log('/level', [level, doTAPass]);
-
-        //finish block for sub functions
+        //add blank node if $watch block return nothing, mostly occur with ng-if
         if (WatchMap[level]) {
-          FnText += Indent(level, 2) + 'return R;}; \n';
-          FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X,N);N+=' + (ngIfCounter||1) + '; \n';
+          FnText += Indent(level, 1) +
+            "R=R||('<" + tagName + ' id="' + idHash[uniqId + '.' + level] +
+            '" style="display:none"></' + tagName + '>\');\n';
           WatchMap[level] = 0;
-          if (diffLevel) {
-            ngIfLevel = ngIfCounter = undefined;
-          }
+          FnText += Indent(level, 2) + 'return R;}; \n';
+          FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X,N); \n';
         }
 
         //reset dota-pass when out of scope
@@ -1597,7 +1597,7 @@ if (typeof module !== "undefined" && module.exports) {
                   var w = func.W[i];
                   // console.log('watch', w);
 
-                  watches[w.I] = NewScope.$watch(w.W, (function(w) {
+                  watches[w.I] = NewScope.$watchCollection(w.W, (function(w) {
                     return function(newVal, oldVal){
                       if (newVal === oldVal) { return; }
                       console.log(attrDoTARender, w.W, 'partial watch before render');

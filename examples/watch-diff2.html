@@ -35,8 +35,10 @@
 		<a ng-if="! vm.grid.length" ng-click="vm.remountGrid()">Remount Grid</a>
 	</form>
 
-<!--<div dota-render=3 inline=1>
-  <div ng-if="vm.form.filter" watch=1><b ng-value="vm.form.filter">Filtered</b></div>
+<!--<div dota-render=3 inline=1 debug=0>
+  <div>
+    <div refresh="vm.form.filter" ng-if="vm.form.filter"><b>Filtered: <input ng-value="vm.form.filter"></b></div>
+  </div>
 </div>-->
 
 <!--bind=1 model=1 event=1 -->
@@ -66,7 +68,7 @@
 
 	<!-- Load scripts. -->
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js"></script>
-  <script type="text/javascript" src="../dist/ngDoTA.min.js"></script>
+  <script type="text/javascript" src="../dist/ngDoTA.js"></script>
 	<script type="text/javascript">
 
 		// Create an application module for our demo.

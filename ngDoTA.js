@@ -497,7 +497,7 @@
                   var w = func.W[i];
                   // console.log('watch', w);
 
-                  watches[w.I] = NewScope.$watch(w.W, (function(w) {
+                  watches[w.I] = NewScope.$watchCollection(w.W, (function(w) {
                     return function(newVal, oldVal){
                       if (newVal === oldVal) { return; }
                       console.log(attrDoTARender, w.W, 'partial watch before render');
