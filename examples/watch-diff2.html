@@ -35,11 +35,14 @@
 		<a ng-if="! vm.grid.length" ng-click="vm.remountGrid()">Remount Grid</a>
 	</form>
 
-<!--<div dota-render=3 inline=1 debug=0>
+<div dota-render=3 inline=1 debug=0 compile-all=1>
   <div>
-    <div refresh="vm.form.filter" ng-if="vm.form.filter"><b>Filtered: <input ng-value="vm.form.filter"></b></div>
+    <div refresh="vm.form.filter" compile=1>
+      <b>Filtered: <input ng-value="vm.form.filter"></b>
+    </div>
+    <input ng-model="vm.updated">
   </div>
-</div>-->
+</div>
 
 <!--bind=1 model=1 event=1 -->
 <div dota-render=2 inline=1 event=0 watch="vm.grid.length" optimize=1 watch-diff="vm.form.filter" diff-level=2 loose="false" debug=0>
@@ -85,6 +88,7 @@
 			function provideAppController( $scope ) {
 
 				var vm = this;
+        vm.updated = 0;
 
         vm.blur = function($event){ console.log('blur', $event && $event.target); }
 

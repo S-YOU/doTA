@@ -758,6 +758,7 @@ var doTA = (function() {'use strict';
               (!Watched ? 'var ' + (isPatch ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
               'var W={N:N,I:N+"' + '.' + uniqId + '",W:"' +
               (oneTimeBinding >=0 ? attrs.refresh.substr(oneTimeBinding + 2) + '",O:1': attrs.refresh + '"') +
+              (attrs.compile ? ',C:1' : '') +
               '};T.W.push(W);\n';
             WatchMap[level] = Watched = 1;
             FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';

@@ -170,13 +170,14 @@
     var elements = elem.querySelectorAll('[de]');
     for (var i = 0, l = elements.length; i < l; i++) {
       addEvent(elements[i], scope, uniqId);
+      elements[i].removeAttribute('de');
     }
   }
 
   function addNgModel(elem, scope, uniqId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
       var dotaPass = partial.getAttribute('dota-pass');
-      console.log('dotaPass', [dotaPass]);
+      // console.log('dotaPass', [dotaPass]);
       if (dotaPass != undefined) { return; } //null or undefined
 
       //override ng-model
@@ -244,8 +245,8 @@
         compile: function() {
           var NewScopeDefined, NewScope, Watchers = [], BindValues = {}; //New scope flag, new Scope
 
-          return function(scope, elem, attrs) {
-            NewScope = scope;
+          return function($scope, elem, attrs) {
+            NewScope = $scope;
             //used attributes, good for minification with closure compiler;
             var attrCacheDOM = attrs.cacheDom;
             var attrDoTARender = attrs.dotaRender;
@@ -285,7 +286,7 @@
 
             function cacheDOM(){
               // console.log('cacheDOM()', attrs)
-              scope.$on("$destroy", function(){
+              $scope.$on("$destroy", function(){
                 console.log('$destroy', elem);
                 // alert(['$destroy', elem[0], hiddenDIV]);
                 if (hiddenDIV) {
@@ -320,15 +321,15 @@
               return compiledFn;
             }
 
-            function attachEventsAndCompile(rawElem) {
+            function attachEventsAndCompile(rawElem, scope) {
 
               if (attrModel) {
-                addNgModel(rawElem, NewScope, attrDoTARender);
+                addNgModel(rawElem, scope, attrDoTARender);
               }
 
               //attach events before replacing
               if (attrEvent) {
-                addEvents(rawElem, NewScope, attrDoTARender);
+                addEvents(rawElem, scope, attrDoTARender);
               }
 
               //ng-bind
@@ -346,7 +347,7 @@
                   if (BindValues[bindExpr]) {
                     partial.innerHTML = BindValues[bindExpr];
                   }
-                  Watchers.push(NewScope.$watchCollection(bindExpr, function(newVal, oldVal){
+                  Watchers.push(scope.$watchCollection(bindExpr, function(newVal, oldVal){
                     if(newVal !== oldVal) {
                       console.log(attrDoTARender, 'watch before bindExpr', newVal);
                       partial[textContent] = BindValues[bindExpr] = newVal || '';
@@ -361,13 +362,13 @@
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
                 forEachArray(rawElem.querySelectorAll('[dota-pass]'), function(partial){
-                  $compile(partial)(NewScope);
+                  $compile(partial)(scope);
                 });
                 console.log(attrDoTARender,'after $compile partial');
 
               } else if (attrCompileAll){
                 //compile child nodes
-                $compile(rawElem.contentDocument || rawElem.childNodes)(NewScope);
+                $compile(rawElem.contentDocument || rawElem.childNodes)(scope);
                 console.log(attrDoTARender,'after $compile all');
               }
             }
@@ -381,18 +382,23 @@
                   console.log('watchers', Watchers);
                   NewScope.$destroy();
                 }
-                NewScope = scope.$new();
+                NewScope = $scope.$new();
                 NewScopeDefined = 1; //new scope created flag
                 console.log('newScope created', attrDoTARender, NewScope);
 
                 if (attrNgController) {
+                  var asPos = attrNgController.indexOf(' as ');
+                  if (asPos > 0) {
+                    attrNgController = attrNgController.substr(0, asPos).trim();
+                  }
                   console.log('new controller', attrNgController);
-                  var l = {$scope: NewScope}, ct = $controller(attrNgController, l);
-                  // if (attrs.controllerAs) {
-                  //   NewScope[attrs.controllerAs] = controller;
-                  // }
-                  elem.data('$ngControllerController', ct);
-                  // elem.children().data('$ngControllerController', ct);
+                  var l = {$scope: NewScope}, controller = $controller(attrNgController, l);
+                  if (attrs.controllerAs || asPos > 0) {
+                    NewScope[attrs.controllerAs || attrNgController.substr(asPos + 4).trim()] = controller;
+                  }
+                  elem[0].removeAttribute('ng-controller');
+                  elem.data('$ngControllerController', controller);
+                  // elem.children().data('$ngControllerController', controller);
                   console.log('new controller created', attrDoTARender);
                 }
               }
@@ -405,7 +411,7 @@
                 }
 
                 console.log(attrDoTARender, 'before render', patch);
-                //execute the function by passing scope(data basically), and $filter
+                //execute render function against scope, $filter, etc.
                 try {
                   console.time('render:' + attrDoTARender);
                   var v = func.F ? func.F(NewScope, $filter, params, patch) : func(NewScope, $filter, params, patch);
@@ -423,7 +429,7 @@
 
                 // console.log('patch?', [patch]);
                 if (patch) {
-                  attachEventsAndCompile(elem[0]);
+                  attachEventsAndCompile(elem[0], NewScope);
                   return;
                 }
 
@@ -434,7 +440,7 @@
                   newNode.innerHTML = v;
 
                   //if needed, attach events and $compile
-                  attachEventsAndCompile(newNode);
+                  attachEventsAndCompile(newNode, NewScope);
 
                   //move child from temp nodes
                   while (firstChild = newNode.firstChild) {
@@ -451,12 +457,12 @@
                   console.log(attrDoTARender, 'after innerHTML');
 
                   //if needed, attach events and $compile
-                  attachEventsAndCompile(elem[0]);
+                  attachEventsAndCompile(elem[0], NewScope);
                 }
 
               //attach client side to prerender context
               } else {
-                attachEventsAndCompile(elem[0]);
+                attachEventsAndCompile(elem[0], NewScope);
               }
 
               //execute raw functions, like jQuery
@@ -499,24 +505,31 @@
 
                   watches[w.I] = NewScope.$watchCollection(w.W, (function(w) {
                     return function(newVal, oldVal){
-                      if (newVal === oldVal) { return; }
+                      console.log('$watch trigger', [newVal, oldVal]);
+                      if (newVal === oldVal && !newVal) { return; }
                       console.log(attrDoTARender, w.W, 'partial watch before render');
                       var oldTag = document.getElementById(w.I);
                       if (!oldTag) { return console.log('tag not found'); }
+
+                      //we don't need new scope here
                       var content = w.F(NewScope, $filter, params, null, w.N);
                       if (!content) { return console.log('no contents'); }
                       console.log('watch new content', content);
                       var newTag = angular.element(content);
-                      //scope management
-                      if (scopes[w.I]) {
-                        scopes[w.I].$destroy();
+
+                      //compile only if specified
+                      if (w.C) {
+                        //scope management
+                        if (scopes[w.I]) {
+                          scopes[w.I].$destroy();
+                        }
+                        scopes[w.I] = NewScope.$new();
                       }
-                      scopes[w.I] = NewScope.$new();
-                      //compile contents
-                      if (attrCompile || attrCompileAll) {
-                        $compile(newTag)(scopes[w.I]);
-                      }
+
+                      attachEventsAndCompile(newTag[0], scopes[w.I] || NewScope);
+
                       angular.element(oldTag).replaceWith(newTag);
+
                       console.log(attrDoTARender, w.W, 'partial watch content written');
                       //unregister watch if wait once
                       if (w.O) {
@@ -538,9 +551,9 @@
               //map scope-* attributes into origAttrMap (first level var from scope)
               } else if (!z.indexOf('scope-')) {
                 if (attrs[x].indexOf('.') >= 0 || attrs[x].indexOf('[') >= 0) {
-                  params[z.slice(6)] = scope.$eval(attrs[x]);
+                  params[z.slice(6)] = $scope.$eval(attrs[x]);
                 } else {
-                  params[z.slice(6)] = scope[attrs[x]];
+                  params[z.slice(6)] = $scope[attrs[x]];
                 }
               }
             }
