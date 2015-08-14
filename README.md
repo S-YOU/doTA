@@ -16,6 +16,7 @@ This project has two libraries, doTA, and ngDoTA.
   - checkout this jsperf for quick look ([doT vs doTA vs Handlebar](http://jsperf.com/dot-dota-handlebar))
 
 ### ngDoTA
+  - include doTA
   - include angular directive called dota-render (also extra dota-include, dota-template, and dota-http)
   - accept templateName or inline and render html with doTA by binding to $scope and $filter, without involving $digest cycle (0 watchers), unless you explicitly set compile or watch options
   - checkout [examples](https://github.com/S-YOU/doTA/tree/master/examples) from github, which based on various online benchmarks or blogs.
@@ -160,6 +161,7 @@ This project has two libraries, doTA, and ngDoTA.
   - some debugging output - use with non-minified version
 
 ### limitations on dota-render directive
+
   - data must be available before directive called, so wrap dota-render directive with `ng-if="data"` if data is not ready
   - `ng-repeat` is transformed in to javascript loop, so internal variables not available to angular, use `$index` to get access to them.
 

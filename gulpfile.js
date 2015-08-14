@@ -53,4 +53,6 @@ function fnInline() {
   // var LVL=1,POS=tagStartPos2;do POS=html2.indexOf("<",POS+1),"/"===html2.charAt(POS+1)?LVL--:LVL++,POS=html2.indexOf(">",POS),"/"===html2.charAt(POS-1)&&LVL--;while(0<LVL);++POS;pos2 = POS;
   return replace(/(\w+)\s*=\s*getOuterHTMLEnd\((\w+)\s*,\s*(\w+)\);/g,
     'LVL=1,$1=$3;do $1=$2.indexOf("<",$1+1),"/"===$2.charAt($1+1)?LVL--:LVL++,$1=$2.indexOf(">",$1),"/"===$2.charAt($1-1)&&LVL--;while(0<LVL);++$1;')
+    .pipe(replace(/=\s*decodeEntities\(([^)]+)\)/g,
+      '=0>$1.indexOf("&")?$1:$1.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,\'"\');'));
 }

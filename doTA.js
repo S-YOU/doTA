@@ -20,7 +20,7 @@ var doTA = (function() {'use strict';
 
   // decode html entities
   function decodeEntities(text) {
-    return text.indexOf('&') === -1 ? text : text
+    return text.indexOf('&') < 0 ? text : text
       .replace(/&gt;/g, '>').replace(/&lt;/g, '<')
       .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
   }
@@ -43,8 +43,9 @@ var doTA = (function() {'use strict';
         // ** attribute without value (last attribute) **
         if (eqPos === -1) {
           attrName = chunk.slice(pos);
+          // console.log('eqPos === -1', [attrName, pos, chunk])
           if (attrName !== '/') {
-            attr[attrName] = "";
+            attr[attrName] = '';
           }
           //attr required will be required="", while is valid syntax
           //http://www.w3.org/TR/html-markup/syntax.html#syntax-attr-empty
@@ -185,6 +186,7 @@ var doTA = (function() {'use strict';
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
     var tagId = '', elem, part1, part2;
+    var posx, endPosx;
 
     do {
       if (html1.charAt(pos1) === "<") {
@@ -207,7 +209,9 @@ var doTA = (function() {'use strict';
             tagId = parsePatchAttr(part1, part2);
           } else {
             //record id
-            tagId = getTagId(part1);
+            //tagId = getTagId(part1);
+            posx = part1.indexOf(' id="');
+            0 <= posx && (posx += 5, endPosx = part1.indexOf('"', posx), tagId = part1.substring(posx, endPosx));
           }
         }
 
@@ -266,7 +270,7 @@ var doTA = (function() {'use strict';
     var html1 = doTA.H[prevKey];
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
-    var tagId1, tagId2 = '', elem1, elem2, part1, part2;
+    var tagId1, tagId2, elem1, elem2, part1, part2;
     var tagNo1 = 0, tagNo2 = 0;
     var newNode = document.createElement('div');
     var parentNode, nextSibling;
@@ -282,9 +286,9 @@ var doTA = (function() {'use strict';
 
       if (pos1 >= 0 && dirty2 < 2) {
         prevPos1 = pos1;
-        pos1 = html1.indexOf('id="', prevPos1);
+        pos1 = html1.indexOf(' id="', prevPos1);
         if (pos1 > 0) {
-          prevPos1 = pos1 + 4;
+          prevPos1 = pos1 + 5;
           pos1 = html1.indexOf('"', prevPos1);
           tagId1 = html1.substring(prevPos1, pos1);
           tagNo1 = tagId1^0;
@@ -299,9 +303,9 @@ var doTA = (function() {'use strict';
       if (pos2 >= 0 && dirty1 < 2) {
         prevTagId2 = tagId2;
         prevPos2 = pos2;
-        pos2 = html2.indexOf('id="', prevPos2);
+        pos2 = html2.indexOf(' id="', prevPos2);
         if (pos2 > 0) {
-          prevPos2 = pos2 + 4;
+          prevPos2 = pos2 + 5;
           pos2 = html2.indexOf('"', prevPos2);
           tagId2 = html2.substring(prevPos2, pos2);
           tagNo2 = tagId2^0;
@@ -464,6 +468,7 @@ var doTA = (function() {'use strict';
 
   // extract value of id from part of html open tag
   // only id="xxx" supported, this is internal use, so it's always double-quotes
+  // this function is inlined during building
   function getTagId(partial, start) {
     var pos = partial.indexOf(' id="', start), endPos;
     if (pos >= 0) {
@@ -925,6 +930,7 @@ var doTA = (function() {'use strict';
         //expand doTA templates with expand=1 option
         if (attr['dota-render'] && attr.expand) {
           var attrArray = [];
+          //attach data-X attr, and scope-X attr
           for(x in attr) {
             if (!x.indexOf('data-')) {
               attrArray.push('"' + x.slice(5) + '":"' + attr[x] + '"');
@@ -933,6 +939,7 @@ var doTA = (function() {'use strict';
             }
           }
           FnText += indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attr['dota-render'] + '";\n';
+          //only expand if renderFn is ready in cache, but not in cache-dom (which unneeded)
           FnText += indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P,X)); \n';
         }
 
@@ -942,11 +949,13 @@ var doTA = (function() {'use strict';
       //void tag no need to write closing tag
       voidTag: function() {
         level--;
+
         //close "if", "for", "while" blocks
         while (LevelMap[level] > 0) {
           FnText += indent(level, 1) + '}\n';
           LevelMap[level]--;
         }
+
         //clear ng-repeat $index
         if (lastLevel === level) {
           LevelVarMap[level] = 0;

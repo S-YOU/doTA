@@ -46,23 +46,23 @@
     </div>
   </div>
 
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js"></script>
-  <script src="../dist/ngDoTA.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+  <script src="../dist/ngDoTA.min.js"></script>
   <script>
   angular.module('fasterAngular', ['doTA']).
     controller('mycontroller', ['$scope', function($scope){
       // Fill the data map with random data
       $scope.refresh = function(){
-        console.time('data refresh')
+        // console.time('data refresh')
         var data = [];
-        for(var i = 0; i < 1500; ++i) {
+        for (var i = 0; i < 1500; ++i) {
           data[i] = {};
-          for(var j = 0; j < 5; ++j) {
+          for (var j = 0; j < 5; ++j) {
             data[i][j] = Math.random();
           }
         }
         $scope.data = data;
-        console.timeEnd('data refresh');
+        // console.timeEnd('data refresh');
       }
       $scope.refresh();
       $scope.name = "test123";
