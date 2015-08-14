@@ -2,113 +2,258 @@ doTA, doT for Angular
 =================
 
 Experimental Micro Templating engine inspired from doT.
+
 doTA is not actually [doT](https://github.com/olado/doT), but produce similar function that generate template like doT does.
 
-Here is few steps how doTA works.
+---
 
-- doTA load html as string or from `$http` with `$templateCache` or directly from DOM,
-- doTA compile html to function called `render` (this is where doTA do same way as doT)
-- running `render(scope, $filter)` output raw html in ngDoTA
-- ngDoTA use jqLite's `elem.html` to write raw html to DOM
-(or you can use compile attribute to use `$compile` with angular attributes)
+This project has two libraries, doTA, and ngDoTA.
 
-This also include experimental extremely stripped down micro html parser similar to htmlparser2, because to compile angular template you need to parse htmls. xD
+### doTA
+  - no dependencies
+  - can run on both server and client
+  - parse html from string and convert them into javascript function, which use to render with data (any objects)
+  - checkout this jsperf for quick look ([doT vs doTA vs Handlebar](http://jsperf.com/dot-dota-handlebar))
 
-Supported or Partially supported following features :)
+### ngDoTA
+  - include angular directive called dota-render (also extra dota-include, dota-template, and dota-http)
+  - accept templateName or inline and render html with doTA by binding to $scope and $filter, without involving $digest cycle (0 watchers), unless you explicitly set compile or watch options
+  - checkout [examples](https://github.com/S-YOU/doTA/tree/master/examples) from github, which based on various online benchmarks or blogs.
 
-Htmlparser part similar to htmlparser2:
+---
 
- - **onopentag**,
- - **onclosetag**,
- - **ontext**,
- - **oncomment**
+### Some limitations on HTML Parser
 
-If you don't know about above, checkout [htmlparser2](https://github.com/fb55/htmlparser2)
+ - must be valid html
+ - must be used html entities to attributes, NO `<, >, &`
+ - usage of `'` or `"` in text nodes or inside attributes may work or may not works.
+ - you need dedicated control on html, shouldn't be used on user-defined templates or security will suffer.
 
-Some Limitations on parser
+### Supported Angular or similar syntax
 
- - html must be valid, and must use html entities to attributes, NO `<, >, &, ', "` in html text nodes or inside attributes)
- - `'` in text nodes must be encoded like `&#x27;` or `&#39;` or parser will throw error.
- - self closing syntax like `<div />` is not supported, must use `<div></div>`
- - img, input, br, hr tag must be `<img>`, `<hr>`, `<br>`, `<hr>`, NO self closing tag like `<img />`  
+- loop
+  - `ng-repeat="x in data"` - array
+    - `ng-repeat="x in data | filter:y | orderBy:x"` - filters inside ng-repeat
+    - `$index` - can be used on attributes
+      - to bind like `ng-model="data[$index]"`, normal `ng-model="x"` won't work
+  - `ng-repeat="k,v in data"` - dict (angular syntax (k,v) in data)
+  - `ng-repeat="i in 1:10:2"` - range
 
-For Angular templates:
+- conditionals
+  - `ng-if="expression"` - (must be valid javascript expression)
+    - extra `elif` and `else` support (must follow by previous `ng-if` or `elif` - no middle text nodes allowed)
+  - `ng-class="{a:x>y,b:z}"` - (must be valid javascript object)
+  - `ng-show` - when false, add `ng-hide` class
+  - `ng-hide` - when true, add `ng-hide` class
 
- - **ng-repeat** (convert to for loop, only '`x in data`' for array supported, no "as", "track by", or no dict loop)
- - **ng-if** (to plain `if`, must be valid javascript expression)
- - **ng-class** (partially supported, expression must be valid javascript expressions, and still having problem with single quote/double quote issue inside)
- - supported most of interpolations
- - supported filters inside interpolations inside text nodes
+- interpolations
+  - `{{ ... }}` - interpolations
+  - `{{ ... | filter1:x:y | filter2:a }}` - filters inside interpolations
 
-supported `ng-src,ng-alt,ng-title,ng-href`. they simply removed ng- xD, after interpolate of course.
+- events
+  - enabled by default
+    - can be disabled by using event=0 on dota-render directive
+  - supported 'change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste'
+    - all the events and its expressions are lazy. angular won't involve until event fired.
+    - change event may be different behavior with angular, untested
 
-Speed is like 1,2 ms for normal small template to parse html, and 1-2 ms for compiling to html (as text) too (in my machine of course). But actual writing to DOM back using jqLite take few more ms, and if you use $compile like for ng-model, or some pass-trough to angular, it will take more time.
+- ng-init
+  - `ng-init="expression"` - evaluate the expression as javascript
 
-But at least I feel faster than `ngInclude` or any other that involve `$digest` cycles, and I believe less memory usage with doTA.
+- ng-controller
+  - `ng-controller="ctrl"` - should be same as angular
+    - will create new scope with scope.$new()
+    - may be used `"ctrl as vm"` or `controller-as="vm"` - untested
 
-####Usage/Example:
+- aliases
+  - `ng-value="value"` - set value attribute without expanding
+  - `ng-src="{{base}}/image/{{size}}.jpg"` - expand and set src attribute
+  - `ng-alt` - expand and set alt attribute
+  - `ng-title` - expand and set title attribute
+  - `ng-href` - expand and set href attribute
 
-Add doTA to your module
+- ng-model
+  - experimental, disabled by default
+  - enabled by using `model=1` on dota-render directive
+  - `ng-model="scope_var"` - only accept dot notation or without, does not use angular $parse
+    - one $watchCollection will be added
 
-```javascript
-angular.module('yourApp', ['doTA']);
-```
+- ng-bind
+  - experimental, disabled by default
+  - enabled by using `bind=1` on dota-render directive
+  - `ng-bind="scope_var"` - apply scope_var to textContent or innerText
+    - one $watchCollection will be added
 
-doTA provides a provider called doTA that you can inject, or just use `doTA`, since it is global variable *for now*.
+---
 
-```javascript
-myapp.controller('myctrl', ['$scope', 'doTA', function($scope, doTA){
-  
-}])
-```
- 
-doTA provide a directive called `dota-render`, to use with templates, with various attributes.
+### dota-render directive attributes
 
-```html
-<div dota-render='path/to/tpl.html'></div>
-```
+- cache-dom
+  - before $scope is destroyed, relocate dom to safer place, and reuse it as is
+  - for static dom, without dynamic binding
 
-```html
-<div dota-render='something_unique' inline=1>
-	<div>some more html</div>
-</div>
-```
+- dota-onload
+  - evalulate javascript when done, `this` is bind to current DOM
 
-(doTA does not add any watchers, so data must be available before this call, so you have to wrap with `ng-if` before this.)
+- dota-onload-scope
+  - evaluate $scope function when done, with $event object injectable like angular
 
-Some more usages
+- compile
+  - use angular $compile on nodes with dota-pass or its children
 
-```html
-<div dota-render='name1' compile=1 encode=1 dota-onload='$(".lazy").lazyload()' dota-onload-scope="scopeFunc()">
-	<div>some more html</div>
-</div>
-```
+- compile-all
+  - use angular $compile with elem.contents() - not much performance gain from dota with this option.
 
-- **compile=1** - $compile only `dota-pass` attribute and it's childs, normally faster than `compile-all=1`, unless you have many `dota-pass`.
-- **compile-all=1** - use `$compile(elem.contents())(scope)` after appending html. you can use when you want the whole template render by angular, this is much slower, and won't get much performance gain.
-- **dota-onload=some_js** - `eval` javascript after element append
-- **dota-onload-scope=some_scope_function** - eval using `scope.$eval`
-- **encode=1** - encoding `<,>,&` in attributes to `&lt; &gt; &amp;` just for some html that not using html entities (partial support).
-- **loose=1** - when object property is falsy, use '', instead of showing undefined.
-- **debug=1** - you have to include non minified version of `ngDoTA.js`, because minified version stripped that down too xD
-- **watch="scope_vars"** - adding to watch for angular, it will passed to `scope.$watchCollection(scope_vars, ...` and template to auto re-render on data change. (new data must be non-falsy, *for now*);
-- **cache-dom=1** - cached rendered dom in hidden tag, and move or copy(on IE) DOM back upon reuse, only for static contents
-- **scope=1** - create new scope, use only when compile=1 or compile-all=1, when parent scope is destroy this will get destroy too or $watchers will leak
-- **loaded=false** - just to hide template with css, once render it will be loaded=true
+- inline
+  - get template string from innerHTML instead of from template
+  - this will ignore if template is once compiled
 
-If you want to exclude rendering inside `dota-render`, you might want to use `dota-pass=1` with `compile=1`,
+- encode
+  - use when attributes have `<,>,&` characters, or may get into infinite loop or will throw errors.
+  - when using with jade templates, I never need this.
 
-```html
-<div dota-pass=1 ng-if='something'>
-   <input ng-model='item.something'>
-</div>
-```
+- loose
+  - set by default - undefined, 0, false will be blank
+  - use `loose=0` if you don't want `0` as blank
 
-And, if you want to continue rendering inside `dota-pass`, you can use `dota-continue`
+- scope
+  - will create new scope
 
-Please note that `ng-repeat="item in data"`, `item` will not available for `ng-model`, even you do `dota-pass`, because, item is not passed to angular, so you have to use like `data[$index].something` in some cases. `$index` will be converted to array index like `data[2].something`.
+- watch
+  - will add $watchCollection and will re-render the the whole template when watch triggered.
 
-### Performance Comparison with Angular, Angular + ReactJs, doTA
+- watch-diff
+  - will add $watchCollection and will partially patch DOM, when changed
+  - only attributes or first text node changes allowed
+
+- diff-level
+  - `diff-level=2` - use experimental **FlatDOM**, which diff html as text and patch DOM while parsing
+
+- event
+  - set by default
+  - convert ng-events into de-events - which is dom events, that evalutes scope fn when triggered.
+
+- model
+  - experimental
+  - convert ng-model into internal approach,
+    - which bind input event on text box and change event on others input, checkbox, radio, select
+    - update to model value when data changed
+
+- bind
+  - experimental
+  - set textContent or innerText when data change
+
+- loaded
+  - once loaded, this attribute will be set to true
+
+- optimize
+  - additional optimization on output - currently size, which strip unnessary quotes
+
+- data-XX
+  - all data-XX attributes on directive will be available as $attr.XX on templates
+
+- scope-XX
+  - all scope-XX attibutes on directive will be avaialble as $attr.XX on templates
+  - attr without `.` or `[` will be $scope[attr] or it will $scope.$eval
+
+- debug
+  - some debugging output - use with non-minified version
+
+### limitations on dota-render directive
+  - data must be available before directive called, so wrap dota-render directive with `ng-if="data"` if data is not ready
+  - `ng-repeat` is transformed in to javascript loop, so internal variables not available to angular, use `$index` to get access to them.
+
+---
+
+### doTA - attributes inside HTML templates
+
+- dota-pass
+  - will skip parsing ng-* attributes
+  - interpolations with {{ ... }} will still be expanded, or use `ng-bind` without bind=1 option
+
+- dota-continue
+  - will continue parsing ng-* attributes, when inside dota-pass
+
+- watch - `watch="expression"`
+  - will create sub functions, and will add watch or one-time watch with `::`
+  - will re-render when watch triggers
+
+---
+
+### Usage:
+
+- Module
+
+  ```javascript
+  angular.module('yourApp', ['doTA']);
+  ```
+
+- Provider
+
+  ```javascript
+  myapp.controller('myctrl', ['$scope', 'doTA', function($scope, doTA){
+    ...
+  }])
+  ```
+
+- Template
+  ```html
+  <div dota-render='path/to/tpl.html'></div>
+  ```
+
+- Inline
+  ```html
+  <div dota-render='something_unique' inline=1>
+    <div>some more html</div>
+  </div>
+  ```
+
+- ng-repeat example
+  ```html
+  <div ng-controller="mycontroller">
+      <div ng-if="data">
+        <table dota-render=1 inline=1>
+          <tr ng-repeat="line in data">
+            <td>{{line[0]}}</td>
+            <td>{{line[1]}}</td>
+            <td>{{line[2]}}</td>
+            <td>{{line[3]}}</td>
+            <td>{{line[4]}}</td>
+          </tr>
+        </table>
+      </div>
+  </div>
+  ```
+
+- watch example
+  ```html
+  <div ng-controller="mycontroller">
+    <table dota-render=1 inline=1 watch="data">
+      <tr ng-repeat="line in data">
+      ....
+  ```
+
+---
+
+### Real world usage
+
+- [www.giveucar.com](http://www.giveucar.com) - as Universal (Isomorphic) Javascript
+
+---
+
+### Performance Comparisons
+
+- jsperf - [doT vs doTA vs Handlebar](http://jsperf.com/dot-dota-handlebar)
+
+- ng-include/dota perf - [ng-include rendering slowness](https://github.com/angular/angular.js/issues/9559)  - [plunk](http://plnkr.co/edit/be2h0vgxvgmkOjfafHoD?p=preview)
+
+- fork of inductjs's benchmark - [angular/inductjs/react/doTA](http://rawgit.com/S-YOU/inductjs/master/examples/changing-list-nested/dota.html)
+
+- fork of Ben Nadel's benchmark - [Rendering Large Datasets With AngularJS](https://rawgit.com/S-YOU/JavaScript-Demos/master/demos/render-large-datasets-angularjs-reactjs/angular-dota.htm)
+
+---
+
+### Some Plunks or Examples
 
 Base on scripts on [this blog](http://www.williambrownstreet.net/blog/2014/04/faster-angularjs-rendering-angularjs-and-reactjs/)
 
@@ -125,43 +270,5 @@ I have downloaded each plunks and tested on Chrome Timeline JS Profiler
 - doTA - http://imgur.com/JxBxO7C - 164ms
 - doTA (with watch) - http://imgur.com/IyotTaL - 166ms initial
 (I have tried 15 times refresh data button, its 165ms to 265ms, sometimes GC got triggered and used like 80ms)
-- doTA (with watch, compile=1, dota-pass and ng-binding/ng-model) - 172ms, not much difference as above. 
+- doTA (with watch, compile=1, dota-pass and ng-binding/ng-model) - 172ms, not much difference as above.
 (but with compile-all=1, its 365ms, since it pass the whole html to angular to $compile)
-
-- jsperf ([doT vs doTA vs Handlebar](http://jsperf.com/dot-dota-handlebar)) - similar speed as doT now. 
-([Test results](http://imgur.com/iE0ZoQG) as image)
-
-- added doTA to [ng-include rendering slowness](https://github.com/angular/angular.js/issues/9559)  - [plunk](http://plnkr.co/edit/be2h0vgxvgmkOjfafHoD?p=preview)
-
-Of course, one reason is because of doTA itself is one way binding, but there is a lot of case you don't need two way bindings, and doTA is easy to use it. (please note that this is not production ready, use at your own risk!)
-
-All you need is just make sure you have data ready by wrapping with **ng-if** and wrap **dota-render='some_unique_name'** and **inline=1** attribute, you don't need to change every existing angular components with bind-this, bind-that or once-once-once :))))))
-
-```html
-<div ng-controller="mycontroller">
-    <div ng-if="data">
-       <table dota-render=1 inline=1>
-         <tr ng-repeat="line in data">
-           <td>{{line[0]}}</td>
-           <td>{{line[1]}}</td>
-           <td>{{line[2]}}</td>
-           <td>{{line[3]}}</td>
-           <td>{{line[4]}}</td>
-         </tr>
-       </table>
-     </div>
-</div>
-```
-
-To enable template automatic updating, you can use `watch` attribute. You don't need to wrap with `ng-if` for that case, since `render` won't trigger if data is falsy.
-
-```html
-<div ng-controller="mycontroller">
-	<table dota-render=1 inline=1 watch="data">
-		<tr ng-repeat="line in data">
-		....
-```
-
-By the way, doTA works on IE8, but you probably won't need it unless you need to care about 19-20% users. :D
- http://imgur.com/2U03BS1 ([browser market share](https://www.netmarketshare.com/browser-market-share.aspx?qprid=2&qpcustomd=0&qpstick=1&qpsp=2014&qpnp=2&qptimeframe=Y))
- 

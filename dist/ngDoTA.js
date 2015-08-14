@@ -6,35 +6,28 @@ var doTA = (function() {'use strict';
     };
   }
 
-  /* for firefox */
+  /* no, thanks! firefox */
   if (Object.prototype.watch) {
     delete Object.prototype.watch;
     delete Object.prototype.unwatch;
   }
 
-  //Pretty Indent for debuging
-  function Indent(n, x) {
+  // pretty indent for debugging
+  function indent(n, x) {
     var ret = new Array(n + 2).join('    ');
     return x ? ret.slice(0, -2 * x) : ret;
   }
 
-  //obj forEach, not currently used
-  // function forEach(obj, fn) {
-  //  for (var x in obj) {
-  //    fn.call(obj[x], x);
-  //  }
-  // }
-
-  //decode html entities
+  // decode html entities
   function decodeEntities(text) {
     return text.indexOf('&') === -1 ? text : text
       .replace(/&gt;/g, '>').replace(/&lt;/g, '<')
       .replace(/&amp;/g, '&').replace(/&quot;/g, '"');
   }
 
-  //parse attributes from html open tag and make dict object
-  function parseAttrs(chunk, func) {
-    var attrs = {}, tagName;
+  // parse attributes from html open tag and make dict object
+  function parseAttr(chunk, func) {
+    var attr = {}, tagName;
     var pos = chunk.indexOf(' ');
     var len, attrName, attrVal;
     var valStart, valEndPos;
@@ -51,10 +44,10 @@ var doTA = (function() {'use strict';
         if (eqPos === -1) {
           attrName = chunk.slice(pos);
           if (attrName !== '/') {
-            attrs[attrName] = "";
+            attr[attrName] = "";
           }
-          //attrs required will be required="", while is valid syntax
-          //http://www.w3.org/TR/html-markup/syntax.html#syntax-attrs-empty
+          //attr required will be required="", while is valid syntax
+          //http://www.w3.org/TR/html-markup/syntax.html#syntax-attr-empty
           break;
         }
 
@@ -62,7 +55,7 @@ var doTA = (function() {'use strict';
         // ** attribute without value (middle attribute) **
         // var sp_pos = chunk.indexOf(' ', pos);
         // if (sp_pos > 0 && sp_pos < eqPos) {
-        //   attrs[chunk.slice(pos, sp_pos)] = "";
+        //   attr[chunk.slice(pos, sp_pos)] = "";
         //   pos = sp_pos;
         //   continue;
         // }
@@ -79,7 +72,7 @@ var doTA = (function() {'use strict';
           valEndPos = chunk.indexOf(valStart, eqPos + 2);
           attrVal =  chunk.slice(eqPos + 2, valEndPos);
           //console.log(311, [eqPos, valEndPos, attrVal]);
-          attrs[attrName] = decodeEntities(attrVal);
+          attr[attrName] = decodeEntities(attrVal);
           pos = valEndPos + 1;
         } else {
 
@@ -88,13 +81,13 @@ var doTA = (function() {'use strict';
           //when no more attributes
           if (valEndPos === -1) {
             attrVal =  chunk.slice(eqPos + 1);
-            attrs[attrName] = decodeEntities(attrVal);
+            attr[attrName] = decodeEntities(attrVal);
             //console.log(442, [attrVal]);
             break;
 
           } else {
             attrVal =  chunk.slice(eqPos + 1, valEndPos);
-            attrs[attrName] = decodeEntities(attrVal);
+            attr[attrName] = decodeEntities(attrVal);
             //console.log(313, [eqPos, valEndPos, attrVal]);
             pos = valEndPos;
           }
@@ -105,38 +98,38 @@ var doTA = (function() {'use strict';
       if (tagName === 'input' || tagName === 'img') {
         //http://www.w3.org/TR/html-markup/syntax.html
         //area, base, br, col, command, embed, hr, img, input, keygen, link, meta, param, source, track, wbr
-        func.onopentag(tagName, attrs, 1);
-        func.onvoidtag();
+        func.openTag(tagName, attr, 1);
+        func.voidTag();
       } else if (attrName === '/') {
-        func.onopentag(tagName, attrs);
-        func.onclosetag(tagName);
+        func.openTag(tagName, attr);
+        func.closeTag(tagName);
       } else {
-        func.onopentag(tagName, attrs);
+        func.openTag(tagName, attr);
       }
 
-    //no attributes
+    // no attributes
     } else {
 
-      //self closing, explicit
+      // self closing, explicit
       if (chunk.charAt(chunk.length - 1) === '/') {
         tagName = chunk.slice(0, -1).toLowerCase();
 
         if (tagName === 'br' || tagName === 'hr') {
-          func.onopentag(tagName, attrs, 1);
-          func.onvoidtag();
+          func.openTag(tagName, attr, 1);
+          func.voidTag();
         } else {
-          func.onopentag(tagName, attrs);
-          func.onclosetag(tagName);
+          func.openTag(tagName, attr);
+          func.closeTag(tagName);
         }
       } else {
         tagName = chunk.toLowerCase();
 
-        //self closing, implicit
+        // self closing, implicit
         if (tagName === 'br' || tagName === 'hr') {
-          func.onopentag(tagName, attrs, 1);
-          func.onvoidtag();
+          func.openTag(tagName, attr, 1);
+          func.voidTag();
         } else {
-          func.onopentag(tagName, attrs);
+          func.openTag(tagName, attr);
         }
       }
     }
@@ -146,7 +139,7 @@ var doTA = (function() {'use strict';
   var events = ' change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
   var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  //minimal stripped down html parser
+  // minimal stripped down html parser
   function parseHTML(html, func) {
     if (!html) { return; }
     var prevPos = 0, pos = html.indexOf('<');
@@ -158,25 +151,25 @@ var doTA = (function() {'use strict';
           pos = html.indexOf('>', prevPos);
           //close tag must be like </div>, but not <div />
           // console.log(['closetag', prevPos, pos, html.substring(prevPos, pos)])
-          func.onclosetag(html.substring(prevPos, pos));
+          func.closeTag(html.substring(prevPos, pos));
         } else if (html.charAt(pos) === '!') {
           prevPos = pos;
           pos = html.indexOf('>', prevPos);
           // console.log(['comment', prevPos, pos, html.substring(prevPos, pos)])
-          func.oncomment(html.substring(prevPos, pos));
+          func.comment(html.substring(prevPos, pos));
         } else {
           prevPos = pos;
           pos = html.indexOf('>', prevPos);
-          // console.log(['opentag', prevPos, pos, html.substring(prevPos, pos), parseAttrs(html.substring(prevPos, pos))])
-          // func.onopentag.apply(this, parseAttrs(html.substring(prevPos, pos)));
-          parseAttrs(html.substring(prevPos, pos), func);
+          // console.log(['opentag', prevPos, pos, html.substring(prevPos, pos), parseAttr(html.substring(prevPos, pos))])
+          // func.openTag.apply(this, parseAttr(html.substring(prevPos, pos)));
+          parseAttr(html.substring(prevPos, pos), func);
         }
       } else if (html.charAt(pos) === '>') { //&& html.charAt(pos + 1) !== '<'
         prevPos = ++pos;
         pos = html.indexOf('<', prevPos);
         if (pos > prevPos) {
           // console.log(['text', prevPos, pos, html.substring(prevPos, pos)])
-          func.ontext(html.substring(prevPos, pos));
+          func.text(html.substring(prevPos, pos));
         }
       } else {
         console.error('Parse ERR?', [prevPos, pos, html.substring(prevPos, pos), html.slice(pos)]);
@@ -186,11 +179,12 @@ var doTA = (function() {'use strict';
     } while (pos > 0);
   }
 
+  //diff and patch dom with exact same structure
   function diffPatchExact(prevKey, html2) {
     var html1 = doTA.H[prevKey];
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
-    var tagId, elem, part1, part2;
+    var tagId = '', elem, part1, part2;
 
     do {
       if (html1.charAt(pos1) === "<") {
@@ -209,8 +203,8 @@ var doTA = (function() {'use strict';
           part2 = html2.substring(prevPos2, pos2);
           //attributes
           if (part1 !== part2) {
-            // console.log('opentag', [part1, part2])
-            tagId = parsePatchAttrs(part1, part2);
+            // console.log('openTag', [part1, part2])
+            tagId = parsePatchAttr(part1, part2);
           } else {
             //record id
             tagId = getTagId(part1);
@@ -246,6 +240,8 @@ var doTA = (function() {'use strict';
     } while(pos1 > 0);
   }
 
+  // find position of outerHTML end
+  // this function will be inline during building
   function getOuterHTMLEnd(HTML, START_POS) {
     var LVL = 1, POS = START_POS;
     do {
@@ -265,11 +261,12 @@ var doTA = (function() {'use strict';
     return ++POS;
   }
 
+  // FlatDOM: diff html as text and patch dom nodes
   function diffPatchChildren(prevKey, html2) {
     var html1 = doTA.H[prevKey];
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
-    var tagId1, tagId2, elem1, elem2, part1, part2;
+    var tagId1, tagId2 = '', elem1, elem2, part1, part2;
     var tagNo1 = 0, tagNo2 = 0;
     var newNode = document.createElement('div');
     var parentNode, nextSibling;
@@ -332,7 +329,7 @@ var doTA = (function() {'use strict';
 
           if (part1 !== part2) {
             elem1 = document.getElementById(tagId1);
-            parsePatchAttrs(part1, part2, elem1);
+            parsePatchAttr(part1, part2, elem1);
             // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
           } else {
             elem1 = 0;
@@ -377,10 +374,12 @@ var doTA = (function() {'use strict';
 
         newNode.innerHTML = html2.slice(tagStartPos2, pos2);
         // console.log('newNode', [tagId1, tagId2, prevTagId2], newNode.innerHTML, nextSibling, parentNode);
-        if (nextSibling) {
-          elem2 = parentNode.insertBefore(newNode.firstChild, nextSibling);
-        } else if (parentNode) {
-          parentNode.appendChild(newNode.firstChild);
+        if (parentNode) {
+          if (nextSibling) {
+            elem2 = parentNode.insertBefore(newNode.firstChild, nextSibling);
+          } else {
+            parentNode.appendChild(newNode.firstChild);
+          }
         } else {
           parentNode = document.getElementById(prevTagId2);
           parentNode.appendChild(newNode.firstChild);
@@ -416,16 +415,15 @@ var doTA = (function() {'use strict';
           // console.warn('replaced node', [tagId1, tagId2], [tagNo1, tagNo2], elem1);
           if (tagNo1 < tagNo2) dirty2 = 1;
           if (tagNo1 > tagNo2) dirty1 = 1;
-          continue;
         }
       }
 
-    };
+    } //infinite loop
 
   }
 
-  //parse attributes from html open tag and make dict object
-  function parsePatchAttrs(chunk1, chunk2, elem) {
+  // parse attributes from html open tag and patch DOM when different
+  function parsePatchAttr(chunk1, chunk2, elem) {
     var tagId;
     var pos1 = chunk1.indexOf(' ');
     var eqPos1, eqPos2;
@@ -464,7 +462,8 @@ var doTA = (function() {'use strict';
     return tagId;
   }
 
-  //extract value of id from part of html open tag, id="xxx"
+  // extract value of id from part of html open tag
+  // only id="xxx" supported, this is internal use, so it's always double-quotes
   function getTagId(partial, start) {
     var pos = partial.indexOf(' id="', start), endPos;
     if (pos >= 0) {
@@ -474,6 +473,7 @@ var doTA = (function() {'use strict';
     }
   }
 
+  // split filters into array, take care of | and || as different
   function splitFilters(input) {
     var pos = input.indexOf('|');
     if (pos === -1) {
@@ -491,46 +491,45 @@ var doTA = (function() {'use strict';
       pos = input.indexOf('|', pos);
     }
     if (prevPos < input.length) {
-      ret.push(input.substring(prevPos));
+      ret.push(input.substr(prevPos));
     }
     return ret;
   }
 
-  //ToDo: check compile perf with regexes
+  // ToDo: check compile performance with regex
   var ngClassRegex = /('[^']+'|"[^"]+"|[\w$]+)\s*:\s*((?:[$.\w]+|\([^)]+\)|[^},])+)/g;
   var varOrStringRegex = /'[^']*'|"[^"]*"|[\w$]+|[^\w$'"]+/g;
   var quotedStringRegex = /"[^"]*"|'[^']*'/g;
   var whiteSpaceRegex = /\s{2,}|\n/g;
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
-
   // https://github.com/kangax/html-minifier/issues/63
   var noValAttrRegex = /^(?:checked|selected|disabled|readonly|multiple|required|hidden|nowrap)/;
   var $indexRegex = /\$index/g;
 
+  // exported as doTA.compile
   function compileHTML(template, options) {
     options = options || {};
     var val_mod = options.loose ? "||''" : '';
     var isPatch = options.watchDiff;
     var diffLevel = +options.diffLevel;
     var VarMap = {$index: 1, undefined: 1, $attr:1};
-    var level = 0, ngIfLevel, ngIfCounter;
+    var level = 0, lastLevel, ngIfLevel, ngIfCounter;
     var LevelMap = {}, LevelVarMap = {};
     var WatchMap = {}, Watched;
     var doTAPass, doTAContinue;
     var compiledFn;
-    var uniqId = this.getId(options.dotaRender);
+    var uniqueId = this.getId(options.dotaRender);
     var idHash = {};
 
-    var FnText = Indent(level) + "'use strict';var " +
-      (isPatch ? 'N=1,J=' + uniqId + ',' : '') +
-      "R='';\n"; //ToDO: check perf on var declaration
+    var FnText = indent(level) + "'use strict';var " +
+      (isPatch ? 'N=1,J=' + uniqueId + ',' : '') +
+      "R='';\n"; //ToDO: check performance on var declaration
 
     //clean up extra white spaces and line break
     template = template.replace(whiteSpaceRegex, ' ');
-    //console.log(template);
 
-    //debug = 1;
+    // when encode is set, find strings and encode < and >, or parser will throw error.
     if (options.encode) {
       template = template.replace(quotedStringRegex, function($0) {
         return $0.replace(/[<>]/g, function($00) {
@@ -539,41 +538,43 @@ var doTA = (function() {'use strict';
       });
     }
 
-    //attach plain variables to Scope.Variable
-    function AttachScope(v) {
+    // attach plain variables to scope variables
+    function attachScope(v) {
       //console.log(VarMap, [v]);
       if (v) {
-        //var logg = /error/.test(v);
-        //logg && console.log(11, [v]);
+        //var DEBUG = /error/.test(v);
+        //DEBUG && console.log(11, [v]);
 
         //ToDo: still buggy, this need to improve
-        var matches = v.match(varOrStringRegex), vv = "";
-        //logg && console.log(12, matches);
+        var vv = '';
+        var matches = v.match(varOrStringRegex);
+        //DEBUG && console.log(12, matches);
         for(var i = 0; i < matches.length; i++) {
+
           if (valid_chr.indexOf(matches[i].charAt(0)) >= 0 && !VarMap[matches[i]] &&
             (!i || matches[i-1][matches[i-1].length-1] !== '.')) {
             vv += 'S.' + matches[i];
           } else {
             if (matches[i].indexOf('$index') >= 0) {
               //console.log([val], LevelMap[level]);
-              for(var j = level; j >= 0; j--) {
-                if (LevelVarMap[j]) {
-                  vv += matches[i].replace($indexRegex, LevelVarMap[j]);
-                  break;
-                }
-              }
+              //for(var j = level; j >= 0; j--) {
+              //  if (LevelVarMap[j]) {
+                  vv += matches[i].replace($indexRegex, LevelVarMap[lastLevel]);
+                  //break;
+                //}
+              //}
             } else {
               vv += matches[i];
             }
           }
         }
-        //logg && console.log(55, vv);
+        //DEBUG && console.log(55, vv);
         return vv;
       }
       return v;
     }
 
-    // Escape single quotes with backslash
+    // escape single quotes with backslash
     function escapeSingleQuote(str) {
       var quotePos = str.indexOf("'");
       if (quotePos >= 0) {
@@ -595,8 +596,8 @@ var doTA = (function() {'use strict';
       }
     }
 
-    // Interpolation
-    function Interpolate(str) {
+    // interpolation
+    function interpolate(str) {
       var pos = str.indexOf('{{');
       if (pos >= 0) {
         var prevPos = 0;
@@ -611,14 +612,14 @@ var doTA = (function() {'use strict';
           pos = str.indexOf('}}', prevPos);
 
           insideStr = str.substring(prevPos, pos);
-          ret += "'+(" + AttachFilter(insideStr) + val_mod + ")+'";
+          ret += "'+(" + attachFilter(insideStr) + val_mod + ")+'";
 
           //skip }} for next
           prevPos = pos + 2;
           pos = str.indexOf('{{', prevPos);
         } while (pos > 0);
 
-        //remaing text outside interpolation
+        //remaining text outside interpolation
         ret += escapeSingleQuote(str.substr(prevPos));
         return ret;
       } else {
@@ -626,16 +627,16 @@ var doTA = (function() {'use strict';
       }
     }
 
-    // Attach $filters
-    function AttachFilter($1) {
+    // attach $filters
+    function attachFilter($1) {
       //console.log(333,$1);
       var pos = $1.indexOf('|');
       if (pos === -1) {
-        return AttachScope($1);
+        return attachScope($1);
       } else {
         //ToDo: check this line later
         var v = splitFilters($1);
-        var val = AttachScope(v[0]);
+        var val = attachScope(v[0]);
         var prevColonPos = 0, colonPos;
         var filter;
 
@@ -650,11 +651,11 @@ var doTA = (function() {'use strict';
             prevColonPos = ++colonPos;
             colonPos = filter.indexOf(':', prevColonPos);
             while (colonPos > 0) {
-              val += ',' + AttachScope(filter.slice(prevColonPos, colonPos));
+              val += ',' + attachScope(filter.slice(prevColonPos, colonPos));
               prevColonPos = ++colonPos;
               colonPos = filter.indexOf(':', prevColonPos);
             }
-            val += ',' + AttachScope(filter.substr(prevColonPos)) + ')';
+            val += ',' + attachScope(filter.substr(prevColonPos)) + ')';
 
           //filter without params
           } else {
@@ -669,45 +670,46 @@ var doTA = (function() {'use strict';
     //parse the element
     parseHTML(template, {
       //open tag with attributes
-      onopentag: function(tagName, attrs, selfClosing) {
-        // debug && console.log('onopentag', [tagName, attrs]);
-        var interpolatedAttrs = {}, customId, tagId, noValAttrs = '', attrName, attrVal, oneTimeBinding;
+      openTag: function(tagName, attr, selfClosing) {
+        // debug && console.log('openTag', [tagName, attr]);
+        var interpolatedAttr = {}, customId, tagId, noValAttr = '', attrName, attrVal, oneTimeBinding;
 
         //skip parsing ng-if, ng-repeat, ng-class with, dota
         // but interpolation will still be evaluated (by-design)
         // to avoid this behavior, use ng-bind instead of {{}}
         //  and create new scope with scope=1 in dota-render, or $watchers will never destroy.
-        if (attrs['dota-pass']) {
+        if (attr['dota-pass']) {
           doTAPass = level; doTAContinue = 0;
         //re-enable dota parsing
-        } else if (attrs['dota-continue']) {
+        } else if (attr['dota-continue']) {
           doTAContinue = level;
         }
 
         //unless dota-pass or with dota-continue
         if (!doTAPass || doTAContinue) {
           //ng-repeat to while/for loop
-          if (attrs['ng-repeat']) {
+          if (attr['ng-repeat']) {
             //console.log(21,[x], [val]);
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             var idx = 'i' + level, l = 'l'+ level;
-            var NG_REPEAT = attrs['ng-repeat'];
+            var NG_REPEAT = attr['ng-repeat'];
             var inPos = NG_REPEAT.indexOf(' in ');
             var repeatVar = NG_REPEAT.substr(0, inPos), repeatSrc = NG_REPEAT.substr(inPos + 4);
             var commaPos = repeatVar.indexOf(',');
             var pipePos = repeatSrc.indexOf('|'), repeatSrcNew;
-            var colonPos;
+            var colonPos, x;
 
             //store variable name to use for $index later
             //this is ng-repeat specific, LevelMap[level] is same for ng-if too
             LevelVarMap[level] = idx;
+            lastLevel = level;
 
             if (pipePos > 0) {
-              repeatSrcNew = AttachFilter(repeatSrc);
+              repeatSrcNew = attachFilter(repeatSrc);
             } else {
               colonPos = repeatSrc.indexOf(':');
               if (colonPos < 0) {
-                repeatSrcNew = AttachScope(repeatSrc);
+                repeatSrcNew = attachScope(repeatSrc);
               }
             }
 
@@ -724,7 +726,7 @@ var doTA = (function() {'use strict';
               }
               // console.log([start, end, step])
 
-              FnText += Indent(level, 1) + 'for(var ' + repeatVar + '=' + start + ';' +
+              FnText += indent(level, 1) + 'for(var ' + repeatVar + '=' + start + ';' +
                 repeatVar + (step > 0 ? '<' : '>') + end + ';' + repeatVar + '+=' + step + '){\n';
               VarMap[repeatVar] = 1;
 
@@ -732,108 +734,108 @@ var doTA = (function() {'use strict';
             } else if (commaPos > 0) {
               var key = repeatVar.substr(0, commaPos);
               var value = repeatVar.substr(commaPos + 1);
-              FnText += Indent(level, 1) + 'var ' + value + ',D' + level + '=' + repeatSrcNew + ';\n';
-              FnText += Indent(level, 1) + 'for(var ' + key + ' in D' + level + '){\n';
+              FnText += indent(level, 1) + 'var ' + value + ',D' + level + '=' + repeatSrcNew + ';\n';
+              FnText += indent(level, 1) + 'for(var ' + key + ' in D' + level + '){\n';
               //                             space is needed for manual uglify  ->  vvv
-              FnText += Indent(level) + value + ' = ' + 'D' + level + '[' + key + ']; \n';
+              FnText += indent(level) + value + ' = ' + 'D' + level + '[' + key + ']; \n';
               VarMap[key] = VarMap[value] = 1;
 
             // Array: "k in []" ==> while loop
             } else {
-              FnText += Indent(level, 1) + 'var ' + repeatVar + ',D' + level + '=' + repeatSrcNew + ','
+              FnText += indent(level, 1) + 'var ' + repeatVar + ',D' + level + '=' + repeatSrcNew + ','
                 + idx + '=-1,' + l + '=D' + level + '.length;\n';
-              FnText += Indent(level, 1) + 'while(++' + idx + '<' + l + '){\n';
+              FnText += indent(level, 1) + 'while(++' + idx + '<' + l + '){\n';
               //                        space is needed for manual uglify  ->  vvv
-              FnText += Indent(level) + repeatVar + '=D' + level + '[' + idx + ']; \n';
+              FnText += indent(level) + repeatVar + '=D' + level + '[' + idx + ']; \n';
               VarMap[repeatVar] = 1;
             }
             //remote attribute not to get forwarded to angular
-            delete attrs['ng-repeat'];
+            delete attr['ng-repeat'];
           }
 
-          if (attrs.refresh) {
+          if (attr.refresh) {
             customId = 1;
-            oneTimeBinding = attrs.refresh.indexOf('::');
-            FnText += Indent(level, 2) +
+            oneTimeBinding = attr.refresh.indexOf('::');
+            FnText += indent(level, 2) +
               (!Watched ? 'var ' + (isPatch ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
-              'var W={N:N,I:N+"' + '.' + uniqId + '",W:"' +
-              (oneTimeBinding >=0 ? attrs.refresh.substr(oneTimeBinding + 2) + '",O:1': attrs.refresh + '"') +
-              (attrs.compile ? ',C:1' : '') +
+              'var W={N:N,I:N+"' + '.' + uniqueId + '",W:"' +
+              (oneTimeBinding >=0 ? attr.refresh.substr(oneTimeBinding + 2) + '",O:1': attr.refresh + '"') +
+              (attr.compile ? ',C:1' : '') +
               '};T.W.push(W);\n';
             WatchMap[level] = Watched = 1;
-            FnText += Indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';
-            delete attrs.refresh;
+            FnText += indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';
+            delete attr.refresh;
           }
 
           //ng-if to javascript if
-          if (attrs['ng-if']) {
+          if (attr['ng-if']) {
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            FnText += Indent(level, 1) + 'if('+ AttachScope(attrs['ng-if']) +'){\n';
+            FnText += indent(level, 1) + 'if('+ attachScope(attr['ng-if']) +'){\n';
 
             if (diffLevel) {
               ngIfLevel = level;
               ngIfCounter = 0;
             }
             // console.log('ng-if starts here', level);
-            delete attrs['ng-if'];
+            delete attr['ng-if'];
           }
 
-          if (attrs['elif'] !== undefined) {
-            FnText += Indent(level, 1) + 'else if('+ AttachScope(attrs['elif']) +'){\n';
+          if (attr['elif'] !== undefined) {
+            FnText += indent(level, 1) + 'else if('+ attachScope(attr['elif']) +'){\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            delete attrs['elif'];
+            delete attr['elif'];
           }
 
-          if (attrs['else'] !== undefined && !isPatch) {
-            FnText += Indent(level, 1) + 'else{\n';
+          if (attr['else'] !== undefined && !isPatch) {
+            FnText += indent(level, 1) + 'else{\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            delete attrs['else'];
+            delete attr['else'];
           }
 
-          if (attrs['ng-init']) {
-            FnText += Indent(level) + AttachScope(attrs["ng-init"]) + '; \n';
-            delete attrs['ng-init'];
+          if (attr['ng-init']) {
+            FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
+            delete attr['ng-init'];
           }
 
-          if (attrs['ng-class']) {
-            var ngScopedClass = AttachScope(attrs['ng-class']), match;
-            interpolatedAttrs.class = (attrs.class ? Interpolate(attrs.class) : '');
+          if (attr['ng-class']) {
+            var ngScopedClass = attachScope(attr['ng-class']), match;
+            interpolatedAttr.class = (attr.class ? interpolate(attr.class) : '');
             while((match = ngClassRegex.exec(ngScopedClass)) !== null) {
-              interpolatedAttrs.class +=
+              interpolatedAttr.class +=
                 ("'+(" + match[2] + '?' +
-                  "'" + (interpolatedAttrs.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
+                  "'" + (interpolatedAttr.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
                   "':'')+'");
             }
-            delete attrs['ng-class'];
+            delete attr['ng-class'];
           }
 
-          if (attrs['ng-show']) {
-            interpolatedAttrs.class = (interpolatedAttrs.class || attrs.class || '');
-            interpolatedAttrs.class += "'+(" + AttachScope(attrs['ng-show']) +
-              "?'':'" + (interpolatedAttrs.class ? ' ' : '') + "ng-hide')+'";
-            delete attrs['ng-show'];
+          if (attr['ng-show']) {
+            interpolatedAttr.class = (interpolatedAttr.class || attr.class || '');
+            interpolatedAttr.class += "'+(" + attachScope(attr['ng-show']) +
+              "?'':'" + (interpolatedAttr.class ? ' ' : '') + "ng-hide')+'";
+            delete attr['ng-show'];
           }
 
-          if (attrs['ng-hide']) {
-            interpolatedAttrs.class = (interpolatedAttrs.class || attrs.class || '');
-            interpolatedAttrs.class += "'+(" + AttachScope(attrs['ng-hide']) +
-              "?'" + (interpolatedAttrs.class ? ' ' : '') + "ng-hide':'')+'";
-            delete attrs['ng-hide'];
+          if (attr['ng-hide']) {
+            interpolatedAttr.class = (interpolatedAttr.class || attr.class || '');
+            interpolatedAttr.class += "'+(" + attachScope(attr['ng-hide']) +
+              "?'" + (interpolatedAttr.class ? ' ' : '') + "ng-hide':'')+'";
+            delete attr['ng-hide'];
           }
 
           //remove +''+ from class, for unnecessary string concat
-          if (interpolatedAttrs.class) {
-            interpolatedAttrs.class = interpolatedAttrs.class.replace(/\+''\+/g, '+')
-            delete attrs.class;
+          if (interpolatedAttr.class) {
+            interpolatedAttr.class = interpolatedAttr.class.replace(/\+''\+/g, '+');
+            delete attr.class;
           }
 
           // expand interpolations on attributes, and some more
-          for (var x in attrs) {
-            attrVal = attrs[x];
+          for (x in attr) {
+            attrVal = attr[x];
 
             // some ng- attributes
             if (x.substr(0, 3) === 'ng-') {
-              //some ng-attrs are just don't need it here.
+              //some ng-attr are just don't need it here.
               attrName = x.substr(3);
               //something like ng-src, ng-href, etc.
               if (lazyNgAttrRegex.test(attrName)) {
@@ -842,17 +844,17 @@ var doTA = (function() {'use strict';
               //convert ng-events to dota-events, to be bind later with native events
               } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
                 //adding attr "de" for querySelectorAll in ngDoTA
-                interpolatedAttrs.de = '1'; //dota-event
+                interpolatedAttr.de = '1'; //dota-event
                 x = 'de-' + attrName;
 
               } else if (noValAttrRegex.test(attrName)) {
-                noValAttrs += "'+(" + AttachScope(attrVal) + "?' " + attrName + "=\"\"':'')+'";
-                //noValAttrs will attach later
+                noValAttr += "'+(" + attachScope(attrVal) + "?' " + attrName + "=\"\"':'')+'";
+                //noValAttr will attach later
                 continue;
 
               //ng-value
               } else if (attrName === 'value') {
-                interpolatedAttrs.value = "'+(" + AttachScope(attrVal) + ")+'";
+                interpolatedAttr.value = "'+(" + attachScope(attrVal) + ")+'";
                 continue;
               }
             }
@@ -862,58 +864,58 @@ var doTA = (function() {'use strict';
             // instead of "item" as in "item in data"
             if (attrVal.indexOf('$index') >= 0) {
               //console.log([val], LevelMap[level]);
-              for(var j = level; j >= 0; j--) {
-                if (LevelVarMap[j]) {
-                  interpolatedAttrs[x] = Interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
-                  break;
-                }
-              }
+              //for(var j = level; j >= 0; j--) {
+              //  if (LevelVarMap[j]) {
+                  interpolatedAttr[x] = interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[lastLevel] + "+'");
+              //    break;
+              //  }
+              //}
             } else {
-              interpolatedAttrs[x] = Interpolate(attrVal);
+              interpolatedAttr[x] = interpolate(attrVal);
             }
           }
 
         // pass all attributes to angular, except interpolation and $index
         } else {
-          for (x in attrs) {
+          for (x in attr) {
             //or just do use escapeSingleQuote
 
-            if (attrs[x].indexOf('$index') >= 0) {
+            if (attr[x].indexOf('$index') >= 0) {
               //console.log([val], LevelMap[level]);
-              for(var j = level; j >= 0; j--) {
-                if (LevelVarMap[j]) {
-                  interpolatedAttrs[x] = Interpolate(attrs[x]).replace($indexRegex, "'+" + LevelVarMap[j] + "+'");
-                  break;
-                }
-              }
+              //for(var j = level; j >= 0; j--) {
+              //  if (LevelVarMap[j]) {
+                  interpolatedAttr[x] = interpolate(attr[x]).replace($indexRegex, "'+" + LevelVarMap[lastLevel] + "+'");
+              //    break;
+              //  }
+              //}
             } else {
-              interpolatedAttrs[x] = Interpolate(attrs[x]);
+              interpolatedAttr[x] = interpolate(attr[x]);
             }
           }
         }
 
         //write tag back as string
-        FnText += Indent(level) + "R+='<" + tagName;
+        FnText += indent(level) + "R+='<" + tagName;
 
         //make id attr come before anything
         if (customId || isPatch) {
-          tagId = idHash[uniqId + '.' + level] = interpolatedAttrs.id || ("'+N+'." + uniqId);
+          tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+N+'." + uniqueId);
           FnText += ' id="' + tagId + '"';
-          if (interpolatedAttrs.id) {
-            delete interpolatedAttrs.id;
+          if (interpolatedAttr.id) {
+            delete interpolatedAttr.id;
           }
         }
 
-        //write back attibutes
-        for(var k in interpolatedAttrs) {
-          FnText += " " + k + '="' + interpolatedAttrs[k] + '"';
+        //write back attributes
+        for(var k in interpolatedAttr) {
+          FnText += " " + k + '="' + interpolatedAttr[k] + '"';
         }
 
         //attach boolean attributes at last
-        FnText += noValAttrs +  (selfClosing ? ' /' : '') + ">';\n";
+        FnText += noValAttr +  (selfClosing ? ' /' : '') + ">';\n";
 
         if (isPatch) {
-          FnText += Indent(level) + "N++; \n";
+          FnText += indent(level) + "N++; \n";
           if (ngIfCounter >= 0) {
             ngIfCounter++;
             // console.log('isPath ngIfCounter', [tagName, ngIfCounter]);
@@ -921,32 +923,36 @@ var doTA = (function() {'use strict';
         }
 
         //expand doTA templates with expand=1 option
-        if (attrs['dota-render'] && attrs.expand) {
+        if (attr['dota-render'] && attr.expand) {
           var attrArray = [];
-          for(var x in attrs) {
+          for(x in attr) {
             if (!x.indexOf('data-')) {
-              attrArray.push('"' + x.slice(5) + '":"' + attrs[x] + '"');
+              attrArray.push('"' + x.slice(5) + '":"' + attr[x] + '"');
             } else if (!x.indexOf('scope-')) {
-              attrArray.push('"' + x.slice(6) + '":S["' + attrs[x] + '"]');
+              attrArray.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
             }
           }
-          FnText += Indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attrs['dota-render'] + '";\n';
-          FnText += Indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P,X)); \n';
+          FnText += indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attr['dota-render'] + '";\n';
+          FnText += indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P,X)); \n';
         }
 
         level++;
       },
 
       //void tag no need to write closing tag
-      onvoidtag: function() {
+      voidTag: function() {
         level--;
         //close "if", "for", "while" blocks
         while (LevelMap[level] > 0) {
-          FnText += Indent(level, 1) + '}\n';
+          FnText += indent(level, 1) + '}\n';
           LevelMap[level]--;
         }
         //clear ng-repeat $index
-        LevelVarMap[level] = 0;
+        if (lastLevel === level) {
+          LevelVarMap[level] = 0;
+          lastLevel = undefined;
+        }
+
         //reset dota-pass when out of scope
         if (doTAPass && doTAPass >= level) {
           doTAPass = 0;
@@ -954,37 +960,40 @@ var doTA = (function() {'use strict';
       },
 
       //close tag
-      onclosetag: function(tagName) {
+      closeTag: function(tagName) {
         level--;
 
         //just write closing tag back
-        FnText += Indent(level) + "R+='</" + tagName + ">';\n";
+        FnText += indent(level) + "R+='</" + tagName + ">';\n";
 
-        //ngIfCounter for most possible uniqId generation; don't work with loop inside!
+        //ngIfCounter for most possible uniqueId generation; don't work with loop inside!
         if (diffLevel && level === ngIfLevel && ngIfCounter >= 0) {
           if (ngIfCounter) {
-            FnText += Indent(level, 1) + '}else{N+=' + ngIfCounter + '; \n';
+            FnText += indent(level, 1) + '}else{N+=' + ngIfCounter + '; \n';
           }
           ngIfLevel = ngIfCounter = undefined;
         }
 
         //close "if", "for", "while" blocks
         while (LevelMap[level] > 0) {
-          FnText += Indent(level, 1) + '}\n';
+          FnText += indent(level, 1) + '}\n';
           LevelMap[level]--;
         }
 
         //clear ng-repeat $index
-        LevelVarMap[level] = 0;
+        if (lastLevel === level) {
+          LevelVarMap[level] = 0;
+          lastLevel = undefined;
+        }
 
         //add blank node if $watch block return nothing, mostly occur with ng-if
         if (WatchMap[level]) {
-          FnText += Indent(level, 1) +
-            "R=R||('<" + tagName + ' id="' + idHash[uniqId + '.' + level] +
+          FnText += indent(level, 1) +
+            "R=R||('<" + tagName + ' id="' + idHash[uniqueId + '.' + level] +
             '" style="display:none"></' + tagName + '>\');\n';
           WatchMap[level] = 0;
-          FnText += Indent(level, 2) + 'return R;}; \n';
-          FnText += Indent(level, 2) + 'R+=W.F(S,F,$attr,X,N); \n';
+          FnText += indent(level, 2) + 'return R;}; \n';
+          FnText += indent(level, 2) + 'R+=W.F(S,F,$attr,X,N); \n';
         }
 
         //reset dota-pass when out of scope
@@ -994,25 +1003,25 @@ var doTA = (function() {'use strict';
       },
 
       //text node
-      ontext: function(text) {
+      text: function(text) {
         //console.log([text]);
-        FnText += Indent(level) + ('R+=\'' + Interpolate(text) + '\';\n')
+        FnText += indent(level) + ('R+=\'' + interpolate(text) + '\';\n')
           .replace(/\+''|''\+/g,'');
       },
 
       //comment node
-      oncomment: function(data) {
+      comment: function(data) {
         //console.log(111,[data]);
-        FnText += Indent(level) + "R+='<" + Interpolate(data) + ">';\n";
+        FnText += indent(level) + "R+='<" + interpolate(data) + ">';\n";
       }
     });
 
     if (isPatch) {
-      FnText += Indent(0) + 'if(X&&J in doTA.H){doTA.diff' + (diffLevel || '') + '(J,R)}' +
+      FnText += indent(0) + 'if(X&&J in doTA.H){doTA.diff' + (diffLevel || '') + '(J,R)}' +
         'doTA.H[J]=R;\n';
     }
 
-    FnText += Indent(0) +'return R;\n';
+    FnText += indent(0) +'return R;\n';
 
     //Default Optimization
     // - concat possible lines for performance
@@ -1044,7 +1053,7 @@ var doTA = (function() {'use strict';
 
     // just for less array usage on heap profiling
     // but this may trigger GC more
-    FnText = level = LevelMap = LevelVarMap = VarMap = doTAPass = null;
+    FnText = level = lastLevel = LevelMap = LevelVarMap = VarMap = doTAPass = undefined;
     return compiledFn;
   }
 
@@ -1060,7 +1069,7 @@ var doTA = (function() {'use strict';
     }
   }
 
-  function getUniqId(key) {
+  function getUniqueId(key) {
     if (key) {
       if (compiledHash[key]) {
         return compiledHash[key];
@@ -1076,7 +1085,7 @@ var doTA = (function() {'use strict';
   var doTAObj = {
     diff: diffPatchExact,
     diff2: diffPatchChildren,
-    getId: getUniqId,
+    getId: getUniqueId,
     initCH: initCompileHash,
     compile: compileHTML,
     C: {}, //Cached compiled functions
@@ -1106,16 +1115,9 @@ if (typeof module !== "undefined" && module.exports) {
   var hiddenDIV;
   setTimeout(function(){
     if (document.createElement) {
-      // hiddenDIV = document.getElementById('dota-cache');
-      // //add ngDoTA.min.js at the end body
-      // if (!hiddenDIV && document.body) {
-        hiddenDIV = document.createElement('div');
-        // hiddenDIV.id = 'dota-cache';
-        // hiddenDIV.style.display = 'none';
-        // document.body.appendChild(hiddenDIV);
-      // }
+      hiddenDIV = document.createElement('div');
     }
-  });
+  },0);
   var BoolMap = {0: 0, 'false': 0};
   function makeBool(attr, defaultValue){
     return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
@@ -1244,10 +1246,10 @@ if (typeof module !== "undefined" && module.exports) {
     })
   }
 
-  function addEvent(partial, scope, uniqId) {
+  function addEvent(partial, scope, uniqueId) {
     if (partial.de) { return; } //only attach events once
     var attrs = partial.attributes;
-    // console.log('attrs', uniqId, attrs);
+    // console.log('attrs', uniqueId, attrs);
     for(var i = 0, l = attrs.length; i < l; i++){
       if (attrs[i].name.substr(0,3) === 'de-') {
         partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
@@ -1261,21 +1263,21 @@ if (typeof module !== "undefined" && module.exports) {
             scope.$evalAsync(attr.value, {$event: evt});
           };
         })(partial, attrs[i]));
-        console.log('event added', uniqId, attrs[i].name);
+        console.log('event added', uniqueId, attrs[i].name);
       }
     }
     partial.de = 1;
   }
 
-  function addEvents(elem, scope, uniqId) {
+  function addEvents(elem, scope, uniqueId) {
     var elements = elem.querySelectorAll('[de]');
     for (var i = 0, l = elements.length; i < l; i++) {
-      addEvent(elements[i], scope, uniqId);
+      addEvent(elements[i], scope, uniqueId);
       elements[i].removeAttribute('de');
     }
   }
 
-  function addNgModel(elem, scope, uniqId) {
+  function addNgModel(elem, scope, uniqueId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
       var dotaPass = partial.getAttribute('dota-pass');
       // console.log('dotaPass', [dotaPass]);
@@ -1370,8 +1372,8 @@ if (typeof module !== "undefined" && module.exports) {
             var origAttrMap = attrs.$attr;
             var NewScope;
 
-            attrLoose = attrs.loose = makeBool(attrLoose, 1); //falsy => ''
-            attrOptimize = attrs.optimize = makeBool(attrOptimize, 0);
+            attrs.loose = makeBool(attrLoose, 1); //falsy => ''
+            attrs.optimize = makeBool(attrOptimize, 0);
             attrDebug = attrs.debug = makeBool(attrDebug, 0);
             attrEvent = attrs.event = makeBool(attrEvent, 1); //ng-click to native click
             attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
@@ -1474,7 +1476,7 @@ if (typeof module !== "undefined" && module.exports) {
             ////////////////////////////////////////////////////////////////////////////
             function compile(template) {
               if(attrDebug) {
-                console.log([attrEncode], [template]);
+                console.log(attrDoTARender + ':' + template);
               }
 
               console.log(attrDoTARender,'before compile');

@@ -5,16 +5,9 @@
   var hiddenDIV;
   setTimeout(function(){
     if (document.createElement) {
-      // hiddenDIV = document.getElementById('dota-cache');
-      // //add ngDoTA.min.js at the end body
-      // if (!hiddenDIV && document.body) {
-        hiddenDIV = document.createElement('div');
-        // hiddenDIV.id = 'dota-cache';
-        // hiddenDIV.style.display = 'none';
-        // document.body.appendChild(hiddenDIV);
-      // }
+      hiddenDIV = document.createElement('div');
     }
-  });
+  },0);
   var BoolMap = {0: 0, 'false': 0};
   function makeBool(attr, defaultValue){
     return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
@@ -143,10 +136,10 @@
     })
   }
 
-  function addEvent(partial, scope, uniqId) {
+  function addEvent(partial, scope, uniqueId) {
     if (partial.de) { return; } //only attach events once
     var attrs = partial.attributes;
-    // console.log('attrs', uniqId, attrs);
+    // console.log('attrs', uniqueId, attrs);
     for(var i = 0, l = attrs.length; i < l; i++){
       if (attrs[i].name.substr(0,3) === 'de-') {
         partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
@@ -160,21 +153,21 @@
             scope.$evalAsync(attr.value, {$event: evt});
           };
         })(partial, attrs[i]));
-        console.log('event added', uniqId, attrs[i].name);
+        console.log('event added', uniqueId, attrs[i].name);
       }
     }
     partial.de = 1;
   }
 
-  function addEvents(elem, scope, uniqId) {
+  function addEvents(elem, scope, uniqueId) {
     var elements = elem.querySelectorAll('[de]');
     for (var i = 0, l = elements.length; i < l; i++) {
-      addEvent(elements[i], scope, uniqId);
+      addEvent(elements[i], scope, uniqueId);
       elements[i].removeAttribute('de');
     }
   }
 
-  function addNgModel(elem, scope, uniqId) {
+  function addNgModel(elem, scope, uniqueId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
       var dotaPass = partial.getAttribute('dota-pass');
       // console.log('dotaPass', [dotaPass]);
@@ -269,8 +262,8 @@
             var origAttrMap = attrs.$attr;
             var NewScope;
 
-            attrLoose = attrs.loose = makeBool(attrLoose, 1); //falsy => ''
-            attrOptimize = attrs.optimize = makeBool(attrOptimize, 0);
+            attrs.loose = makeBool(attrLoose, 1); //falsy => ''
+            attrs.optimize = makeBool(attrOptimize, 0);
             attrDebug = attrs.debug = makeBool(attrDebug, 0);
             attrEvent = attrs.event = makeBool(attrEvent, 1); //ng-click to native click
             attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
@@ -373,7 +366,7 @@
             ////////////////////////////////////////////////////////////////////////////
             function compile(template) {
               if(attrDebug) {
-                console.log([attrEncode], [template]);
+                console.log(attrDoTARender + ':' + template);
               }
 
               console.log(attrDoTARender,'before compile');
