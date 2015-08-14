@@ -769,7 +769,7 @@ var doTA = (function() {'use strict';
               '};T.W.push(W);\n';
             WatchMap[level] = Watched = 1;
             FnText += indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';
-            delete attr.refresh;
+            attr.refresh = void 0;
           }
 
           //ng-if to javascript if
@@ -782,24 +782,24 @@ var doTA = (function() {'use strict';
               ngIfCounter = 0;
             }
             // console.log('ng-if starts here', level);
-            delete attr['ng-if'];
+            attr['ng-if'] = void 0;
           }
 
-          if (attr['elif'] !== undefined) {
+          if (attr['elif'] !== void 0) {
             FnText += indent(level, 1) + 'else if('+ attachScope(attr['elif']) +'){\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            delete attr['elif'];
+            attr['elif'] = void 0;
           }
 
-          if (attr['else'] !== undefined && !isPatch) {
+          if (attr['else'] !== void 0 && !isPatch) {
             FnText += indent(level, 1) + 'else{\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            delete attr['else'];
+            attr['else'] = void 0;
           }
 
           if (attr['ng-init']) {
             FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
-            delete attr['ng-init'];
+            attr['ng-init'] = void 0;
           }
 
           if (attr['ng-class']) {
@@ -811,32 +811,33 @@ var doTA = (function() {'use strict';
                   "'" + (interpolatedAttr.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
                   "':'')+'");
             }
-            delete attr['ng-class'];
+            attr['ng-class'] = void 0;
           }
 
           if (attr['ng-show']) {
             interpolatedAttr.class = (interpolatedAttr.class || attr.class || '');
             interpolatedAttr.class += "'+(" + attachScope(attr['ng-show']) +
               "?'':'" + (interpolatedAttr.class ? ' ' : '') + "ng-hide')+'";
-            delete attr['ng-show'];
+            attr['ng-show'] = void 0;
           }
 
           if (attr['ng-hide']) {
             interpolatedAttr.class = (interpolatedAttr.class || attr.class || '');
             interpolatedAttr.class += "'+(" + attachScope(attr['ng-hide']) +
               "?'" + (interpolatedAttr.class ? ' ' : '') + "ng-hide':'')+'";
-            delete attr['ng-hide'];
+            attr['ng-hide'] = void 0;
           }
 
           //remove +''+ from class, for unnecessary string concat
           if (interpolatedAttr.class) {
             interpolatedAttr.class = interpolatedAttr.class.replace(/\+''\+/g, '+');
-            delete attr.class;
+            attr.class = void 0;
           }
 
           // expand interpolations on attributes, and some more
           for (x in attr) {
             attrVal = attr[x];
+            if (attrVal === void 0) { continue; }
 
             // some ng- attributes
             if (x.substr(0, 3) === 'ng-') {
@@ -907,7 +908,7 @@ var doTA = (function() {'use strict';
           tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+N+'." + uniqueId);
           FnText += ' id="' + tagId + '"';
           if (interpolatedAttr.id) {
-            delete interpolatedAttr.id;
+            interpolatedAttr.id = void 0;
           }
         }
 
@@ -959,7 +960,7 @@ var doTA = (function() {'use strict';
         //clear ng-repeat $index
         if (lastLevel === level) {
           LevelVarMap[level] = 0;
-          lastLevel = undefined;
+          lastLevel = void 0;
         }
 
         //reset dota-pass when out of scope
@@ -980,7 +981,7 @@ var doTA = (function() {'use strict';
           if (ngIfCounter) {
             FnText += indent(level, 1) + '}else{N+=' + ngIfCounter + '; \n';
           }
-          ngIfLevel = ngIfCounter = undefined;
+          ngIfLevel = ngIfCounter = void 0;
         }
 
         //close "if", "for", "while" blocks
@@ -992,7 +993,7 @@ var doTA = (function() {'use strict';
         //clear ng-repeat $index
         if (lastLevel === level) {
           LevelVarMap[level] = 0;
-          lastLevel = undefined;
+          lastLevel = void 0;
         }
 
         //add blank node if $watch block return nothing, mostly occur with ng-if
@@ -1062,7 +1063,7 @@ var doTA = (function() {'use strict';
 
     // just for less array usage on heap profiling
     // but this may trigger GC more
-    FnText = level = lastLevel = LevelMap = LevelVarMap = VarMap = doTAPass = undefined;
+    FnText = level = lastLevel = LevelMap = LevelVarMap = VarMap = doTAPass = void 0;
     return compiledFn;
   }
 
