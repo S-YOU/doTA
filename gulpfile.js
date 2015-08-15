@@ -38,17 +38,20 @@
     var closure = require('gulp-closure-compiler-service');
     var uglify = require('gulp-uglify');
     var rename = require('gulp-rename');
+    var sourcemaps = require('gulp-sourcemaps');
+
     return gulp.src(['dist/*.js', '!dist/*.min.js'])
       // .pipe(replace(/^\s*console\.log.*$/gm, ''))
+      .pipe(sourcemaps.init())
       .pipe(replace(/^\s*console\..*$/gm, ''))
       .pipe(replace(/\bindent\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/g, ''))
       .pipe(closure())
       .pipe(uglify())
-      //.pipe(replace(/\bthis\.(\$event=[^,]+),/g, 'var $1;'))
       .on('error', console.error)
       .pipe(rename({
         extname: '.min.js'
       }))
+      .pipe(sourcemaps.write('./'))
       .pipe(gulp.dest('dist'));
   });
 
@@ -58,6 +61,7 @@
     /(\w+)\s*=\s*getOuterHTMLEnd\((\w+)\s*,\s*(\w+)\);/g,
     'LVL=1,$1=$3;do $1=$2.indexOf("<",$1+1),"/"===$2.charAt($1+1)?LVL--:LVL++,$1=$2.indexOf(">",$1),"/"===$2.charAt($1-1)&&LVL--;while(0<LVL);++$1; //INLINE'
   ];
+
   var inline2 = [
     /=\s*decodeEntities\(([^)]+)\)/g,
     '=0>$1.indexOf("&")?$1:$1.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,\'"\'); //INLINE'

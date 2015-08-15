@@ -11,6 +11,7 @@
     "gulp-concat": "*",
     "gulp-rename": "*",
     "gulp-replace": "*",
+    "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "*"
   },
   "repository": {

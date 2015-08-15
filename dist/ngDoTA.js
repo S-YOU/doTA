@@ -1123,7 +1123,8 @@ if (typeof module !== "undefined" && module.exports) {
 /* global angular, doTA */
 (function (angular, document) {'use strict';
   var msie = document.documentMode;
-  var textContent = msie <= 8 ? 'innerText' : 'textContent';
+  var ie8 = msie <= 8;
+  var textContent = ie8 ? 'innerText' : 'textContent';
   var hiddenDIV;
   setTimeout(function(){
     if (document.createElement) {
@@ -1260,36 +1261,48 @@ if (typeof module !== "undefined" && module.exports) {
 
   function addEvent(partial, scope, uniqueId) {
     if (partial.de) { return; } //only attach events once
-    var attrs = partial.attributes;
+    partial.de = 1;
+    var attrs = partial.attributes, attrName, attrVal;
+    var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
     // console.log('attrs', uniqueId, attrs);
-    for(var i = 0, l = attrs.length; i < l; i++){
-      if (attrs[i].name.substr(0,3) === 'de-') {
-        partial.addEventListener(attrs[i].name.substr(3), (function(target, attr){
+    for(var i = 0, l = attrs.length; i < l; i++) {
+      if (!attrs[i] || !attrs[i].name || !attrs[i].value) { continue; }
+      attrName = attrs[i].name;
+      attrVal = attrs[i].value;
+      if (attrName.substr(0, 3) === 'de-') {
+        //remove attribute, so never bind again
+        partial.removeAttribute(attrName);
+        partial[listenerName]((ie8 ? 'on' : '') + attrName.substr(3), (function(target, attrVal){
           return function(evt){
-            if (!evt.target) { //make $event.target always available
-              evt.target = evt.srcElement;
+            if (ie8) {
+              //make $event.target always available
+              evt.target = evt.srcElement || document;
+              evt.returnValue = false;
+              evt.cancelBubble = true;
+            } else {
+              evt.preventDefault();
+              evt.stopPropagation();
             }
-            evt.preventDefault();
-            evt.stopPropagation();
+
             //isedom: disallow, so no $target here
-            scope.$evalAsync(attr.value, {$event: evt});
+            scope.$evalAsync(attrVal, {$event: evt});
           };
-        })(partial, attrs[i]));
-        console.log('event added', uniqueId, attrs[i].name);
+        })(partial, attrVal));
+        console.log('event added', uniqueId, attrName);
       }
     }
-    partial.de = 1;
   }
 
   function addEvents(elem, scope, uniqueId) {
     var elements = elem.querySelectorAll('[de]');
     for (var i = 0, l = elements.length; i < l; i++) {
-      addEvent(elements[i], scope, uniqueId);
+      //remove attribute, so never bind again
       elements[i].removeAttribute('de');
+      addEvent(elements[i], scope, uniqueId);
     }
   }
 
-  function addNgModel(elem, scope, uniqueId) {
+  function addNgModels(elem, scope, uniqueId) {
     forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
       var dotaPass = partial.getAttribute('dota-pass');
       // console.log('dotaPass', [dotaPass]);
@@ -1297,11 +1310,13 @@ if (typeof module !== "undefined" && module.exports) {
 
       //override ng-model
       var modelName = partial.getAttribute('ng-model');
+
+      //remove attribute, so never bind again
       partial.removeAttribute('ng-model');
 
       //textbox default event is input unless IE8, all others are change event
       var updateOn = partial.getAttribute('update-on') ||
-        (partial.type !== 'text' || msie <= 8 ? 'change' : 'input');
+        (partial.type !== 'text' || ie8 ? 'change' : 'input');
       var throttleVal = +partial.getAttribute('throttle') || 100;
 
       //use checked property for checkbox and radio
@@ -1345,6 +1360,7 @@ if (typeof module !== "undefined" && module.exports) {
     .config(['$provide',function(P) {
       P.factory('doTA', function(){
         doTA.addEvents = addEvents;
+        doTA.addNgModels = addNgModels;
         return doTA;
       });
     }])
@@ -1512,12 +1528,38 @@ if (typeof module !== "undefined" && module.exports) {
             }
 
             ////////////////////////////////////////////////////////////////////////////
+            // attach ng-bind
+            ////////////////////////////////////////////////////////////////////////////
+            function addNgBind(rawElem, scope, attrDoTARender) {
+              //ToDo: check Watchers scope
+              while (Watchers.length) {
+                Watchers.pop()();
+              }
+              forEachArray(rawElem.querySelectorAll('[ng-bind]'), function(partial) {
+                //override ng-bind
+                var bindExpr = partial.getAttribute('ng-bind');
+                partial.removeAttribute('ng-bind');
+
+                if (BindValues[bindExpr]) {
+                  partial.innerHTML = BindValues[bindExpr];
+                }
+                Watchers.push(scope.$watchCollection(bindExpr, function(newVal, oldVal){
+                  if(newVal !== oldVal) {
+                    console.log(attrDoTARender, 'watch before bindExpr', newVal);
+                    partial[textContent] = BindValues[bindExpr] = newVal || '';
+                    console.log(attrDoTARender, 'watch after render');
+                  }
+                }));
+              });
+            }
+
+            ////////////////////////////////////////////////////////////////////////////
             // attach ng-model, events, ng-bind, and $compile
             ////////////////////////////////////////////////////////////////////////////
             function attachEventsAndCompile(rawElem, scope) {
 
               if (attrModel) {
-                addNgModel(rawElem, scope, attrDoTARender);
+                addNgModels(rawElem, scope, attrDoTARender);
               }
 
               //attach events before replacing
@@ -1527,27 +1569,7 @@ if (typeof module !== "undefined" && module.exports) {
 
               //ng-bind
               if (attrBind) {
-                //remove old watchers, async
-                while (Watchers.length) {
-                  Watchers.pop()();
-                }
-
-                forEachArray(rawElem.querySelectorAll('[ng-bind]'), function(partial) {
-                  //override ng-bind
-                  var bindExpr = partial.getAttribute('ng-bind');
-                  partial.removeAttribute('ng-bind');
-
-                  if (BindValues[bindExpr]) {
-                    partial.innerHTML = BindValues[bindExpr];
-                  }
-                  Watchers.push(scope.$watchCollection(bindExpr, function(newVal, oldVal){
-                    if(newVal !== oldVal) {
-                      console.log(attrDoTARender, 'watch before bindExpr', newVal);
-                      partial[textContent] = BindValues[bindExpr] = newVal || '';
-                      console.log(attrDoTARender, 'watch after render');
-                    }
-                  }));
-                });
+                addNgBind(rawElem, scope, attrDoTARender);
               }
 
               //$compile html if you need ng-model or ng-something
