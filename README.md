@@ -19,7 +19,8 @@ This project has two libraries, doTA, and ngDoTA.
   - included doTA
   - included angular directive called dota-render
   - accept templateName or inline and render html with doTA by binding to $scope and $filter, without involving $digest cycle (0 watchers), unless you explicitly set compile or watch options
-  - checkout [examples](https://github.com/S-YOU/doTA/tree/master/examples) from github, which based on various online benchmarks or blogs.
+
+##### Checkout [examples](http://rawgit.com/S-YOU/doTA/master/examples/index.html) from github, which is based on various online benchmarks or blogs.
 
 ---
 
@@ -27,7 +28,7 @@ This project has two libraries, doTA, and ngDoTA.
 
  - must be valid html
  - must be used html entities to attributes, NO `<, >, &`
- - usage of `'` or `"` in text nodes or inside attributes may work or may not works.
+ - usage of `'` or `"` or `\` in text nodes or inside attributes may work or may not works.
  - you need dedicated control on html, shouldn't be used on user-defined templates or security will suffer.
 
 ### Supported Angular or similar syntax
@@ -51,10 +52,10 @@ This project has two libraries, doTA, and ngDoTA.
   - `{{ ... }}` - interpolations
   - `{{ ... | filter1:x:y | filter2:a }}` - filters inside interpolations
 
-- events
+- ng-events
   - enabled by default
     - can be disabled by using event=0 on dota-render directive
-  - supported 'change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste'
+    - supported `change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste`, but untested
     - all the events and its expressions are lazy. angular won't involve until event fired.
     - change event may be different behavior with angular, untested
 
@@ -62,119 +63,131 @@ This project has two libraries, doTA, and ngDoTA.
   - `ng-init="expression"` - evaluate the expression as javascript
 
 - ng-controller
-  - `ng-controller="ctrl"` - should be same as angular
-    - will create new scope with scope.$new()
+  - `ng-controller="ctrl"` - should be same behavior as angular
+    - will create new scope with `scope.$new()`
     - may be used `"ctrl as vm"` or `controller-as="vm"` - untested
 
-- aliases
-  - `ng-value="value"` - set value attribute without expanding
-  - `ng-src="{{base}}/image/{{size}}.jpg"` - expand and set src attribute
-  - `ng-alt` - expand and set alt attribute
-  - `ng-title` - expand and set title attribute
-  - `ng-href` - expand and set href attribute
+- some ng-xx aliases
+  - `ng-value="value"` - set to `value` attribute without interpolation
+  - `ng-src="{{base}}/image/{{size}}.jpg"` - expand interpolation and set `src` attribute
+  - `ng-alt` - expand interpolation and set `alt` attribute
+  - `ng-title` - expand interpolation and set `title` attribute
+  - `ng-href` - expand interpolation and set `href` attribute
 
 - ng-model
   - experimental, disabled by default
   - enabled by using `model=1` on dota-render directive
   - `ng-model="scope_var"` - only accept dot notation or without, does not use angular $parse
-    - one $watchCollection will be added
+    - one `$watchCollection` will be added
 
 - ng-bind
   - experimental, disabled by default
   - enabled by using `bind=1` on dota-render directive
-  - `ng-bind="scope_var"` - apply scope_var to textContent or innerText
-    - one $watchCollection will be added
+  - `ng-bind="scope_var"` - apply scope_var to `textContent` or `innerText`
+    - one `$watchCollection` will be added
 
 ---
 
 ### dota-render directive attributes
 
 - inline
-  - get template string from innerHTML instead of from template
+  - get template string from `innerHTML` instead of from template
   - this will ignore if template is once compiled
 
 - cache-dom
-  - before $scope is destroyed, relocate dom to safer place, and reuse it as is
-  - for static dom, without dynamic binding
+  - before `$scope` is destroyed, relocate DOM to safer place, and reuse it as is when same directive is called again.
+  - for static DOM, no dynamic binding.
 
 - dota-onload
   - evalulate javascript when done, `this` is bind to current DOM
 
 - dota-onload-scope
-  - evaluate $scope function when done, with $event object injectable like angular
+  - evaluate `$scope` function when done, with `$event` object injectable like angular
 
 - compile
-  - use angular $compile on nodes with dota-pass or its children
+  - use angular `$compile` on nodes with `dota-pass` or its children
 
 - compile-all
-  - use angular $compile with elem.contents() - not much performance gain from dota with this option.
+  - use angular `$compile` with `elem.contents()` - not much performance gain from doTA with this option.
 
 - encode
-  - use when attributes have `<,>,&` characters, or may get into infinite loop or will throw errors.
+  - use when attributes contain `<`, `>`, `&` characters, or may get into infinite loop or will throw errors.
   - when using with jade templates, I never need this.
 
 - loose
-  - set by default - undefined, 0, false will be blank
+  - set by default - `undefined`, `0`, `false` will be blank
   - use `loose=0` if you don't want `0` as blank
 
 - scope
-  - will create new scope
+  - will create new scope with `$scope.$new()`
+  - having `ng-controller` on dota-render directive will have new scope too, but only one.
 
 - watch
-  - will add $watchCollection and will re-render the the whole template when watch triggered.
+  - will add `$watchCollection` and will re-render the the whole template when watch triggered.
 
 - watch-diff
-  - will add $watchCollection and will partially patch DOM, when changed
+  - will add `$watchCollection` and will partially patch DOM, when changed
   - only attributes or first text node changes allowed
+  - known issue: `<`, `>` will display as `&lt;` and `&gt;` in text nodes
 
 - diff-level
-  - `diff-level=2` - use experimental **FlatDOM**, which diff html as text and patch DOM while parsing
+  - `diff-level=2` - will use experimental **FlatDOM**, which diff html as text and incrementally patch DOM while parsing
+  - known issue: `<`, `>` will display as `&lt;` and `&gt;` in text nodes
 
 - event
   - set by default
-  - convert ng-events into de-events - which is dom events, that evalutes scope fn when triggered.
+  - convert ng-events into de-events - which is DOM events, that evalutes $scope function when triggered.
 
 - model
   - experimental
   - convert ng-model into internal approach,
-    - which bind input event on text box and change event on others input, checkbox, radio, select
+    - which bind `input` event on text box and `change` event on others input, checkbox, radio, select
     - update to model value when data changed
+    - events are throttle with 200ms by default, you can set with `throttle` attribute
 
 - bind
   - experimental
-  - set textContent or innerText when data change
+  - set `textContent` or `innerText` when data change
 
 - loaded
-  - once loaded, this attribute will be set to true
+  - once loaded, this attribute will be set to `true`
+  - may be useful for hiding raw tags before angular render, with custom CSS (not included)
+
+      ```css
+      [dota-render][loaded=false] {
+        display:none;
+      }
+      ```
 
 - optimize
-  - additional optimization on output - currently size, which strip unnessary quotes
+  - additional optimization on output - currently size, which strip unnessary quotes on attributes
 
 - data-XX
-  - all data-XX attributes on directive will be available as $attr.XX on templates
+  - all `data-XX` attributes on directive will be available as `$attr.XX` on templates
 
 - scope-XX
-  - all scope-XX attibutes on directive will be avaialble as $attr.XX on templates
-  - attr without `.` or `[` will be $scope[attr] or it will $scope.$eval
+  - all `scope-XX` attibutes on directive will be avaialble as `$attr.XX` on templates
+  - attr without `.` or `[` will be `$scope[attr]` or it will `$scope.$eval`
 
 - debug
-  - some debugging output - use with non-minified version
+  - some debugging output - also need to use with non-minified version of doTA.js or ngDoTA.js
 
 ### limitations on dota-render directive
 
-  - data must be available before directive called, so wrap dota-render directive with `ng-if="data"` if data is not ready
-  - `ng-repeat` is transformed in to javascript loop, so internal variables not available to angular, use `$index` to get access to them.
+  - data must be available before directive called.
+  - if data is not ready, you need to wrap `dota-render` directive with `ng-if="data"`
+  - `ng-repeat="item in data"` is transformed into javascript loop, so internal variable like `item` is not available to angular, use `data[$index]` to get access to them. Normally to use with `ng-model="data[$index]"`
 
 ---
 
 ### doTA - attributes inside HTML templates
 
 - dota-pass
-  - will skip parsing ng-* attributes
-  - interpolations with {{ ... }} will still be expanded, or use `ng-bind` without bind=1 option
+  - will skip parsing `ng-*` attributes
+  - interpolations with `{{ ... }}` will still be expanded, or use `ng-bind` without `bind=1` option
 
 - dota-continue
-  - will continue parsing ng-* attributes, when inside dota-pass
+  - will continue parsing `ng-*` attributes, when inside `dota-pass`
 
 - watch - `watch="expression"`
   - will create sub functions, and will add watch or one-time watch with `::`
@@ -182,8 +195,8 @@ This project has two libraries, doTA, and ngDoTA.
 
 ### extra directives
   - dota-include - like `ng-include="tpl/name"` but usign doTA - static
-  - dota-template - like `ng-include src="tpl/name"` - dynamic - one $watcher
-  - dota-http - return compiled template as string
+  - dota-template - like `ng-include src="tpl/name"` - dynamic - one `$watcher`
+  - dota-http - a service which return compiled template as string
 
 ---
 

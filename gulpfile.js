@@ -55,6 +55,9 @@
       .pipe(gulp.dest('dist'));
   });
 
+  gulp.task('docs:example:index', makeExampleIndex);
+  gulp.task('docs', ['docs:example:index']);
+
   ////////////////////////
 
   var inline1 = [
@@ -65,5 +68,33 @@
   var inline2 = [
     /=\s*decodeEntities\(([^)]+)\)/g,
     '=0>$1.indexOf("&")?$1:$1.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,\'"\'); //INLINE'
-  ]
+  ];
+
+  function makeExampleIndex() {
+    var BASE = './examples';
+    var TITLE = 'doTA - Examples Index';
+    var ret = '<html><head><title>' + TITLE + '</title></head><body><h1>' + TITLE + '</h1><ul>';
+    var fs = require('fs');
+    var path = require('path');
+    var dirs = fs.readdirSync(BASE);
+    dirs.forEach(function(subFolder) {
+      subFolder = path.join(BASE, subFolder);
+      if (fs.statSync(subFolder).isDirectory(subFolder)) {
+        fs.readdirSync(subFolder).forEach(function(file) {
+          if (/\.htm.?$/i.test(file)) {
+            var fullPath = path.join(subFolder, file);
+            var buffer = fs.readFileSync(fullPath);
+            var title = /<title>([\s\S]+?)<\/title>/.test(buffer) && RegExp.$1.trim();
+            ret += '<li><a href="../' + fullPath + '">' + title + '</a></li>';
+            // console.log(fullPath, title);
+          }
+        })
+      }
+    });
+    ret += '</ul></body></html>';
+    fs.writeFileSync(path.join(BASE, 'index.html'), ret);
+    // return ret;
+  }
+
+  // console.log(makeExampleIndex());
 })();
