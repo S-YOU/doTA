@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Rendering With Angular with doTA (Text Only)</title>
+    <script>var USE_NESTED = true; USE_TEXT = true;</script>
+</head>
+
+<body ng-app="fasterAngular">
+<div style="float:right">Fork of InductJS
+  <a href="https://github.com/xkrogen/inductjs" target="_blank">repo</a>
+  <a href="https://rawgit.com/xkrogen/inductjs/master/examples/changing-list-nested/angular.html" target="_blank">examples</a>
+</div>
+<h1>Rendering With Angular with doTA (Text Only)</h1>
+<h3><a href="dota.html">doTA (Text)</a> | <a href="dota-html.html">doTA (HTML)</a></h3>
+
+<div style="width: 800px;"><p>Below is a large array of test data used for performance comparisons between React, AngularJS, and InductJS. On this page, each row of the displayed content is actually composed of 15 individually tracked elements, each of which can only display text (non-HTML) content. See <a href="./angular-html.html">here</a> for a similar comparison which uses template sites which can display arbitrary HTML content. You can use the buttons below to perform various operations on the array and see how long they take. Time taken will appear in the console as well as in the area below. You can also change the number of iterations to perform a given operation and the time to complete it will be averaged over that many runs. </p></div>
+
+<div><p id="textOutput">Performance info will appear here!</p></div>
+
+<form style="margin-bottom:10px" >
+    Number of Rows: <input type="text" id="rowCount"><button type="button" onclick="changeRowCount()" style='margin-right:20px'>Update</button>
+    Number of Iterations to Average Over: <input type="text" id="iterationCount" value="1"><button type="button" onclick="updateIterationCount()">Update</button>
+</form>
+
+<div>
+    <button onclick="updateRows(100)" title="Change all of the rows in the top level array">Change All Rows</button>
+    <button style='margin-right:20px' onclick="updateElements(100)" title="Change the elements in the bottom level array, leaving the top level rows untouched">Change All Elements</button>
+
+    <button onclick="updateRows(75)" title="Change 75% of the rows in the top level array">Change 75% of Rows</button>
+    <button style='margin-right:20px' onclick="updateElements(75)" title="Change 75% of the elements in the bottom level array, leaving the top level rows untouched">Change 75% of Elements</button>
+
+    <button onclick="updateRows(50)" title="Change 50% of the rows in the top level array">Change 50% of Rows</button>
+    <button style='margin-right:20px' onclick="updateElements(50)" title="Change 50% of the elements in the bottom level array, leaving the top level rows untouched">Change 50% of Elements</button>
+
+    <button onclick="updateRows(25)" title="Change 25% of the rows in the top level array">Change 25% of Rows</button>
+    <button style='margin-right:20px' onclick="updateElements(25)" title="Change 25% of the elements in the bottom level array, leaving the top level rows untouched">Change 25% of Elements</button>
+</div>
+<div>
+    <button onclick="addOrRemoveRows(1, false)" title="Insert 30 rows at the front of the list">Insert At Start</button>
+    <button onclick="addOrRemoveRows(-1, false)" title="Delete 30 rows from the front of the list">Delete From Start</button>
+    <button onclick="addOrRemoveRows(1, true)" title="Insert 30 rows at the end of the list">Insert At End</button>
+    <button style='margin-right:20px' onclick="addOrRemoveRows(-1, true)" title="Delete 30 rows from the end of the list">Delete From End</button>
+
+    <button onclick="insertRowInMiddle()" title="Insert one new row in the middle of the top-level array">Insert Item In Middle</button>
+    <button style='margin-right:20px' onclick="changeRowInMiddle()" title="Change one row in the middle of the top-level array">Change Item In Middle</button>
+
+    <button onclick="rerenderNoChange()" title="Request a rerender though nothing has actually changed">Rerender With No Changes</button>
+</div>
+
+
+<div ng-controller="mycontroller">
+  <div dota-render=1 inline=1 event=0 watch=updated><table><tr><th colspan="5">Large Nested List:</th></tr><tr class="dataLine" ng-repeat="line in dataLines"><td><span class="dataToken" ng-repeat="token in line">{{token}}</span></td></tr></table></div>
+</div>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+    <script src="../../dist/ngDoTA.min.js"></script>
+    <script src="js/script-common.js"></script>
+    <script src="js/script-dota.js"></script>
+
+</body>
+
+
+</html>
