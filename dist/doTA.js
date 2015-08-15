@@ -73,7 +73,7 @@ var doTA = (function() {'use strict';
           valEndPos = chunk.indexOf(valStart, eqPos + 2);
           attrVal =  chunk.slice(eqPos + 2, valEndPos);
           //console.log(311, [eqPos, valEndPos, attrVal]);
-          attr[attrName] =0>attrVal.indexOf("&")?attrVal:attrVal.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,'"');;
+          attr[attrName] =0>attrVal.indexOf("&")?attrVal:attrVal.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,'"'); //INLINE;
           pos = valEndPos + 1;
         } else {
 
@@ -82,13 +82,13 @@ var doTA = (function() {'use strict';
           //when no more attributes
           if (valEndPos === -1) {
             attrVal =  chunk.slice(eqPos + 1);
-            attr[attrName] =0>attrVal.indexOf("&")?attrVal:attrVal.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,'"');;
+            attr[attrName] =0>attrVal.indexOf("&")?attrVal:attrVal.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,'"'); //INLINE;
             //console.log(442, [attrVal]);
             break;
 
           } else {
             attrVal =  chunk.slice(eqPos + 1, valEndPos);
-            attr[attrName] =0>attrVal.indexOf("&")?attrVal:attrVal.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,'"');;
+            attr[attrName] =0>attrVal.indexOf("&")?attrVal:attrVal.replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&").replace(/&quot;/g,'"'); //INLINE;
             //console.log(313, [eqPos, valEndPos, attrVal]);
             pos = valEndPos;
           }
@@ -374,7 +374,7 @@ var doTA = (function() {'use strict';
       if (dirty2 && (tagNo1 > tagNo2 || (pos1 < 0 && pos2 > 0))) {
         // console.log('dirty2', [tagNo1, tagNo2]);
         tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-        pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+        LVL=1,pos2=tagStartPos2;do pos2=html2.indexOf("<",pos2+1),"/"===html2.charAt(pos2+1)?LVL--:LVL++,pos2=html2.indexOf(">",pos2),"/"===html2.charAt(pos2-1)&&LVL--;while(0<LVL);++pos2; //INLINE
 
         newNode.innerHTML = html2.slice(tagStartPos2, pos2);
         // console.log('newNode', [tagId1, tagId2, prevTagId2], newNode.innerHTML, nextSibling, parentNode);
@@ -397,7 +397,7 @@ var doTA = (function() {'use strict';
         elem1 = document.getElementById(tagId1);
         elem1.parentNode.removeChild(elem1);
         //skip
-        pos1 = getOuterHTMLEnd(html1, pos1);
+        LVL=1,pos1=pos1;do pos1=html1.indexOf("<",pos1+1),"/"===html1.charAt(pos1+1)?LVL--:LVL++,pos1=html1.indexOf(">",pos1),"/"===html1.charAt(pos1-1)&&LVL--;while(0<LVL);++pos1; //INLINE
         // console.warn('removeChild', [tagNo1, tagNo2], elem1, [html1.substr(pos1, 15)]);
         continue;
       }
@@ -410,11 +410,11 @@ var doTA = (function() {'use strict';
           parentNode = elem1.parentNode;
 
           tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-          pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+          LVL=1,pos2=tagStartPos2;do pos2=html2.indexOf("<",pos2+1),"/"===html2.charAt(pos2+1)?LVL--:LVL++,pos2=html2.indexOf(">",pos2),"/"===html2.charAt(pos2-1)&&LVL--;while(0<LVL);++pos2; //INLINE
           newNode.innerHTML = html2.substring(tagStartPos2, pos2);
           parentNode.replaceChild(newNode.firstChild, elem1);
 
-          pos1 = getOuterHTMLEnd(html1, pos1);
+          LVL=1,pos1=pos1;do pos1=html1.indexOf("<",pos1+1),"/"===html1.charAt(pos1+1)?LVL--:LVL++,pos1=html1.indexOf(">",pos1),"/"===html1.charAt(pos1-1)&&LVL--;while(0<LVL);++pos1; //INLINE
           // console.log( [pos1, newPos],[html1.substring(pos1, newPos)]);
           // console.warn('replaced node', [tagId1, tagId2], [tagNo1, tagNo2], elem1);
           if (tagNo1 < tagNo2) dirty2 = 1;
