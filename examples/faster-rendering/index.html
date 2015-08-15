@@ -2,6 +2,10 @@
 <html>
 <head></head>
 <body ng-app="fasterAngular">
+  <div style="float:right">Scripts are based from this
+    <a href="http://www.williambrownstreet.net/blog/2014/04/faster-angularjs-rendering-angularjs-and-reactjs/" target="_blank">Blog</a>
+  </div>
+
   <h1>Faster Rendering With doTA</h1>
   <div ng-controller="mycontroller">
     <div dota-render=1 inline=1 watch=data model=1 bind=1 event=1>
@@ -47,7 +51,7 @@
   </div>
 
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
-  <script src="../dist/ngDoTA.min.js"></script>
+  <script src="../../dist/ngDoTA.min.js"></script>
   <script>
   angular.module('fasterAngular', ['doTA']).
     controller('mycontroller', ['$scope', function($scope){
