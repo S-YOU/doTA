@@ -71,16 +71,18 @@ var doTA = (function() {'use strict';
         //if attribute value is start with quote
         if (valStart === '"' || valStart === "'") {
           valEndPos = chunk.indexOf(valStart, eqPos + 2);
+          if (valEndPos < 0) { throw 'ERR:Invalid HTML: [' + chunk + ']'; }
+
           attrVal =  chunk.slice(eqPos + 2, valEndPos);
-          //console.log(311, [eqPos, valEndPos, attrVal]);
           attr[attrName] = decodeEntities(attrVal);
           pos = valEndPos + 1;
+          //console.log(311, [valEndPos, attrName, attrVal]);
         } else {
 
           valEndPos = chunk.indexOf(' ', eqPos + 2);
 
           //when no more attributes
-          if (valEndPos === -1) {
+          if (valEndPos < 0) {
             attrVal =  chunk.slice(eqPos + 1);
             attr[attrName] = decodeEntities(attrVal);
             //console.log(442, [attrVal]);

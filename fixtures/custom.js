@@ -25,4 +25,6 @@ module.exports = {
   'elif': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div elif="x===2">2</div><div else>else</div></div>',
 
   'ngValue': '<div ng-repeat="x in data"><input ng-value="x"></div>',
+
+  'broken': '<div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>'
 }
