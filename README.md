@@ -16,8 +16,8 @@ This project has two libraries, doTA, and ngDoTA.
   - checkout this jsperf for quick look ([doT vs doTA vs Handlebar](http://jsperf.com/dot-dota-handlebar))
 
 ### ngDoTA
-  - include doTA
-  - include angular directive called dota-render (also extra dota-include, dota-template, and dota-http)
+  - included doTA
+  - included angular directive called dota-render
   - accept templateName or inline and render html with doTA by binding to $scope and $filter, without involving $digest cycle (0 watchers), unless you explicitly set compile or watch options
   - checkout [examples](https://github.com/S-YOU/doTA/tree/master/examples) from github, which based on various online benchmarks or blogs.
 
@@ -89,6 +89,10 @@ This project has two libraries, doTA, and ngDoTA.
 
 ### dota-render directive attributes
 
+- inline
+  - get template string from innerHTML instead of from template
+  - this will ignore if template is once compiled
+
 - cache-dom
   - before $scope is destroyed, relocate dom to safer place, and reuse it as is
   - for static dom, without dynamic binding
@@ -104,10 +108,6 @@ This project has two libraries, doTA, and ngDoTA.
 
 - compile-all
   - use angular $compile with elem.contents() - not much performance gain from dota with this option.
-
-- inline
-  - get template string from innerHTML instead of from template
-  - this will ignore if template is once compiled
 
 - encode
   - use when attributes have `<,>,&` characters, or may get into infinite loop or will throw errors.
@@ -179,6 +179,11 @@ This project has two libraries, doTA, and ngDoTA.
 - watch - `watch="expression"`
   - will create sub functions, and will add watch or one-time watch with `::`
   - will re-render when watch triggers
+
+### extra directives
+  - dota-include - like `ng-include="tpl/name"` but usign doTA - static
+  - dota-template - like `ng-include src="tpl/name"` - dynamic - one $watcher
+  - dota-http - return compiled template as string
 
 ---
 
