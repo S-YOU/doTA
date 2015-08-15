@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+  <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="styles.css" rel="stylesheet">
+  <title>dbmon</title>
+  <script src="../../dist/doTA.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body>
+  <div id="main">
+    <table class="table table-striped table-latest-data">
+      <tbody>
+        <tr ng-repeat="db in dbs">
+          <td class="dbname">{{db.title}}</td>
+          <td class="query-count">
+            <span class="{{db.labelClass}}">{{db.count}}</span>
+          </td>
+          <td ng-repeat="topx in db.top5" class="{{topx.elapsedClass}}">
+            {{topx.formatElapsed}}
+            <div class="popover left">
+              <div class="popover-content">{{topx.text}}</div>
+              <div class="arrow"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
