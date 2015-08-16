@@ -144,10 +144,14 @@ This project has two libraries, doTA, and ngDoTA.
     - which bind `input` event on text box and `change` event on others input, checkbox, radio, select
     - update to model value when data changed
     - events are throttle with 200ms by default, you can set with `throttle` attribute
+    - just one way binding of input back to model, that's all
+  - no validations, no other features from ng-model
 
 - bind
   - experimental
-  - set `textContent` or `innerText` when data change
+  - convert ng-bind to internal approach,
+    - which set `textContent` or `innerText` when data change
+    - just one way binding of data into view
 
 - loaded
   - once loaded, this attribute will be set to `true`
@@ -160,7 +164,9 @@ This project has two libraries, doTA, and ngDoTA.
       ```
 
 - optimize
-  - additional optimization on output - currently size, which strip unnessary quotes on attributes
+  - additional optimization on output
+    - currently only size optimization, which strip unnessary quotes on attributes
+      - may be only useful for precompiled templates on server side
 
 - data-XX
   - all `data-XX` attributes on directive will be available as `$attr.XX` on templates
@@ -269,7 +275,7 @@ This project has two libraries, doTA, and ngDoTA.
 
 - fork of inductjs's benchmark - [angular/inductjs/react/doTA](http://rawgit.com/S-YOU/inductjs/master/examples/changing-list-nested/dota.html)
 
-- fork of Ben Nadel's benchmark - [Rendering Large Datasets With AngularJS](https://rawgit.com/S-YOU/JavaScript-Demos/master/demos/render-large-datasets-angularjs-reactjs/angular-dota.htm)
+- fork of Ben Nadel's benchmark - [Rendering Large Datasets With AngularJS](http://rawgit.com/S-YOU/JavaScript-Demos/master/demos/render-large-datasets-angularjs-reactjs/angular-dota.htm)
 
 ---
 
