@@ -858,7 +858,8 @@ var doTA = (function() {'use strict';
               //convert ng-events to dota-events, to be bind later with native events
               } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
                 //adding attr "de" for querySelectorAll in ngDoTA
-                interpolatedAttr.de = '1'; //dota-event
+                interpolatedAttr.class = interpolatedAttr.class ? 'de ' + interpolatedAttr.class : 'de';
+                // interpolatedAttr.de = 1;
                 x = 'de-' + attrName;
 
               } else if (noValAttrRegex.test(attrName)) {

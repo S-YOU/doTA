@@ -9,12 +9,13 @@
       hiddenDIV = document.createElement('div');
     }
   },0);
-  var BoolMap = {0: 0, 'false': 0};
+  var BoolMap = {0: 0, 'false': 0, 1: 1, 'true': 1};
   function makeBool(attr, defaultValue){
     return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
   }
 
   function forEachArray(src, iter, ctx) {
+    if (!src) { return; }
     if (src.forEach) {
       return src.forEach(iter);
     }
@@ -23,7 +24,6 @@
         iter.call(ctx, src[key], key);
       }
     }
-    return src;
   }
 
   //something like $eval to read value from nested objects with dots
@@ -137,16 +137,16 @@
     })
   }
 
-  function addEvent(partial, scope, uniqueId) {
+  function addEventUnknown(partial, scope, attrs) {
     if (partial.de) { return; } //only attach events once
     partial.de = 1;
-    var attrs = partial.attributes, attrName, attrVal;
+    var attributes = partial.attributes, attrName, attrVal;
     var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
-    // console.log('attrs', uniqueId, attrs);
-    for(var i = 0, l = attrs.length; i < l; i++) {
-      if (!attrs[i] || !attrs[i].name || !attrs[i].value) { continue; }
-      attrName = attrs[i].name;
-      attrVal = attrs[i].value;
+    // console.log('attributes', attributes);
+    for(var i = 0, l = attributes.length; i < l; i++) {
+      if (!attributes[i] || !attributes[i].name || !attributes[i].value) { continue; }
+      attrName = attributes[i].name;
+      attrVal = attributes[i].value;
       if (attrName.substr(0, 3) === 'de-') {
         //remove attribute, so never bind again
         partial.removeAttribute(attrName);
@@ -166,17 +166,68 @@
             scope.$evalAsync(attrVal, {$event: evt});
           };
         })(partial, attrVal));
-        console.log('event added', uniqueId, attrName);
+        // console.log('event added', uniqueId, attrName);
       }
     }
   }
 
-  function addEvents(elem, scope, uniqueId) {
-    var elements = elem.querySelectorAll('[de]');
-    for (var i = 0, l = elements.length; i < l; i++) {
-      //remove attribute, so never bind again
-      elements[i].removeAttribute('de');
-      addEvent(elements[i], scope, uniqueId);
+  //specified events
+  function addEventKnown(partial, scope, attrs) {
+    if (partial.ded) { return; } //only attach events once
+    partial.ded = 1;
+    var attrName, attrVal;
+    var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
+    var events = attrs.events;
+    // console.log('attributes', attributes);
+    for(var i = 0, l = events.length; i < l; i++) {
+      attrName = 'de-' + events[i]
+      attrVal = partial.getAttribute(attrName);
+      // console.log(i, [attrVal, events[i]])
+      if (!attrVal) { continue; }
+      // if (attrName.substr(0, 3) === 'de-') {
+        //remove attribute, so never bind again
+        // partial.removeAttribute(attrName);
+        partial[listenerName]((ie8 ? 'on' : '') + events[i], (function(target, attrVal){
+          return function(evt){
+            if (ie8) {
+              //make $event.target always available
+              evt.target = evt.srcElement || document;
+              evt.returnValue = false;
+              evt.cancelBubble = true;
+            } else {
+              evt.preventDefault();
+              evt.stopPropagation();
+            }
+
+            //isedom: disallow, so no $target here
+            scope.$evalAsync(attrVal, {$event: evt});
+          };
+        })(partial, attrVal));
+        // console.log('event added', uniqueId, attrName);
+      // }
+    }
+  }
+
+  function addEvents(elem, scope, attrs) {
+    //getElementsByClassName is faster than querySelectorAll
+    //http://jsperf.com/queryselectorall-vs-getelementsbytagname/20
+    console.time('getElementsByClassName:');
+    var elements = (ie8 ? document : elem).getElementsByClassName('de');
+    console.timeEnd('getElementsByClassName:');
+    // console.log(elements.length);
+    // console.time('querySelectotAll:');
+    // var elements = document.querySelectorAll('[de]');
+    // console.timeEnd('querySelectotAll:');
+    // console.log(elements.length);
+    if (typeof attrs.event === 'number') {
+      for (var i = 0, l = elements.length, attr; i < l; i++) {
+        addEventUnknown(elements[i], scope, attrs);
+      }
+    } else {
+      attrs.events = attrs.event.split(' ');
+      for (var i = 0, l = elements.length, attr; i < l; i++) {
+        addEventKnown(elements[i], scope, attrs);
+      }
     }
   }
 
@@ -437,31 +488,41 @@
             function attachEventsAndCompile(rawElem, scope) {
 
               if (attrModel) {
+                console.time('ngModel:' + attrDoTARender);
                 addNgModels(rawElem, scope, attrDoTARender);
+                console.timeEnd('ngModel:' + attrDoTARender);
               }
 
               //attach events before replacing
               if (attrEvent) {
-                addEvents(rawElem, scope, attrDoTARender);
+                console.time('ng-events:' + attrDoTARender);
+                addEvents(rawElem, scope, attrs);
+                console.timeEnd('ng-events:' + attrDoTARender);
               }
 
               //ng-bind
               if (attrBind) {
+                console.time('ngBind:' + attrDoTARender);
                 addNgBind(rawElem, scope, attrDoTARender);
+                console.timeEnd('ngBind:' + attrDoTARender);
               }
 
               //$compile html if you need ng-model or ng-something
               if (attrCompile){
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
+                console.time('compile:' + attrDoTARender);
                 forEachArray(rawElem.querySelectorAll('[dota-pass]'), function(partial){
                   $compile(partial)(scope);
                 });
+                console.timeEnd('compile:' + attrDoTARender);
                 console.log(attrDoTARender,'after $compile partial');
 
               } else if (attrCompileAll){
                 //compile child nodes
+                console.time('compile-all:' + attrDoTARender);
                 $compile(rawElem.contentDocument || rawElem.childNodes)(scope);
+                console.timeEnd('compile-all:' + attrDoTARender);
                 console.log(attrDoTARender,'after $compile all');
               }
             }
