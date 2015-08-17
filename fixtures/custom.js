@@ -21,10 +21,25 @@ module.exports = {
   'ngShowHideWithClass': '<div ng-repeat="x in data"><div class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old">FALSE</div></div>',
   'ngShowHideWithNgClass': '<div ng-repeat="x in data"><div ng-class="{shiny:1}" class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old" ng-class="{darky:0}">FALSE</div></div>',
 
-  'else': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div else>else</div></div>',
-  'elif': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div elif="x===2">2</div><div else>else</div></div>',
+  // 'else': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div else>else</div></div>',
+  // 'elif': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div elif="x===2">2</div><div else>else</div></div>',
 
   'ngValue': '<div ng-repeat="x in data"><input ng-value="x"></div>',
+  'diffLvl2': `<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
+		<tr ng-repeat="row in vm.grid">
+			<td class="test">
+				{{ row.id }}
+			</td>
+			<td
+				ng-repeat="item in row.items"
+				class="item"
+				ng-class="{ 'hidden': item.isHiddenByFilter }">
+				<span ng-if="!item.isHiddenByFilter">{{ item.value }}</span>
+        <span ng-if="item.isHiddenByFilter"><input ng-value="item.value"></span>
+        <span ng-if="item.isHiddenByFilter"><input ng-repeat="x in y" ng-value="item.value"></span>
+        </td>
+		</tr>
+	</table>`
 
-  'broken': '<div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>'
+  // 'broken': '<div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>'
 }

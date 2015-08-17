@@ -53,6 +53,7 @@
   </div>
 
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+  <!--<script src="./angular.min.js"></script>-->
   <script src="../../dist/ngDoTA.min.js"></script>
   <script>
   angular.module('fasterAngular', ['doTA']).
@@ -75,8 +76,8 @@
       $scope.checkbox2 = "c2";
       // $scope.radio = "r1"
       $scope.name3 = "name3Val";
-
   }])
+  angular.bootstrap(document.body, ['fasterAngular'])
   </script>
 
 </body>

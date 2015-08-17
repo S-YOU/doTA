@@ -520,7 +520,9 @@ var doTA = (function() {'use strict';
     var val_mod = options.loose ? "||''" : '';
     var isPatch = options.watchDiff;
     var diffLevel = +options.diffLevel;
-    var VarMap = {$index: 1, undefined: 1, $attr:1};
+    var VarMap = {$index: 1, undefined: 1, $attr: 1,
+      Math: 1, Date: 1, String: 1, Object: 1, Array: 1, Infinity: 1, NaN: 1,
+      true: 1, false: 1, null: 1};
     var level = 0, lastLevel, ngIfLevel, ngIfCounter;
     var LevelMap = {}, LevelVarMap = {};
     var WatchMap = {}, Watched;
@@ -535,6 +537,10 @@ var doTA = (function() {'use strict';
 
     //clean up extra white spaces and line break
     template = template.replace(whiteSpaceRegex, ' ');
+
+    if (options.strip) {
+      template = template.replace(/>\s+/g, '>').replace(/\s+</g, '<');
+    }
 
     // when encode is set, find strings and encode < and >, or parser will throw error.
     if (options.encode) {
@@ -907,7 +913,7 @@ var doTA = (function() {'use strict';
 
         //make id attr come before anything
         if (customId || isPatch) {
-          tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+N+'." + uniqueId);
+          tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+(N++)+'." + uniqueId);
           FnText += ' id="' + tagId + '"';
           if (interpolatedAttr.id) {
             interpolatedAttr.id = void 0;
@@ -923,7 +929,7 @@ var doTA = (function() {'use strict';
         FnText += noValAttr +  (selfClosing ? ' /' : '') + ">';\n";
 
         if (isPatch) {
-          FnText += indent(level) + "N++; \n";
+          // FnText += indent(level) + "N++; \n";
           if (ngIfCounter >= 0) {
             ngIfCounter++;
             // console.log('isPath ngIfCounter', [tagName, ngIfCounter]);

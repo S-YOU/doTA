@@ -73,26 +73,30 @@
   function makeExampleIndex() {
     var BASE = './examples';
     var TITLE = 'doTA - Examples Index';
-    var ret = '<html><head><title>' + TITLE + '</title></head><body><h1>' + TITLE + '</h1><ul>';
+    var before = '<html><head><title>' + TITLE + '</title></head><body><h1>' + TITLE + '</h1><ul>';
     var fs = require('fs');
     var path = require('path');
     var dirs = fs.readdirSync(BASE);
+    var ret = [];
     dirs.forEach(function(subFolder) {
       subFolder = path.join(BASE, subFolder);
-      if (fs.statSync(subFolder).isDirectory(subFolder)) {
+      var stats = fs.statSync(subFolder);
+      // console.log('stats', stats);
+      if (stats.isDirectory(subFolder)) {
         fs.readdirSync(subFolder).forEach(function(file) {
           if (/\.htm.?$/i.test(file)) {
             var fullPath = path.join(subFolder, file);
             var buffer = fs.readFileSync(fullPath);
             var title = /<title>([\s\S]+?)<\/title>/.test(buffer) && RegExp.$1.trim();
-            ret += '<li><a href="../' + fullPath + '">' + title + '</a></li>';
+            ret.push([stats.ctime, '<li><a href="../' + fullPath + '">' + title + '</a></li>']);
             // console.log(fullPath, title);
           }
         })
       }
     });
-    ret += '</ul></body></html>';
-    fs.writeFileSync(path.join(BASE, 'index.html'), ret);
+    ret.sort(function(a, b) { return a[0] - b[0]; })
+    var after = '</ul></body></html>';
+    fs.writeFileSync(path.join(BASE, 'index.html'), before + ret.map(function(x){ return x[1]; }).join('') + after);
     // return ret;
   }
 

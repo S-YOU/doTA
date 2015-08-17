@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<title>Animate Circles (Ember+HTMLBars/React/Backbone/Raw/doTA)</title>
+<link rel="stylesheet" type="text/css" href="./styles.css"></link>
+</head>
+<body>
+
+<p>
+    This is a fork of <a href="http://jsfiddle.net/Ut2X6/10/" target="_blank">http://jsfiddle.net/Ut2X6/10/</a> to include <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a>, which in turn a fork of <a href="http://jsfiddle.net/jashkenas/CGSd5/" target="_blank">jashkenas's Ember/Backbone</a> benchmark to include React. Note that this is just a simple benchmark: you wouldn't be doing this in an actual app.
+</p>
+
+<button onclick="runDoTA()">Animate with doTA</button>
+<button onclick="runEmber()">Animate with Ember+HTMLBars</button>
+<button onclick="runReact()">Animate with React</button>
+<button onclick="runBackbone()">Animate with Backbone</button>
+<button onclick="runRawdog()">Animate with nothing</button>
+
+<p id="timing">&nbsp;</p>
+<div id="grid"></div>
+
+<script type="x-template" id="underscore-template">
+  <div class="box" id="box-<%= number %>" style="top: <%= top %>px; left: <%= left %>px; background: rgb(0,0,<%= color %>);">
+    <%= content %>
+  </div>
+</script>
+
+<script type="text/x-htmlbars" id="htmlbars-box">
+    <div class="box" id="{{number}}" style="{{style}}"> {{content}}</div>
+</script>
+
+<script type="x-template" id="dota-template">
+  <div class=box-view ng-repeat="x in X">
+    <div class=box style="top:{{ Math.sin(x/10) * 10 }}px;left:{{ Math.cos(x/10) * 10}}px;background:rgb(0,0,{{x % 255}});">
+      {{ x % 100}}
+    </div>
+  </div>
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://underscorejs.org/underscore-min.js"></script>
+<script src="http://backbonejs.org/backbone-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>
+<script src="ember-htmlbars-dont-use-me-anywhere-else.prod.js"></script>
+<script src="https://fb.me/react-0.12.2.min.js"></script>
+<script src="../../dist/doTA.min.js"></script>
+<script src="scripts.js"></script>
+
+</body>
+</html>

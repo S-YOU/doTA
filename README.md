@@ -118,6 +118,9 @@ This project has two libraries, doTA, and ngDoTA.
   - set by default - `undefined`, `0`, `false` will be blank
   - use `loose=0` if you don't want `0` as blank
 
+- strip
+  - strip whitespaces before and after tags, disabled by default
+
 - scope
   - will create new scope with `$scope.$new()`
   - having `ng-controller` on dota-render directive will have new scope too, but only one.
