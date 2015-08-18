@@ -151,7 +151,7 @@
       attrVal = attributes[i].value;
       if (attrName.substr(0, 3) === 'de-') {
         //remove attribute, so never bind again
-        partial.removeAttribute(attrName);
+        // partial.removeAttribute(attrName);
         partial[listenerName]((ie8 ? 'on' : '') + attrName.substr(3), (function(target, attrVal){
           return function(evt){
             if (ie8) {

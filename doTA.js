@@ -382,7 +382,11 @@ var doTA = (function() {'use strict';
         // console.log('newNode', [tagId1, tagId2, prevTagId2], newNode.innerHTML, nextSibling, parentNode);
         if (parentNode) {
           if (nextSibling) {
-            elem2 = parentNode.insertBefore(newNode.firstChild, nextSibling);
+            if (newNode.firstChild) {
+              elem2 = parentNode.insertBefore(newNode.firstChild, nextSibling);
+            } else {
+              console.error('newNode is broken', [newNode], [html2.slice(tagStartPos2, pos2)])
+            }
           } else {
             parentNode.appendChild(newNode.firstChild);
           }
@@ -397,10 +401,14 @@ var doTA = (function() {'use strict';
       if (dirty1 && (tagNo2 > tagNo1 || (pos2 < 0 && pos1 > 0))) {
         // console.log('dirty1', [tagId1, tagId2]);
         elem1 = document.getElementById(tagId1);
-        elem1.parentNode.removeChild(elem1);
-        //skip
-        pos1 = getOuterHTMLEnd(html1, pos1);
-        // console.warn('removeChild', [tagNo1, tagNo2], elem1, [html1.substr(pos1, 15)]);
+        if (elem1) {
+          elem1.parentNode.removeChild(elem1);
+          //skip
+          pos1 = getOuterHTMLEnd(html1, pos1);
+          // console.warn('removeChild', [tagNo1, tagNo2], elem1, [html1.substr(pos1, 15)]);
+        } else {
+          console.error('tag not found: elem1', [tagId1]);
+        }
         continue;
       }
 
@@ -408,19 +416,23 @@ var doTA = (function() {'use strict';
         if (tagNo1 !== tagNo2 && !dirty2 && !dirty1) {
           // console.log('before delete', [tagId1, tagId2]);
           elem1 = document.getElementById(tagId1);
-          nextSibling = elem1.nextSibling;
-          parentNode = elem1.parentNode;
+          if (elem1) {
+            nextSibling = elem1.nextSibling;
+            parentNode = elem1.parentNode;
 
-          tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-          pos2 = getOuterHTMLEnd(html2, tagStartPos2);
-          newNode.innerHTML = html2.substring(tagStartPos2, pos2);
-          parentNode.replaceChild(newNode.firstChild, elem1);
+            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+            pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+            parentNode.replaceChild(newNode.firstChild, elem1);
 
-          pos1 = getOuterHTMLEnd(html1, pos1);
-          // console.log( [pos1, newPos],[html1.substring(pos1, newPos)]);
-          // console.warn('replaced node', [tagId1, tagId2], [tagNo1, tagNo2], elem1);
-          if (tagNo1 < tagNo2) dirty2 = 1;
-          if (tagNo1 > tagNo2) dirty1 = 1;
+            pos1 = getOuterHTMLEnd(html1, pos1);
+            // console.log( [pos1, newPos],[html1.substring(pos1, newPos)]);
+            // console.warn('replaced node', [tagId1, tagId2], [tagNo1, tagNo2], elem1);
+            if (tagNo1 < tagNo2) dirty2 = 1;
+            if (tagNo1 > tagNo2) dirty1 = 1;
+          } else {
+            console.error('tag not found: elem1', [tagId1]);
+          }
         }
       }
 
