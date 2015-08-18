@@ -3,6 +3,7 @@
   var msie = document.documentMode;
   var ie8 = msie <= 8;
   var textContent = ie8 ? 'innerText' : 'textContent';
+  var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
   var hiddenDIV;
   setTimeout(function(){
     if (document.createElement) {
@@ -137,11 +138,12 @@
     })
   }
 
+
+
   function addEventUnknown(partial, scope, attrs) {
     if (partial.de) { return; } //only attach events once
     partial.de = 1;
     var attributes = partial.attributes, attrName, attrVal;
-    var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
     // console.log('attributes', attributes);
     for(var i = 0, l = attributes.length; i < l; i++) {
       if (!attributes[i] || !attributes[i].name || !attributes[i].value) { continue; }
@@ -176,7 +178,7 @@
     if (partial.ded) { return; } //only attach events once
     partial.ded = 1;
     var attrName, attrVal;
-    var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
+
     var events = attrs.events;
     // console.log('attributes', attributes);
     for(var i = 0, l = events.length; i < l; i++) {
@@ -211,21 +213,21 @@
   function addEvents(elem, scope, attrs) {
     //getElementsByClassName is faster than querySelectorAll
     //http://jsperf.com/queryselectorall-vs-getelementsbytagname/20
-    console.time('getElementsByClassName:');
-    var elements = (ie8 ? document : elem).getElementsByClassName('de');
-    console.timeEnd('getElementsByClassName:');
+    console.time('find-nodes:');
+    var elements = ie8 ? elem.querySelectorAll('.de') : elem.getElementsByClassName('de');
+    console.timeEnd('find-nodes:');
     // console.log(elements.length);
     // console.time('querySelectotAll:');
     // var elements = document.querySelectorAll('[de]');
     // console.timeEnd('querySelectotAll:');
     // console.log(elements.length);
     if (typeof attrs.event === 'number') {
-      for (var i = 0, l = elements.length, attr; i < l; i++) {
+      for (var i = 0, l = elements.length; i < l; i++) {
         addEventUnknown(elements[i], scope, attrs);
       }
     } else {
       attrs.events = attrs.event.split(' ');
-      for (var i = 0, l = elements.length, attr; i < l; i++) {
+      for (var i = 0, l = elements.length; i < l; i++) {
         addEventKnown(elements[i], scope, attrs);
       }
     }
@@ -316,7 +318,6 @@
             var attrEvent = attrs.event;
             var attrDebug = attrs.debug;
             var attrWatch = attrs.watch;
-            var attrEncode = attrs.encode;
             var attrCompile = attrs.compile;
             var attrModel = attrs.model;
             var attrBind = attrs.bind;

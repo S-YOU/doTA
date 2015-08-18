@@ -840,6 +840,9 @@ var doTA = (function() {'use strict';
           if (interpolatedAttr.class) {
             interpolatedAttr.class = interpolatedAttr.class.replace(/\+''\+/g, '+');
             attr.class = void 0;
+          } else if (attr.class) {
+            interpolatedAttr.class = interpolate(attr.class);
+            attr.class = void 0;
           }
 
           // expand interpolations on attributes, and some more
