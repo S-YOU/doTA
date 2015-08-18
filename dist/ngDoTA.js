@@ -1031,7 +1031,7 @@ var doTA = (function() {'use strict';
       //comment node
       comment: function(data) {
         //console.log(111,[data]);
-        FnText += indent(level) + "R+='<" + interpolate(data) + ">';\n";
+        FnText += indent(level) + "R+='<" + escapeSingleQuote(data) + ">';\n";
       }
     });
 
@@ -1343,7 +1343,7 @@ if (typeof module !== "undefined" && module.exports) {
     console.time('getElementsByClassName:');
     var elements = (ie8 ? document : elem).getElementsByClassName('de');
     console.timeEnd('getElementsByClassName:');
-    console.log(elements.length);
+    // console.log(elements.length);
     // console.time('querySelectotAll:');
     // var elements = document.querySelectorAll('[de]');
     // console.timeEnd('querySelectotAll:');

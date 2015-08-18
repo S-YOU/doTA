@@ -1031,7 +1031,7 @@ var doTA = (function() {'use strict';
       //comment node
       comment: function(data) {
         //console.log(111,[data]);
-        FnText += indent(level) + "R+='<" + interpolate(data) + ">';\n";
+        FnText += indent(level) + "R+='<" + escapeSingleQuote(data) + ">';\n";
       }
     });
 
