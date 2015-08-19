@@ -320,11 +320,14 @@ var doTA = (function() {'use strict';
       // console.log('after', [dirty1, dirty2], [tagId1, tagId2],
       //   [pos1, pos2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
+      //exist inifite loop
       if (pos1 < 0 && pos2 < 0) break;
 
+      //only if there is remaining tags
       if (pos1 > 0 && pos2 > 0) {
+
+        //same node
         if (tagNo1 === tagNo2) {
-          //attr diff
           tagStartPos1 = ++pos1;
           pos1 = html1.indexOf('>', pos1);
           part1 = html1.substring(tagStartPos1, pos1);
@@ -333,21 +336,25 @@ var doTA = (function() {'use strict';
           pos2 = html2.indexOf('>', pos2);
           part2 = html2.substring(tagStartPos2, pos2);
 
+          //attr really different
           if (part1 !== part2) {
             elem1 = document.getElementById(tagId1);
             parsePatchAttr(part1, part2, elem1);
             // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
           } else {
+            //?
             elem1 = 0;
           }
 
-          //text diff
+          //for text diff
           prevPos1 = ++pos1;
           pos1 = html1.indexOf('<', prevPos1);
           part1 = html1.substring(prevPos1, pos1);
           prevPos2 = ++pos2;
           pos2 = html2.indexOf('<', prevPos2);
           part2 = html2.substring(prevPos2, pos2);
+
+          //for text node really diff
           if (part1 !== part2) {
             if (!elem1) {
               elem1 = document.getElementById(tagId1);
@@ -398,6 +405,7 @@ var doTA = (function() {'use strict';
         continue;
       }
 
+      //node is gone
       if (dirty1 && (tagNo2 > tagNo1 || (pos2 < 0 && pos1 > 0))) {
         // console.log('dirty1', [tagId1, tagId2]);
         elem1 = document.getElementById(tagId1);
@@ -530,12 +538,13 @@ var doTA = (function() {'use strict';
   function compileHTML(template, options) {
     options = options || {};
     var val_mod = options.loose ? "||''" : '';
-    var isPatch = options.watchDiff;
+    var watchDiff = options.watchDiff;
     var diffLevel = +options.diffLevel;
     var VarMap = {$index: 1, undefined: 1, $attr: 1,
       Math: 1, Date: 1, String: 1, Object: 1, Array: 1, Infinity: 1, NaN: 1,
       true: 1, false: 1, null: 1};
-    var level = 0, lastLevel, ngIfLevel, ngIfCounter;
+    var level = 0, ngRepeatLevel;
+    var ngIfLevel, ngIfSkipLevel, ngIfCounterTmp, ngIfLevels = [], ngIfLevelMap = {};
     var LevelMap = {}, LevelVarMap = {};
     var WatchMap = {}, Watched;
     var doTAPass, doTAContinue;
@@ -544,7 +553,7 @@ var doTA = (function() {'use strict';
     var idHash = {};
 
     var FnText = indent(level) + "'use strict';var " +
-      (isPatch ? 'N=1,J=' + uniqueId + ',' : '') +
+      (watchDiff ? 'N=1,J=' + uniqueId + ',' : '') +
       "R='';\n"; //ToDO: check performance on var declaration
 
     //clean up extra white spaces and line break
@@ -584,7 +593,7 @@ var doTA = (function() {'use strict';
               //console.log([val], LevelMap[level]);
               //for(var j = level; j >= 0; j--) {
               //  if (LevelVarMap[j]) {
-                  vv += matches[i].replace($indexRegex, LevelVarMap[lastLevel]);
+                  vv += matches[i].replace($indexRegex, LevelVarMap[ngRepeatLevel]);
                   //break;
                 //}
               //}
@@ -727,7 +736,7 @@ var doTA = (function() {'use strict';
             //store variable name to use for $index later
             //this is ng-repeat specific, LevelMap[level] is same for ng-if too
             LevelVarMap[level] = idx;
-            lastLevel = level;
+            ngRepeatLevel = level;
 
             if (pipePos > 0) {
               repeatSrcNew = attachFilter(repeatSrc);
@@ -751,7 +760,9 @@ var doTA = (function() {'use strict';
               }
               // console.log([start, end, step])
 
-              FnText += indent(level, 1) + 'for(var ' + repeatVar + '=' + start + ';' +
+              FnText += indent(level, 1) + 'for(var ' +
+                (diffLevel ? 'O' + level + '=N+' + (attr.skip || (end - start) / step + 1) + ',': '') +
+                repeatVar + '=' + start + ';' +
                 repeatVar + (step > 0 ? '<' : '>') + end + ';' + repeatVar + '+=' + step + '){\n';
               VarMap[repeatVar] = 1;
 
@@ -759,7 +770,9 @@ var doTA = (function() {'use strict';
             } else if (commaPos > 0) {
               var key = repeatVar.substr(0, commaPos);
               var value = repeatVar.substr(commaPos + 1);
-              FnText += indent(level, 1) + 'var ' + value + ',D' + level + '=' + repeatSrcNew + ';\n';
+              FnText += indent(level, 1) + 'var ' +
+                (diffLevel ? 'O' + level + '=N+' + (attr.skip || 100) + ',': '') +
+                value + ',D' + level + '=' + repeatSrcNew + ';\n';
               FnText += indent(level, 1) + 'for(var ' + key + ' in D' + level + '){\n';
               //                             space is needed for manual uglify  ->  vvv
               FnText += indent(level) + value + ' = ' + 'D' + level + '[' + key + ']; \n';
@@ -767,22 +780,26 @@ var doTA = (function() {'use strict';
 
             // Array: "k in []" ==> while loop
             } else {
-              FnText += indent(level, 1) + 'var ' + repeatVar + ',D' + level + '=' + repeatSrcNew + ','
-                + idx + '=-1,' + l + '=D' + level + '.length;\n';
+              FnText += indent(level, 1) + 'var ' +
+                repeatVar + ',D' + level + '=' + repeatSrcNew + ','
+                + idx + '=-1,' + l + '=D' + level + '.length' +
+                (diffLevel ? ',O' + level + '=N+' + (attr.skip || l): '') +
+                ';\n';
               FnText += indent(level, 1) + 'while(++' + idx + '<' + l + '){\n';
               //                        space is needed for manual uglify  ->  vvv
               FnText += indent(level) + repeatVar + '=D' + level + '[' + idx + ']; \n';
               VarMap[repeatVar] = 1;
             }
             //remote attribute not to get forwarded to angular
-            delete attr['ng-repeat'];
+            attr['ng-repeat'] = void 0;
           }
 
+          //re-render sub template
           if (attr.refresh) {
             customId = 1;
             oneTimeBinding = attr.refresh.indexOf('::');
             FnText += indent(level, 2) +
-              (!Watched ? 'var ' + (isPatch ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
+              (!Watched ? 'var ' + (watchDiff ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
               'var W={N:N,I:N+"' + '.' + uniqueId + '",W:"' +
               (oneTimeBinding >=0 ? attr.refresh.substr(oneTimeBinding + 2) + '",O:1': attr.refresh + '"') +
               (attr.compile ? ',C:1' : '') +
@@ -794,13 +811,17 @@ var doTA = (function() {'use strict';
 
           //ng-if to javascript if
           if (attr['ng-if']) {
-            LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            FnText += indent(level, 1) + 'if('+ attachScope(attr['ng-if']) +'){\n';
-
             if (diffLevel) {
               ngIfLevel = level;
-              ngIfCounter = 0;
+              ngIfLevels.push(level);
+              ngIfLevelMap[level] = 0;
+              if (attr.skip) {
+                ngIfSkipLevel = level;
+                FnText += indent(level, 1) + 'var O' + level + '=N+' + attr.skip + '; \n';
+              }
             }
+            LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
+            FnText += indent(level, 1) + 'if('+ attachScope(attr['ng-if']) +'){\n';
             // console.log('ng-if starts here', level);
             attr['ng-if'] = void 0;
           }
@@ -811,7 +832,7 @@ var doTA = (function() {'use strict';
             attr['elif'] = void 0;
           }
 
-          if (attr['else'] !== void 0 && !isPatch) {
+          if (attr['else'] !== void 0 && !watchDiff) {
             FnText += indent(level, 1) + 'else{\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             attr['else'] = void 0;
@@ -896,7 +917,7 @@ var doTA = (function() {'use strict';
               //console.log([val], LevelMap[level]);
               //for(var j = level; j >= 0; j--) {
               //  if (LevelVarMap[j]) {
-                  interpolatedAttr[x] = interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[lastLevel] + "+'");
+                  interpolatedAttr[x] = interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
               //    break;
               //  }
               //}
@@ -914,7 +935,7 @@ var doTA = (function() {'use strict';
               //console.log([val], LevelMap[level]);
               //for(var j = level; j >= 0; j--) {
               //  if (LevelVarMap[j]) {
-                  interpolatedAttr[x] = interpolate(attr[x]).replace($indexRegex, "'+" + LevelVarMap[lastLevel] + "+'");
+                  interpolatedAttr[x] = interpolate(attr[x]).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
               //    break;
               //  }
               //}
@@ -928,7 +949,7 @@ var doTA = (function() {'use strict';
         FnText += indent(level) + "R+='<" + tagName;
 
         //make id attr come before anything
-        if (customId || isPatch) {
+        if (customId || watchDiff) {
           tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+(N++)+'." + uniqueId);
           FnText += ' id="' + tagId + '"';
           if (interpolatedAttr.id) {
@@ -944,10 +965,10 @@ var doTA = (function() {'use strict';
         //attach boolean attributes at last
         FnText += noValAttr +  (selfClosing ? ' /' : '') + ">';\n";
 
-        if (isPatch) {
+        if (watchDiff) {
           // FnText += indent(level) + "N++; \n";
-          if (ngIfCounter >= 0) {
-            ngIfCounter++;
+          if (ngIfLevelMap[ngIfLevel] >= 0) {
+            ngIfLevelMap[ngIfLevel]++;
             // console.log('isPath ngIfCounter', [tagName, ngIfCounter]);
           }
         }
@@ -976,15 +997,16 @@ var doTA = (function() {'use strict';
         level--;
 
         //close "if", "for", "while" blocks
+        //while is needed because loop and if can be in same tag
         while (LevelMap[level] > 0) {
           FnText += indent(level, 1) + '}\n';
           LevelMap[level]--;
         }
 
         //clear ng-repeat $index
-        if (lastLevel === level) {
+        if (ngRepeatLevel === level) {
           LevelVarMap[level] = 0;
-          lastLevel = void 0;
+          ngRepeatLevel = void 0;
         }
 
         //reset dota-pass when out of scope
@@ -1001,23 +1023,49 @@ var doTA = (function() {'use strict';
         FnText += indent(level) + "R+='</" + tagName + ">';\n";
 
         //ngIfCounter for most possible uniqueId generation; don't work with loop inside!
-        if (diffLevel && level === ngIfLevel && ngIfCounter >= 0) {
-          if (ngIfCounter) {
-            FnText += indent(level, 1) + '}else{N+=' + ngIfCounter + '; \n';
+        if (diffLevel && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
+          // console.log('ngIfLevelMap1', ngIfLevel, ngIfLevels, ngIfLevelMap);
+          if (ngIfLevelMap[ngIfLevel]) {
+            FnText += indent(level, 1) + '}else{N+=' + ngIfLevelMap[ngIfLevel] + '};\n';
           }
-          ngIfLevel = ngIfCounter = void 0;
+          //save counter
+          ngIfCounterTmp = ngIfLevelMap[ngIfLevel];
+          //clear counter
+          ngIfLevelMap[ngIfLevel] = void 0;
+          //remove last level
+          ngIfLevel = ngIfLevels[--ngIfLevels.length - 1];
+          //add up to previous level
+          if (ngIfLevel) {
+            ngIfLevelMap[ngIfLevel] += ngIfCounterTmp;
+          }
+          // console.log('ngIfLevelMap2', ngIfLevel, ngIfLevels, ngIfLevelMap);
+          if (LevelMap[level] > 0) {
+            LevelMap[level]--;
+          }
         }
 
+        // console.log('LevelMap1', LevelMap);
         //close "if", "for", "while" blocks
         while (LevelMap[level] > 0) {
           FnText += indent(level, 1) + '}\n';
           LevelMap[level]--;
         }
+        // console.log('LevelMap2', LevelMap);
+
+        if (diffLevel) {
+          if (level === ngIfSkipLevel || level === ngRepeatLevel) {
+            // console.log('ngIfLevel', [level, ngIfSkipLevel, ngRepeatLevel])
+            FnText += indent(level, 1) + 'N=O' + level + '; \n';
+          }
+          if (level === ngIfSkipLevel) {
+            ngIfSkipLevel = void 0;
+          }
+        }
 
         //clear ng-repeat $index
-        if (lastLevel === level) {
+        if (ngRepeatLevel === level) {
           LevelVarMap[level] = 0;
-          lastLevel = void 0;
+          ngRepeatLevel = void 0;
         }
 
         //add blank node if $watch block return nothing, mostly occur with ng-if
@@ -1050,7 +1098,7 @@ var doTA = (function() {'use strict';
       }
     });
 
-    if (isPatch) {
+    if (watchDiff) {
       FnText += indent(0) + 'if(X&&J in doTA.H){doTA.diff' + (diffLevel || '') + '(J,R)}' +
         'doTA.H[J]=R;\n';
     }
@@ -1062,7 +1110,7 @@ var doTA = (function() {'use strict';
     FnText = FnText.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
 
     //extra optimization, which might take some more CPU
-    if (options.optimize && !isPatch) {
+    if (options.optimize && !watchDiff) {
       FnText = FnText.replace(removeUnneededQuotesRegex,'$1$2');
     }
 
@@ -1087,7 +1135,7 @@ var doTA = (function() {'use strict';
 
     // just for less array usage on heap profiling
     // but this may trigger GC more
-    FnText = level = lastLevel = LevelMap = LevelVarMap = VarMap = doTAPass = void 0;
+    FnText = LevelMap = LevelVarMap = VarMap = ngIfLevels = ngIfLevelMap = WatchMap = void 0;
     return compiledFn;
   }
 

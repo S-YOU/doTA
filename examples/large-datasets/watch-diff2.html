@@ -1,43 +1,43 @@
 <!doctype html>
 <html ng-app="Demo">
 <head>
-	<meta charset="utf-8" />
+  <meta charset="utf-8" />
 
   <div style="float:right">Scripts are based from Ben Nadel's
     <a href="http://www.bennadel.com/blog/2864-rendering-large-datasets-with-angularjs-and-reactjs.htm" target="_blank">Blog</a>
   </div>
 
-	<title>
-		Rendering Large Datasets With AngularJS + doTA (Different Structure)
-	</title>
+  <title>
+    Rendering Large Datasets With AngularJS + doTA (Different Structure)
+  </title>
 
-	<link rel="stylesheet" type="text/css" href="./watch-diff.css"></link>
+  <link rel="stylesheet" type="text/css" href="./watch-diff.css"></link>
 </head>
 <body ng-controller="AppController as vm">
 
-	<h1>
-		Rendering Large Datasets With AngularJS
-	</h1>
+  <h1>
+    Rendering Large Datasets With AngularJS
+  </h1>
 
-	<form>
-		<strong>Filter Data</strong>:
-		<input type="text" ng-model="vm.form.filter" />
+  <form>
+    <strong>Filter Data</strong>:
+    <input type="text" ng-model="vm.form.filter" />
 
-		<!--
-			If the user is filtering the data, we want to offer some insight into
-			the breadth of the filtering.
-		-->
-		<span ng-if="vm.form.filter">
-			&mdash;
-			Filtering <strong>{{ vm.form.filter }}</strong>
-			over {{ vm.dataPoints }} data points,
-			{{ vm.visibleCount }} found.
-		</span>
+    <!--
+      If the user is filtering the data, we want to offer some insight into
+      the breadth of the filtering.
+    -->
+    <span ng-if="vm.form.filter">
+      &mdash;
+      Filtering <strong>{{ vm.form.filter }}</strong>
+      over {{ vm.dataPoints }} data points,
+      {{ vm.visibleCount }} found.
+    </span>
 
-		<!-- Provide tooling to unmount and remount the grid. -->
-		<a ng-if="vm.grid.length" ng-click="vm.unmountGrid()">Unmount Grid</a>
-		<a ng-if="! vm.grid.length" ng-click="vm.remountGrid()">Remount Grid</a>
-	</form>
+    <!-- Provide tooling to unmount and remount the grid. -->
+    <a ng-if="vm.grid.length" ng-click="vm.unmountGrid()">Unmount Grid</a>
+    <a ng-if="! vm.grid.length" ng-click="vm.remountGrid()">Remount Grid</a>
+  </form>
 
 <div dota-render=3 inline=1 debug=0 compile-all=1>
   <div>
@@ -51,203 +51,216 @@
 
 <!--bind=1 model=1 event=1 -->
 <div dota-render=2 inline=1 watch="vm.grid.length" watch-diff="vm.form.filter" diff-level=2 event=0 loose=0 debug=0>
-	<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
-		<tr ng-repeat="row in vm.grid">
-			<td class="test">
-				{{ row.id }}
-			</td>
-			<td
-				ng-repeat="item in row.items"
-				class="item"
-				ng-class="{ 'hidden': item.isHiddenByFilter }">
-				<span ng-if="!item.isHiddenByFilter">{{ item.value }}</span>
-        <span ng-if="item.isHiddenByFilter"><input ng-value="item.value"></span>
+  <table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
+    <tr ng-repeat="row in vm.grid">
+      <td class="test">
+        {{ row.id }}
+      </td>
+      <td
+        ng-repeat="item in row.items"
+        class="item"
+        ng-class="{ 'hidden': item.isHiddenByFilter }">
+        <span ng-if="item.isHiddenByFilter">0</span>
+        <span ng-if="!item.isHiddenByFilter" skip=200>{{ item.value }}
+          <span ng-if="item.isHiddenByFilter">0</span>
+          <span ng-repeat="x in vm.someArr"></span>
+          <span ng-if="item.isHiddenByFilter">0</span>
+          <span ng-repeat="k,v in vm.someObj"></span>
+          <span ng-if="item.isHiddenByFilter">0</span>
+          <span ng-repeat="i in 1:10"></span>
+        </span>
+        <span ng-if="item.isHiddenByFilter"><input value="test" ng-model="vm.value" ng-blur="vm.blur($event)" ng-value="item.value"></span>
+        <span ng-if="item.isHiddenByFilter">1</span>
+        <span ng-if="item.isHiddenByFilter" ng-bind="vm.value">2</span>
         </td>
-		</tr>
-	</table>
+    </tr>
+  </table>
 </div>
 
         <!--<span ng-if="item.isHiddenByFilter">0</span>
-				<span ng-if="!item.isHiddenByFilter">{{ item.value }}</span>
+        <span ng-if="!item.isHiddenByFilter">{{ item.value }}</span>
         <span ng-if="item.isHiddenByFilter"><input value="test" ng-model="vm.value" ng-blur="vm.blur($event)" ng-value="item.value"></span>
         <span ng-if="item.isHiddenByFilter">1</span>
         <span ng-if="item.isHiddenByFilter" ng-bind="vm.value">2</span>-->
 
 
-	<!-- Load scripts. -->
+  <!-- Load scripts. -->
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
   <script type="text/javascript" src="../../dist/ngDoTA.min.js"></script>
-	<script type="text/javascript">
+  <script type="text/javascript">
 
-		// Create an application module for our demo.
-		angular.module( "Demo", ['doTA'] );
-
-
-		// --------------------------------------------------------------------------- //
-		// --------------------------------------------------------------------------- //
+    // Create an application module for our demo.
+    angular.module( "Demo", ['doTA'] );
 
 
-		// I control the root of the application.
-		angular.module( "Demo" ).controller(
-			"AppController",
-			function provideAppController( $scope ) {
+    // --------------------------------------------------------------------------- //
+    // --------------------------------------------------------------------------- //
 
-				var vm = this;
+
+    // I control the root of the application.
+    angular.module( "Demo" ).controller(
+      "AppController",
+      function provideAppController( $scope ) {
+
+        var vm = this;
         vm.updated = 0;
 
         vm.blur = function($event){ console.log('blur', $event && $event.target); }
 
-				// We'll start out with a grid with 10,000 items.
-				vm.grid = generateGrid( 100, 10);
+        // We'll start out with a grid with 10,000 items.
+        vm.grid = generateGrid( 100, 10);
 
-				// Calculate the number of data-points that may have filtering.
-				vm.dataPoints = ( vm.grid.length * vm.grid[ 0 ].items.length );
+        // Calculate the number of data-points that may have filtering.
+        vm.dataPoints = ( vm.grid.length * vm.grid[ 0 ].items.length );
 
-				// I hold the form data for use with ngModel.
-				vm.form = {
-					filter: ""
-				};
+        vm.someArr = [1,2,3,5,6,7];
+        vm.someObj = {x:1, y:2};
 
-				// I hold the number of items that are visible based on filtering.
-				vm.visibleCount = 0;
+        // I hold the form data for use with ngModel.
+        vm.form = {
+          filter: ""
+        };
 
-				// As the user interacts with filter, we need to update the view-model
-				// to reflect the matching items.
-				$scope.$watch( "vm.form.filter", handleFilterChange );
+        // I hold the number of items that are visible based on filtering.
+        vm.visibleCount = 0;
 
-				// Expose the public API.
-				vm.remountGrid = remountGrid;
-				vm.unmountGrid = unmountGrid;
+        // As the user interacts with filter, we need to update the view-model
+        // to reflect the matching items.
+        $scope.$watch( "vm.form.filter", handleFilterChange );
 
-
-				// ---
-				// PUBLIC METHODS.
-				// ---
+        // Expose the public API.
+        vm.remountGrid = remountGrid;
+        vm.unmountGrid = unmountGrid;
 
 
-				// I update the visibility of the items when the filter is updated.
-				function handleFilterChange( newValue, oldValue ) {
+        // ---
+        // PUBLIC METHODS.
+        // ---
 
-					if ( newValue === oldValue ) {
 
-						return;
+        // I update the visibility of the items when the filter is updated.
+        function handleFilterChange( newValue, oldValue ) {
 
-					}
+          if ( newValue === oldValue ) {
 
-					// Reset the visible count. As we iterate of the items checking
-					// for visibility, we can increment this count as necessary.
-					vm.visibleCount = 0;
+            return;
 
-					for ( var r = 0, rowCount = vm.grid.length ; r < rowCount ; r++ ) {
+          }
 
-						var row = vm.grid[ r ];
+          // Reset the visible count. As we iterate of the items checking
+          // for visibility, we can increment this count as necessary.
+          vm.visibleCount = 0;
 
-						for ( var c = 0, columnCount = row.items.length ; c < columnCount ; c++ ) {
+          for ( var r = 0, rowCount = vm.grid.length ; r < rowCount ; r++ ) {
 
-							var item = row.items[ c ];
+            var row = vm.grid[ r ];
+
+            for ( var c = 0, columnCount = row.items.length ; c < columnCount ; c++ ) {
+
+              var item = row.items[ c ];
 
               // item.value = item.value + '1';
-							// The item is hidden if the given filter text cannot be
-							// found in the value of the item.
-							item.isHiddenByFilter = ( newValue && ( item.value.indexOf( newValue ) === -1 ) );
+              // The item is hidden if the given filter text cannot be
+              // found in the value of the item.
+              item.isHiddenByFilter = ( newValue && ( item.value.indexOf( newValue ) === -1 ) );
 
-							// If the item isn't hidden, track it as part of the visible
-							// set of data.
-							if ( ! item.isHiddenByFilter ) {
+              // If the item isn't hidden, track it as part of the visible
+              // set of data.
+              if ( ! item.isHiddenByFilter ) {
 
-								vm.visibleCount++;
+                vm.visibleCount++;
 
-							}
+              }
 
-						}
+            }
 
-					}
+          }
 
-				}
-
-
-				// I repopulate the grid with data. This will help separate processing
-				// performance characteristics from page-load processing.
-				function remountGrid() {
-
-					vm.grid = generateGrid( 100, 10 );
-					vm.dataPoints = ( vm.grid.length * vm.grid[ 0 ].items.length );
-
-					vm.visibleCount = 0;
-					vm.form.filter = "";
-
-				}
+        }
 
 
-				// I clear the grid of data. This will help separate processing
-				// performance characteristics from page-load processing.
-				function unmountGrid() {
+        // I repopulate the grid with data. This will help separate processing
+        // performance characteristics from page-load processing.
+        function remountGrid() {
 
-					vm.grid = [];
-					vm.dataPoints = 0;
+          vm.grid = generateGrid( 100, 10 );
+          vm.dataPoints = ( vm.grid.length * vm.grid[ 0 ].items.length );
 
-					vm.visibleCount = 0;
-					vm.form.filter = "";
+          vm.visibleCount = 0;
+          vm.form.filter = "";
 
-				}
-
-
-				// ---
-				// PRIVATE METHODS.
-				// ---
+        }
 
 
-				// I generate a grid of items with the given dimensions. The grid is
-				// represented as a two dimensional grid, of sorts. Each row has an
-				// object that has an items collection.
-				function generateGrid( rowCount, columnCount ) {
+        // I clear the grid of data. This will help separate processing
+        // performance characteristics from page-load processing.
+        function unmountGrid() {
 
-					var valuePoints = [
-						"Daenerys", "Jon", "Sansa", "Arya", "Stannis", "Gregor", "Tyrion",
-						"Theon", "Joffrey", "Ramsay", "Cersei", "Bran", "Margaery",
-						"Melisandre", "Daario", "Jamie", "Eddard", "Myrcella", "Robb",
-						"Jorah", "Petyr", "Tommen", "Sandor", "Oberyn", "Drogo", "Ygritte"
-					];
+          vm.grid = [];
+          vm.dataPoints = 0;
 
-					var valueIndex = 0;
+          vm.visibleCount = 0;
+          vm.form.filter = "";
 
-					var grid = [];
+        }
 
-					for ( var r = 0 ; r < rowCount ; r++ ) {
 
-						var row = {
-							id: r,
-							items: []
-						};
+        // ---
+        // PRIVATE METHODS.
+        // ---
 
-						for ( var c = 0 ; c < columnCount ; c++ ) {
 
-							row.items.push({
-								id: ( r + "-" + c ),
-								value: valuePoints[ valueIndex ],
-								isHiddenByFilter: false
-							});
+        // I generate a grid of items with the given dimensions. The grid is
+        // represented as a two dimensional grid, of sorts. Each row has an
+        // object that has an items collection.
+        function generateGrid( rowCount, columnCount ) {
 
-							if ( ++valueIndex >= valuePoints.length ) {
+          var valuePoints = [
+            "Daenerys", "Jon", "Sansa", "Arya", "Stannis", "Gregor", "Tyrion",
+            "Theon", "Joffrey", "Ramsay", "Cersei", "Bran", "Margaery",
+            "Melisandre", "Daario", "Jamie", "Eddard", "Myrcella", "Robb",
+            "Jorah", "Petyr", "Tommen", "Sandor", "Oberyn", "Drogo", "Ygritte"
+          ];
 
-								valueIndex = 0;
+          var valueIndex = 0;
 
-							}
+          var grid = [];
 
-						}
+          for ( var r = 0 ; r < rowCount ; r++ ) {
 
-						grid.push( row );
+            var row = {
+              id: r,
+              items: []
+            };
 
-					}
+            for ( var c = 0 ; c < columnCount ; c++ ) {
 
-					return( grid );
+              row.items.push({
+                id: ( r + "-" + c ),
+                value: valuePoints[ valueIndex ],
+                isHiddenByFilter: false
+              });
 
-				}
+              if ( ++valueIndex >= valuePoints.length ) {
 
-			}
-		);
+                valueIndex = 0;
 
-	</script>
+              }
+
+            }
+
+            grid.push( row );
+
+          }
+
+          return( grid );
+
+        }
+
+      }
+    );
+
+  </script>
 
 </body>
 </html>
