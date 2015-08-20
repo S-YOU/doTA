@@ -25,30 +25,32 @@ module.exports = {
   // 'elif': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div elif="x===2">2</div><div else>else</div></div>',
 
   'ngValue': '<div ng-repeat="x in data"><input ng-value="x"></div>',
-  'diffLvl2': `<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
-    <tr ng-repeat="row in vm.grid">
-      <td class="test">
-        {{ row.id }}
-      </td>
-      <td
-        ng-repeat="item in row.items"
-        class="item"
-        ng-class="{ 'hidden': item.isHiddenByFilter }">
-        <span ng-if="item.isHiddenByFilter">0</span>
-        <span ng-if="!item.isHiddenByFilter" skip=200>{{ item.value }}
-          <span ng-if="item.isHiddenByFilter">0</span>
-          <span ng-repeat="x in vm.someArr"></span>
-          <span ng-if="item.isHiddenByFilter">0</span>
-          <span ng-repeat="k,v in vm.someObj"></span>
-          <span ng-if="item.isHiddenByFilter">0</span>
-          <span ng-repeat="i in 1:10"></span>
-        </span>
-        <span ng-if="item.isHiddenByFilter"><input value="test" ng-model="vm.value" ng-blur="vm.blur($event)" ng-value="item.value"></span>
-        <span ng-if="item.isHiddenByFilter">1</span>
-        <span ng-if="item.isHiddenByFilter" ng-bind="vm.value">2</span>
-        </td>
-    </tr>
-  </table>`
+  'diffLvl2': "<table width=\"100%\" cellspacing=\"2\" ng-class=\"{ 'filtered': vm.form.filter }\">\n    <tr ng-repeat=\"row in vm.grid\">\n      <td class=\"test\">\n        {{ row.id }}\n      </td>\n      <td\n        ng-repeat=\"item in row.items\"\n        class=\"item\"\n        ng-class=\"{ 'hidden': item.isHiddenByFilter }\">\n        <span ng-if=\"item.isHiddenByFilter\">0</span>\n        <span ng-if=\"!item.isHiddenByFilter\" skip=200>{{ item.value }}\n          <span ng-if=\"item.isHiddenByFilter\">0</span>\n          <span ng-repeat=\"x in vm.someArr\"></span>\n          <span ng-if=\"item.isHiddenByFilter\">0</span>\n          <span ng-repeat=\"k,v in vm.someObj\"></span>\n          <span ng-if=\"item.isHiddenByFilter\">0</span>\n          <span ng-repeat=\"i in 1:10\"></span>\n        </span>\n        <span ng-if=\"item.isHiddenByFilter\"><input value=\"test\" ng-model=\"vm.value\" ng-blur=\"vm.blur($event)\" ng-value=\"item.value\"></span>\n        <span ng-if=\"item.isHiddenByFilter\">1</span>\n        <span ng-if=\"item.isHiddenByFilter\" ng-bind=\"vm.value\">2</span>\n        </td>\n    </tr>\n  </table>"
+  
+  // `<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
+  //   <tr ng-repeat="row in vm.grid">
+  //     <td class="test">
+  //       {{ row.id }}
+  //     </td>
+  //     <td
+  //       ng-repeat="item in row.items"
+  //       class="item"
+  //       ng-class="{ 'hidden': item.isHiddenByFilter }">
+  //       <span ng-if="item.isHiddenByFilter">0</span>
+  //       <span ng-if="!item.isHiddenByFilter" skip=200>{{ item.value }}
+  //         <span ng-if="item.isHiddenByFilter">0</span>
+  //         <span ng-repeat="x in vm.someArr"></span>
+  //         <span ng-if="item.isHiddenByFilter">0</span>
+  //         <span ng-repeat="k,v in vm.someObj"></span>
+  //         <span ng-if="item.isHiddenByFilter">0</span>
+  //         <span ng-repeat="i in 1:10"></span>
+  //       </span>
+  //       <span ng-if="item.isHiddenByFilter"><input value="test" ng-model="vm.value" ng-blur="vm.blur($event)" ng-value="item.value"></span>
+  //       <span ng-if="item.isHiddenByFilter">1</span>
+  //       <span ng-if="item.isHiddenByFilter" ng-bind="vm.value">2</span>
+  //       </td>
+  //   </tr>
+  // </table>`
 
   // 'broken': '<div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>'
 }

@@ -250,18 +250,24 @@ var doTA = (function() {'use strict';
   // this function will be inline during building
   function getOuterHTMLEnd(HTML, START_POS) {
     var LVL = 1, POS = START_POS;
-    do {
-      POS = HTML.indexOf('<', POS + 1);
-      if (HTML.charAt(POS + 1) === '/') {
-        LVL--;
-      } else {
-        LVL++;
-      }
+    for(;;) {
       POS = HTML.indexOf('>', POS);
       if (HTML.charAt(POS - 1) === '/') { //self closing
         LVL--;
+        if (LVL <= 0) break;
       }
-    } while (LVL > 0);
+      POS = HTML.indexOf('<', POS);
+      if (HTML.charAt(POS + 1) === '/') {
+        LVL--;
+        if (LVL <= 0) {
+          POS = HTML.indexOf('>', POS + 2);
+          break;
+        }
+      } else if (HTML.charAt(POS + 1) !== '!') {
+        LVL++;
+      }
+      // console.log('LVL', LVL);
+    }
 
     // console.log('getOutHTML', tagName, [tagName, pos2, pos2, ])
     return ++POS;
@@ -272,13 +278,10 @@ var doTA = (function() {'use strict';
     var html1 = doTA.H[prevKey];
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
-    var tagId1, tagId2, elem1, elem2, part1, part2;
+    var tagId1, tagId2, elem1, part1, part2;
     var tagNo1 = 0, tagNo2 = 0;
     var newNode = document.createElement('div');
-    var parentNode, nextSibling;
     var tagStartPos1, tagStartPos2;
-    var dirty1 = 0, dirty2 = 0;
-    var prevTagId2;
     var LVL; //this is needed for fnInline
     // console.log(html1);
     // console.log(html2);
@@ -286,7 +289,7 @@ var doTA = (function() {'use strict';
     for(;;) {
       // console.log('before', [dirty1, dirty2], [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
-      if (pos1 >= 0 && dirty2 < 2) {
+      if (pos1 >= 0) {
         prevPos1 = pos1;
         pos1 = html1.indexOf(' id="', prevPos1);
         if (pos1 > 0) {
@@ -295,15 +298,11 @@ var doTA = (function() {'use strict';
           tagId1 = html1.substring(prevPos1, pos1);
           tagNo1 = tagId1^0;
         }
-        if (dirty2 && tagNo1 > tagNo2) {
-          dirty2 = 2;
-        }
       }
 
       // console.log('middle', [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
-      if (pos2 >= 0 && dirty1 < 2) {
-        prevTagId2 = tagId2;
+      if (pos2 >= 0) {
         prevPos2 = pos2;
         pos2 = html2.indexOf(' id="', prevPos2);
         if (pos2 > 0) {
@@ -311,9 +310,6 @@ var doTA = (function() {'use strict';
           pos2 = html2.indexOf('"', prevPos2);
           tagId2 = html2.substring(prevPos2, pos2);
           tagNo2 = tagId2^0;
-        }
-        if (dirty1 && tagNo2 > tagNo1) {
-          dirty1 = 2;
         }
       }
 
@@ -336,110 +332,69 @@ var doTA = (function() {'use strict';
           pos2 = html2.indexOf('>', pos2);
           part2 = html2.substring(tagStartPos2, pos2);
 
+          // console.log('same node', [part1, part2]);
+
           //attr really different
           if (part1 !== part2) {
             elem1 = document.getElementById(tagId1);
-            parsePatchAttr(part1, part2, elem1);
-            // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
+            if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+              // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
+              // console.warn('replaceChild', [tagId2, tagId1], [
+              //   html2.substring(tagStartPos2, getOuterHTMLEnd(html2, tagStartPos2)),
+              //   html1.substring(tagStartPos1, getOuterHTMLEnd(html1, pos1))]);
+
+              elem1.parentNode.replaceChild(newNode.firstChild, elem1);
+
+              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+            } else {
+              parsePatchAttr(part1, part2, elem1);
+              // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
+            }
           } else {
-            //?
+            //for textNode
             elem1 = 0;
           }
 
-          //for text diff
-          prevPos1 = ++pos1;
+          //if blank text node, continue
+          if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
+            pos1++, pos2++;
+            continue;
+          }
+
+          prevPos1 = pos1;
           pos1 = html1.indexOf('<', prevPos1);
-          part1 = html1.substring(prevPos1, pos1);
-          prevPos2 = ++pos2;
+          part1 = html1.substring(prevPos1 + 1, pos1);
+          prevPos2 = pos2;
           pos2 = html2.indexOf('<', prevPos2);
-          part2 = html2.substring(prevPos2, pos2);
+          part2 = html2.substring(prevPos2 + 1, pos2);
 
           //for text node really diff
           if (part1 !== part2) {
+            console.log('text diff', [tagId1, tagId2], [part1, part2]);
             if (!elem1) {
               elem1 = document.getElementById(tagId1);
             }
-            if (elem1.firstChild && elem1.firstChild.nodeType === 3) {
-              elem1.firstChild.nodeValue = part2;
-            }
-            // console.warn('patch text node', [tagId1, tagId2], [part1, part2])
-          }
-          dirty1 = dirty2 = 0;
-          continue;
-        }
-      }
+            // console.log('part1,2', [part1, part2]);
+            if (elem1.firstChild) {
+              //overwrite textNode value
+              if (elem1.firstChild.nodeType === 3) {
+                elem1.firstChild.nodeValue = part2;
+                // console.warn('textNode overwritten', elem1, elem1.firstChild)
 
-      if (dirty1 && ((tagNo1 > tagNo2 && pos2 > 0) || pos1 < 0)) {
-        // console.warn('dirty1**', [dirty1, dirty2], [tagNo1, tagNo2]);
-        dirty2 = 2;
-        dirty1 = 0;
-      }
-      if (dirty2 && ((tagNo2 > tagNo1 && pos1 > 0) || pos2 < 0)) {
-        // console.warn('dirty2**', [dirty1, dirty2], [tagNo1, tagNo2]);
-        dirty1 = 2;
-        dirty2 = 0;
-      }
+              //not textNode, so, insertBefore
+              } else {
+                elem1.insertBefore(document.createTextNode(part2), elem1.firstChild);
+                // console.warn('textNode inserted', elem1, elem1.firstChild)
+              }
 
-      if (dirty2 && (tagNo1 > tagNo2 || (pos1 < 0 && pos2 > 0))) {
-        // console.log('dirty2', [tagNo1, tagNo2]);
-        tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-        LVL=1,pos2=tagStartPos2;do pos2=html2.indexOf("<",pos2+1),"/"===html2.charAt(pos2+1)?LVL--:LVL++,pos2=html2.indexOf(">",pos2),"/"===html2.charAt(pos2-1)&&LVL--;while(0<LVL);++pos2; //INLINE
-
-        newNode.innerHTML = html2.slice(tagStartPos2, pos2);
-        // console.log('newNode', [tagId1, tagId2, prevTagId2], newNode.innerHTML, nextSibling, parentNode);
-        if (parentNode) {
-          if (nextSibling) {
-            if (newNode.firstChild) {
-              elem2 = parentNode.insertBefore(newNode.firstChild, nextSibling);
+            //no childNodes, so append one
             } else {
-              console.error('newNode is broken', [newNode], [html2.slice(tagStartPos2, pos2)])
+              elem1.appendChild(document.createTextNode(part2));
             }
-          } else {
-            parentNode.appendChild(newNode.firstChild);
-          }
-        } else {
-          parentNode = document.getElementById(prevTagId2);
-          parentNode.appendChild(newNode.firstChild);
-        }
-        // console.warn('add node', [tagNo1, tagNo2], elem2);
-        continue;
-      }
-
-      //node is gone
-      if (dirty1 && (tagNo2 > tagNo1 || (pos2 < 0 && pos1 > 0))) {
-        // console.log('dirty1', [tagId1, tagId2]);
-        elem1 = document.getElementById(tagId1);
-        if (elem1) {
-          elem1.parentNode.removeChild(elem1);
-          //skip
-          LVL=1,pos1=pos1;do pos1=html1.indexOf("<",pos1+1),"/"===html1.charAt(pos1+1)?LVL--:LVL++,pos1=html1.indexOf(">",pos1),"/"===html1.charAt(pos1-1)&&LVL--;while(0<LVL);++pos1; //INLINE
-          // console.warn('removeChild', [tagNo1, tagNo2], elem1, [html1.substr(pos1, 15)]);
-        } else {
-          console.error('tag not found: elem1', [tagId1]);
-        }
-        continue;
-      }
-
-      if (pos1 > 0 && pos2 > 0) {
-        if (tagNo1 !== tagNo2 && !dirty2 && !dirty1) {
-          // console.log('before delete', [tagId1, tagId2]);
-          elem1 = document.getElementById(tagId1);
-          if (elem1) {
-            nextSibling = elem1.nextSibling;
-            parentNode = elem1.parentNode;
-
-            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-            LVL=1,pos2=tagStartPos2;do pos2=html2.indexOf("<",pos2+1),"/"===html2.charAt(pos2+1)?LVL--:LVL++,pos2=html2.indexOf(">",pos2),"/"===html2.charAt(pos2-1)&&LVL--;while(0<LVL);++pos2; //INLINE
-            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
-            parentNode.replaceChild(newNode.firstChild, elem1);
-
-            LVL=1,pos1=pos1;do pos1=html1.indexOf("<",pos1+1),"/"===html1.charAt(pos1+1)?LVL--:LVL++,pos1=html1.indexOf(">",pos1),"/"===html1.charAt(pos1-1)&&LVL--;while(0<LVL);++pos1; //INLINE
-            // console.log( [pos1, newPos],[html1.substring(pos1, newPos)]);
-            // console.warn('replaced node', [tagId1, tagId2], [tagNo1, tagNo2], elem1);
-            if (tagNo1 < tagNo2) dirty2 = 1;
-            if (tagNo1 > tagNo2) dirty1 = 1;
-          } else {
-            console.error('tag not found: elem1', [tagId1]);
           }
         }
       }
@@ -544,7 +499,7 @@ var doTA = (function() {'use strict';
       Math: 1, Date: 1, String: 1, Object: 1, Array: 1, Infinity: 1, NaN: 1,
       true: 1, false: 1, null: 1};
     var level = 0, ngRepeatLevel;
-    var ngIfLevel, ngIfSkipLevel, ngIfCounterTmp, ngIfLevels = [], ngIfLevelMap = {};
+    var ngIfLevel, skipLevel, ngIfCounterTmp, ngIfLevels = [], ngIfLevelMap = {};
     var LevelMap = {}, LevelVarMap = {};
     var WatchMap = {}, Watched;
     var doTAPass, doTAContinue;
@@ -706,7 +661,8 @@ var doTA = (function() {'use strict';
       //open tag with attributes
       openTag: function(tagName, attr, selfClosing) {
         // debug && console.log('openTag', [tagName, attr]);
-        var interpolatedAttr = {}, customId, tagId, noValAttr = '', attrName, attrVal, oneTimeBinding;
+        var interpolatedAttr = {}, customId, tagId, noValAttr = '';
+        var attrName, attrVal, attrSkip, oneTimeBinding;
 
         //skip parsing ng-if, ng-repeat, ng-class with, dota
         // but interpolation will still be evaluated (by-design)
@@ -721,6 +677,13 @@ var doTA = (function() {'use strict';
 
         //unless dota-pass or with dota-continue
         if (!doTAPass || doTAContinue) {
+          if (diffLevel && attr.skip) {
+            skipLevel = level;
+            attrSkip = attr.skip;
+            attr.skip = void 0;
+            FnText += indent(level, 1) + 'var O'+ level + '=N+' + attrSkip + '; \n';
+          }
+
           //ng-repeat to while/for loop
           if (attr['ng-repeat']) {
             //console.log(21,[x], [val]);
@@ -761,7 +724,6 @@ var doTA = (function() {'use strict';
               // console.log([start, end, step])
 
               FnText += indent(level, 1) + 'for(var ' +
-                (diffLevel ? 'O' + level + '=N+' + (attr.skip || (end - start) / step + 1) + ',': '') +
                 repeatVar + '=' + start + ';' +
                 repeatVar + (step > 0 ? '<' : '>') + end + ';' + repeatVar + '+=' + step + '){\n';
               VarMap[repeatVar] = 1;
@@ -771,7 +733,6 @@ var doTA = (function() {'use strict';
               var key = repeatVar.substr(0, commaPos);
               var value = repeatVar.substr(commaPos + 1);
               FnText += indent(level, 1) + 'var ' +
-                (diffLevel ? 'O' + level + '=N+' + (attr.skip || 100) + ',': '') +
                 value + ',D' + level + '=' + repeatSrcNew + ';\n';
               FnText += indent(level, 1) + 'for(var ' + key + ' in D' + level + '){\n';
               //                             space is needed for manual uglify  ->  vvv
@@ -782,9 +743,7 @@ var doTA = (function() {'use strict';
             } else {
               FnText += indent(level, 1) + 'var ' +
                 repeatVar + ',D' + level + '=' + repeatSrcNew + ','
-                + idx + '=-1,' + l + '=D' + level + '.length' +
-                (diffLevel ? ',O' + level + '=N+' + (attr.skip || l): '') +
-                ';\n';
+                + idx + '=-1,' + l + '=D' + level + '.length;\n';
               FnText += indent(level, 1) + 'while(++' + idx + '<' + l + '){\n';
               //                        space is needed for manual uglify  ->  vvv
               FnText += indent(level) + repeatVar + '=D' + level + '[' + idx + ']; \n';
@@ -815,10 +774,6 @@ var doTA = (function() {'use strict';
               ngIfLevel = level;
               ngIfLevels.push(level);
               ngIfLevelMap[level] = 0;
-              if (attr.skip) {
-                ngIfSkipLevel = level;
-                FnText += indent(level, 1) + 'var O' + level + '=N+' + attr.skip + '; \n';
-              }
             }
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             FnText += indent(level, 1) + 'if('+ attachScope(attr['ng-if']) +'){\n';
@@ -950,7 +905,7 @@ var doTA = (function() {'use strict';
 
         //make id attr come before anything
         if (customId || watchDiff) {
-          tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+(N++)+'." + uniqueId);
+          tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+N+++'." + uniqueId);
           FnText += ' id="' + tagId + '"';
           if (interpolatedAttr.id) {
             interpolatedAttr.id = void 0;
@@ -1026,7 +981,12 @@ var doTA = (function() {'use strict';
         if (diffLevel && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
           // console.log('ngIfLevelMap1', ngIfLevel, ngIfLevels, ngIfLevelMap);
           if (ngIfLevelMap[ngIfLevel]) {
-            FnText += indent(level, 1) + '}else{N+=' + ngIfLevelMap[ngIfLevel] + '};\n';
+            FnText += indent(level, 1) + "}else{" +
+              "R+='<" + tagName + " id=\"'+N+'." + uniqueId + '" hidden="" ' +
+              (tagName === 'img' || tagName === 'input' || tagName === 'br' || tagName === 'hr' ?
+                '/>' : '></' + tagName + '>')
+              + '\';' +
+              "N+=" + ngIfLevelMap[ngIfLevel] + ";}; \n";
           }
           //save counter
           ngIfCounterTmp = ngIfLevelMap[ngIfLevel];
@@ -1053,12 +1013,12 @@ var doTA = (function() {'use strict';
         // console.log('LevelMap2', LevelMap);
 
         if (diffLevel) {
-          if (level === ngIfSkipLevel || level === ngRepeatLevel) {
-            // console.log('ngIfLevel', [level, ngIfSkipLevel, ngRepeatLevel])
+          if (level === skipLevel) {
+            // console.log('ngIfLevel', [level, skipLevel, ngRepeatLevel])
             FnText += indent(level, 1) + 'N=O' + level + '; \n';
           }
-          if (level === ngIfSkipLevel) {
-            ngIfSkipLevel = void 0;
+          if (level === skipLevel) {
+            skipLevel = void 0;
           }
         }
 
@@ -1093,8 +1053,10 @@ var doTA = (function() {'use strict';
 
       //comment node
       comment: function(data) {
-        //console.log(111,[data]);
-        FnText += indent(level) + "R+='<" + escapeSingleQuote(data) + ">';\n";
+        if (options.comment !== 0) {
+          //console.log(111,[data]);
+          FnText += indent(level) + "R+='<" + escapeSingleQuote(data) + ">';\n";
+        }
       }
     });
 

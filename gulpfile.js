@@ -62,7 +62,7 @@
 
   var inline1 = [
     /(\w+)\s*=\s*getOuterHTMLEnd\((\w+)\s*,\s*(\w+)\);/g,
-    'LVL=1,$1=$3;do $1=$2.indexOf("<",$1+1),"/"===$2.charAt($1+1)?LVL--:LVL++,$1=$2.indexOf(">",$1),"/"===$2.charAt($1-1)&&LVL--;while(0<LVL);++$1; //INLINE'
+    'LVL=1,$1=$3;for(;;){$1=$2.indexOf(">",$1);if("/"===$2.charAt($1-1)&&(LVL--,0>=LVL))break;$1=$2.indexOf("<",$1);if("/"===$2.charAt($1+1)){if(LVL--,0>=LVL){$1=$2.indexOf(">",$1+2);break}}else"!"!==$2.charAt($1+1)&&LVL++} //INLINE'
   ];
 
   var inline2 = [
@@ -73,7 +73,7 @@
   function makeExampleIndex() {
     var BASE = './examples';
     var TITLE = 'doTA - Examples Index';
-    var before = '<html><head><title>' + TITLE + '</title></head><body><h1>' + TITLE + '</h1><ul>';
+    var before = '<$2><head><title>' + TITLE + '</title></head><body><h1>' + TITLE + '</h1><ul>';
     var fs = require('fs');
     var path = require('path');
     var dirs = fs.readdirSync(BASE);
@@ -95,8 +95,8 @@
       }
     });
     ret.sort(function(a, b) { return a[0] - b[0]; })
-    var after = '</ul></body></html>';
-    fs.writeFileSync(path.join(BASE, 'index.html'), before + ret.map(function(x){ return x[1]; }).join('') + after);
+    var after = '</ul></body></$2>';
+    fs.writeFileSync(path.join(BASE, 'index.$2'), before + ret.map(function(x){ return x[1]; }).join('') + after);
     // return ret;
   }
 

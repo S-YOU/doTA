@@ -39,7 +39,8 @@
 		<a ng-if="! vm.grid.length" ng-click="vm.remountGrid()">Remount Grid</a>
 	</form>
 
-<div dota-render=2 inline=1 watch="vm.grid.length" watch-diff="vm.form.filter" loose=0 event=0 debug=0>
+<div dota-render=2 inline=1 strip=1 watch="vm.grid.length"
+  watch-diff="vm.form.filter" loose=0 event=0 debug=0>
 	<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
 		<tr ng-repeat="row in vm.grid">
 			<td class="test">

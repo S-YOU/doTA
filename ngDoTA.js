@@ -314,7 +314,6 @@
             var attrScope = attrs.scope;
             var attrNgController = attrs.ngController;
             var attrLoose = attrs.loose;
-            var attrOptimize = attrs.optimize;
             var attrEvent = attrs.event;
             var attrDebug = attrs.debug;
             var attrWatch = attrs.watch;
@@ -330,8 +329,9 @@
             var origAttrMap = attrs.$attr;
             var NewScope;
 
-            attrs.loose = makeBool(attrLoose, 1); //falsy => ''
-            attrs.optimize = makeBool(attrOptimize, 0);
+            attrs.loose = makeBool(attrLoose, 1); //if set, falsy => ''
+            attrs.optimize = makeBool(attrs.optimize, 0);
+            attrs.comment = makeBool(attrs.comment, 1); //if 0, remove comments
             attrDebug = attrs.debug = makeBool(attrDebug, 0);
             attrEvent = attrs.event = makeBool(attrEvent, 1); //ng-click to native click
             attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
