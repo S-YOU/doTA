@@ -248,7 +248,7 @@ var N = 100;
 
 // doTA Implementation
 (function(){
-  var renderFn = doTA.compile($('#dota-template').text().trim(), {watchDiff: 1,
+  var renderFn = doTA.compile($('#dota-template').text().trim(), {watchDiff: 1, diffLevel: 2,
     strip: 1, debug: 0});
   var BoxView = {};
 

@@ -279,37 +279,35 @@ var doTA = (function() {'use strict';
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
     var tagId1, tagId2, elem1, part1, part2;
-    var tagNo1 = 0, tagNo2 = 0;
+    // var tagNo1 = 0, tagNo2 = 0;
     var newNode = document.createElement('div');
     var tagStartPos1, tagStartPos2;
     var LVL; //this is needed for fnInline
     // console.log(html1);
     // console.log(html2);
 
-    for(;;) {
+    for (;;) {
       // console.log('before', [dirty1, dirty2], [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
       if (pos1 >= 0) {
-        prevPos1 = pos1;
-        pos1 = html1.indexOf(' id="', prevPos1);
+        pos1 = html1.indexOf(' id="', pos1);
         if (pos1 > 0) {
           prevPos1 = pos1 + 5;
           pos1 = html1.indexOf('"', prevPos1);
           tagId1 = html1.substring(prevPos1, pos1);
-          tagNo1 = tagId1^0;
+          // tagNo1 = tagId1^0;
         }
       }
 
       // console.log('middle', [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
       if (pos2 >= 0) {
-        prevPos2 = pos2;
-        pos2 = html2.indexOf(' id="', prevPos2);
+        pos2 = html2.indexOf(' id="', pos2);
         if (pos2 > 0) {
           prevPos2 = pos2 + 5;
           pos2 = html2.indexOf('"', prevPos2);
           tagId2 = html2.substring(prevPos2, pos2);
-          tagNo2 = tagId2^0;
+          // tagNo2 = tagId2^0;
         }
       }
 
@@ -317,84 +315,83 @@ var doTA = (function() {'use strict';
       //   [pos1, pos2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
       //exist inifite loop
-      if (pos1 < 0 && pos2 < 0) break;
+      if (pos1 < 0 || pos2 < 0) break;
 
-      //only if there is remaining tags
-      if (pos1 > 0 && pos2 > 0) {
+      //same node
+      if (tagId1 === tagId2) {
+        tagStartPos1 = ++pos1;
+        pos1 = html1.indexOf('>', pos1);
+        part1 = html1.substring(tagStartPos1, pos1);
 
-        //same node
-        if (tagNo1 === tagNo2) {
-          tagStartPos1 = ++pos1;
-          pos1 = html1.indexOf('>', pos1);
-          part1 = html1.substring(tagStartPos1, pos1);
+        tagStartPos2 = ++pos2;
+        pos2 = html2.indexOf('>', pos2);
+        part2 = html2.substring(tagStartPos2, pos2);
 
-          tagStartPos2 = ++pos2;
-          pos2 = html2.indexOf('>', pos2);
-          part2 = html2.substring(tagStartPos2, pos2);
+        // console.log('same node', [part1, part2]);
 
-          // console.log('same node', [part1, part2]);
+        //attr really different
+        if (part1 !== part2) {
+          elem1 = document.getElementById(tagId1);
+          //nodes to be inserted or deleted
+          if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
+            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+            pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
 
-          //attr really different
-          if (part1 !== part2) {
-            elem1 = document.getElementById(tagId1);
-            if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
-              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-              pos2 = getOuterHTMLEnd(html2, tagStartPos2);
-              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+            // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
+            // console.warn('replaceChild', [tagId2, tagId1], [
+            //   html2.substring(tagStartPos2, getOuterHTMLEnd(html2, tagStartPos2)),
+            //   html1.substring(tagStartPos1, getOuterHTMLEnd(html1, pos1))]);
 
-              // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
-              // console.warn('replaceChild', [tagId2, tagId1], [
-              //   html2.substring(tagStartPos2, getOuterHTMLEnd(html2, tagStartPos2)),
-              //   html1.substring(tagStartPos1, getOuterHTMLEnd(html1, pos1))]);
+            elem1.parentNode.replaceChild(newNode.firstChild, elem1);
 
-              elem1.parentNode.replaceChild(newNode.firstChild, elem1);
+            pos1 = getOuterHTMLEnd(html1, pos1);
 
-              pos1 = getOuterHTMLEnd(html1, pos1);
-            } else {
-              parsePatchAttr(part1, part2, elem1);
-              // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
-            }
+          //only attribute changes
           } else {
-            //for textNode
-            elem1 = 0;
+            parsePatchAttr(part1, part2, elem1);
+            // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
           }
+        } else {
+          //clear node for textNode
+          elem1 = void 0;
+        }
 
-          //if blank text node, continue
-          if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
-            pos1++, pos2++;
-            continue;
+        //if blank text node, skip early
+        if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
+          pos1++, pos2++;
+          continue;
+        }
+
+        prevPos1 = pos1;
+        pos1 = html1.indexOf('<', prevPos1);
+        part1 = html1.substring(prevPos1 + 1, pos1);
+        prevPos2 = pos2;
+        pos2 = html2.indexOf('<', prevPos2);
+        part2 = html2.substring(prevPos2 + 1, pos2);
+
+        //for text node really diff
+        if (part1 !== part2) {
+          // console.log('text diff', [tagId1, tagId2], [part1, part2]);
+          if (!elem1) {
+            elem1 = document.getElementById(tagId1);
           }
+          // console.log('part1,2', [part1, part2]);
+          if (elem1.firstChild) {
+            //overwrite textNode value
+            if (elem1.firstChild.nodeType === 3) {
+              elem1.firstChild.nodeValue = part2;
+              // console.warn('textNode overwritten', elem1, elem1.firstChild)
 
-          prevPos1 = pos1;
-          pos1 = html1.indexOf('<', prevPos1);
-          part1 = html1.substring(prevPos1 + 1, pos1);
-          prevPos2 = pos2;
-          pos2 = html2.indexOf('<', prevPos2);
-          part2 = html2.substring(prevPos2 + 1, pos2);
-
-          //for text node really diff
-          if (part1 !== part2) {
-            console.log('text diff', [tagId1, tagId2], [part1, part2]);
-            if (!elem1) {
-              elem1 = document.getElementById(tagId1);
-            }
-            // console.log('part1,2', [part1, part2]);
-            if (elem1.firstChild) {
-              //overwrite textNode value
-              if (elem1.firstChild.nodeType === 3) {
-                elem1.firstChild.nodeValue = part2;
-                // console.warn('textNode overwritten', elem1, elem1.firstChild)
-
-              //not textNode, so, insertBefore
-              } else {
-                elem1.insertBefore(document.createTextNode(part2), elem1.firstChild);
-                // console.warn('textNode inserted', elem1, elem1.firstChild)
-              }
-
-            //no childNodes, so append one
+            //not textNode, so, insertBefore
             } else {
-              elem1.appendChild(document.createTextNode(part2));
+              elem1.insertBefore(document.createTextNode(part2), elem1.firstChild);
+              // console.warn('textNode inserted', elem1, elem1.firstChild)
             }
+
+          //no childNodes, so append one
+          } else {
+            elem1.appendChild(document.createTextNode(part2));
           }
         }
       }
@@ -497,7 +494,9 @@ var doTA = (function() {'use strict';
     var diffLevel = +options.diffLevel;
     var VarMap = {$index: 1, undefined: 1, $attr: 1,
       Math: 1, Date: 1, String: 1, Object: 1, Array: 1, Infinity: 1, NaN: 1,
-      true: 1, false: 1, null: 1};
+      // alert: 1, confirm: 1, prompt: 1,
+      var: 1, in: 1,
+      true: 1, false: 1, null: 1, void: 1};
     var level = 0, ngRepeatLevel;
     var ngIfLevel, skipLevel, ngIfCounterTmp, ngIfLevels = [], ngIfLevelMap = {};
     var LevelMap = {}, LevelVarMap = {};
@@ -1097,7 +1096,7 @@ var doTA = (function() {'use strict';
 
     // just for less array usage on heap profiling
     // but this may trigger GC more
-    FnText = LevelMap = LevelVarMap = VarMap = ngIfLevels = ngIfLevelMap = WatchMap = void 0;
+    FnText = LevelMap = LevelVarMap = VarMap = ngIfLevels = ngIfLevelMap = WatchMap = idHash = void 0;
     return compiledFn;
   }
 
