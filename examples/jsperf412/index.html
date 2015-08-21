@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>JavaScript template language shootoff · jsPerf</title>
+<meta name="description" content="A limited comparison of some popular JavaScript templating engines on a short template: 6 header tags, and 10 list items. Compared templating engines:   Mustache…">
+<link rel="stylesheet" href="https://jsperf.com/_css/20150702.css">
+<link href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating.atom" rel="alternate" type="application/atom+xml" title="Atom feed for revisions of this test case">
+<script>document.documentElement.className='js'</script>
+<!--[if lt IE 9]><script src="https://jsperf.com/html5.js"></script><![endif]-->
+</head>
+<body>
+<article>
+<hgroup>
+	<h1>JavaScript template language shootoff</h1>
+	<h2>JavaScript performance comparison</h2>
+</hgroup>
+<p class="meta">Revision 1059 of this test case created by Jarno <time datetime="2015-08-19T11:56:47+02:00" pubdate>2 days ago</time></p>
+<section>
+<h2>Info</h2>
+<p>A limited comparison of some popular JavaScript templating engines on a short template: <strong><em>6 header tags, and 10 list items</em></strong>. Compared templating engines:</p>
+<ul>
+ <li><a rel="nofollow" href="http://mustache.github.com/">Mustache</a></li>
+ <li><a rel="nofollow" href="http://github.com/BorisMoore/jsrender">JsRender</a></li>
+ <li><a rel="nofollow" href="http://demos.kendoui.com/templates/index.html">Kendo UI Templates</a></li>
+ <li><a rel="nofollow" href="http://www.handlebarsjs.com/">Handlebars</a></li>
+ <li><a rel="nofollow" href="http://ejohn.org/blog/javascript-micro-templating/">Resig Micro-Templating (modified)</a></li>
+ <li><a rel="nofollow" href="http://documentcloud.github.com/underscore/">Underscore JS</a></li>
+ <li><a rel="nofollow" href="http://twitter.github.com/hogan.js/">Hogan</a></li>
+ <li><a rel="nofollow" href="https://github.com/olado/doT">doT.js</a></li>
+<li><a rel="nofollow" href="https://github.com/S-YOU/doTA">doTA</a></li>
+</ul>
+<p>Same as 412 but excludes DOM node generation.</p>
+<p>Updated versions of mustache and handlebars.</p>
+</section>
+<section id="prep-code">
+<h2>Preparation code</h2>
+<pre><code><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://code.jquery.com/jquery-2.1.1.min.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://cdn.kendostatic.com/2013.3.1119/js/kendo.all.min.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://cdnjs.cloudflare.com/ajax/libs/coffee-script/1.7.1/coffee-script.min.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span> <br><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://borismoore.github.com/jsrender/jsrender.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://twitter.github.io/hogan.js/builds/3.0.1/hogan-3.0.1.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;http://olado.github.io/doT/doT.min.js&quot;</span>&gt;</span><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/javascript&quot;</span> <span class="kw3">src</span><span class="sy0">=</span><span class="st0">&quot;https://rawgit.com/S-YOU/doTA/master/dist/doTA.min.js&quot;</span>&gt;</span><br><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><span class="sc-1">&lt;!--External Template Definitions--&gt;</span><br><span class="sc2">&lt;<span class="kw2">script</span> <span class="kw3">type</span><span class="sy0">=</span><span class="st0">&quot;text/x-kendo-template&quot;</span> <span class="kw3">id</span><span class="sy0">=</span><span class="st0">&quot;kendoUIextTemplate&quot;</span>&gt;</span><br><span class="sy0">&lt;</span>div<span class="sy0">&gt;</span><br><span class="sy0">&lt;</span>h1 <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'header'</span><span class="sy0">&gt;</span>#<span class="sy0">=</span> data.<span class="me1">header</span> #<span class="sy0">&lt;/</span>h1<span class="sy0">&gt;</span><br><span class="sy0">&lt;</span>h2 <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'header2'</span><span class="sy0">&gt;</span>#<span class="sy0">=</span> data.<span class="me1">header2</span> #<span class="sy0">&lt;/</span>h2<span class="sy0">&gt;</span><br><span class="sy0">&lt;</span>h3 <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'header3'</span><span class="sy0">&gt;</span>#<span class="sy0">=</span> data.<span class="me1">header3</span> #<span class="sy0">&lt;/</span>h3<span class="sy0">&gt;</span><br><span class="sy0">&lt;</span>h4 <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'header4'</span><span class="sy0">&gt;</span>#<span class="sy0">=</span> data.<span class="me1">header4</span> #<span class="sy0">&lt;/</span>h4<span class="sy0">&gt;</span><br><span class="sy0">&lt;</span>h5 <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'header5'</span><span class="sy0">&gt;</span>#<span class="sy0">=</span> data.<span class="me1">header5</span> #<span class="sy0">&lt;/</span>h5<span class="sy0">&gt;</span><br><span class="sy0">&lt;</span>h6 <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'header6'</span><span class="sy0">&gt;</span>#<span class="sy0">=</span> data.<span class="me1">header6</span> #<span class="sy0">&lt;/</span>h6<span class="sy0">&gt;</span><br><span class="sy0">&lt;</span>ul <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'list'</span><span class="sy0">&gt;</span><br>&nbsp; &nbsp;# <span class="kw1">for</span> <span class="br0">&#40;</span><span class="kw2">var</span> i <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">,</span> l <span class="sy0">=</span> data.<span class="me1">list</span>.<span class="me1">length</span><span class="sy0">;</span> i <span class="sy0">&lt;</span> l<span class="sy0">;</span> i<span class="sy0">++</span><span class="br0">&#41;</span> <span class="br0">&#123;</span> #<br>&nbsp; &nbsp;<span class="sy0">&lt;</span>li <span class="kw2">class</span><span class="sy0">=</span><span class="st0">'item'</span><span class="sy0">&gt;</span>#<span class="sy0">=</span> data.<span class="me1">list</span><span class="br0">&#91;</span>i<span class="br0">&#93;</span> #<span class="sy0">&lt;/</span>li<span class="sy0">&gt;</span><br>&nbsp; &nbsp;# <span class="br0">&#125;</span> #<br><span class="sy0">&lt;/</span>ul<span class="sy0">&gt;</span><br><span class="sy0">&lt;/</span>div<span class="sy0">&gt;</span><br><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><span class="sc2">&lt;<span class="kw2">script</span>&gt;</span><br>&nbsp; window.<span class="me1">sharedVariables</span> <span class="sy0">=</span> <span class="br0">&#123;</span><br>&nbsp; &nbsp;header<span class="sy0">:</span> <span class="st0">&quot;Header&quot;</span><span class="sy0">,</span><br>&nbsp; &nbsp;header2<span class="sy0">:</span> <span class="st0">&quot;Header2&quot;</span><span class="sy0">,</span><br>&nbsp; &nbsp;header3<span class="sy0">:</span> <span class="st0">&quot;Header3&quot;</span><span class="sy0">,</span><br>&nbsp; &nbsp;header4<span class="sy0">:</span> <span class="st0">&quot;Header4&quot;</span><span class="sy0">,</span><br>&nbsp; &nbsp;header5<span class="sy0">:</span> <span class="st0">&quot;Header5&quot;</span><span class="sy0">,</span><br>&nbsp; &nbsp;header6<span class="sy0">:</span> <span class="st0">&quot;Header6&quot;</span><span class="sy0">,</span><br>&nbsp; &nbsp;list<span class="sy0">:</span> <span class="br0">&#91;</span><span class="st0">'1000000000'</span><span class="sy0">,</span> <span class="st0">'2'</span><span class="sy0">,</span> <span class="st0">'3'</span><span class="sy0">,</span> <span class="st0">'4'</span><span class="sy0">,</span> <span class="st0">'5'</span><span class="sy0">,</span> <span class="st0">'6'</span><span class="sy0">,</span> <span class="st0">'7'</span><span class="sy0">,</span> <span class="st0">'8'</span><span class="sy0">,</span> <span class="st0">'9'</span><span class="sy0">,</span> <span class="st0">'10'</span><span class="br0">&#93;</span><br>&nbsp; <span class="br0">&#125;</span><span class="sy0">;</span><br>&nbsp; <br><br>&nbsp; <span class="co1">//JsRender compiled template (no encoding)</span><br>&nbsp; window.<span class="me1">jsRenderTemplate</span> <span class="sy0">=</span> $.<span class="me1">templates</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;{{:header}}&lt;/h1&gt;&lt;h2 class='header2'&gt;{{:header2}}&lt;/h2&gt;&lt;h3 class='header3'&gt;{{:header3}}&lt;/h3&gt;&lt;h4 class='header4'&gt;{{:header4}}&lt;/h4&gt;&lt;h5 class='header5'&gt;{{:header5}}&lt;/h5&gt;&lt;h6 class='header6'&gt;{{:header6}}&lt;/h6&gt;&lt;ul class='list'&gt;{{for list}}&lt;li class='item'&gt;{{:#data}}&lt;/li&gt;{{/for}}&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">mustacheTemplate</span> <span class="sy0">=</span> <span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;{{{header}}}&lt;/h1&gt;&lt;h2 class='header2'&gt;{{{header2}}}&lt;/h2&gt;&lt;h3 class='header3'&gt;{{{header3}}}&lt;/h3&gt;&lt;h4 class='header4'&gt;{{{header4}}}&lt;/h4&gt;&lt;h5 class='header5'&gt;{{{header5}}}&lt;/h5&gt;&lt;h6 class='header6'&gt;{{{header6}}}&lt;/h6&gt;&lt;ul class='list'&gt;{{#list}}&lt;li class='item'&gt;{{{.}}}&lt;/li&gt;{{/list}}&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">handlebarsTemplate</span> <span class="sy0">=</span> Handlebars.<span class="me1">compile</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;{{header}}&lt;/h1&gt;&lt;h2 class='header2'&gt;{{header2}}&lt;/h2&gt;&lt;h3 class='header3'&gt;{{header3}}&lt;/h3&gt;&lt;h4 class='header4'&gt;{{header4}}&lt;/h4&gt;&lt;h5 class='header5'&gt;{{header5}}&lt;/h5&gt;&lt;h6 class='header6'&gt;{{header6}}&lt;/h6&gt;&lt;ul class='list'&gt;{{#each list}}&lt;li class='item'&gt;{{this}}&lt;/li&gt;{{/each}}&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">kendouiTemplate</span> <span class="sy0">=</span> kendo.<span class="me1">template</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;#= data.header #&lt;/h1&gt;&lt;h2 class='header2'&gt;#= data.header2 #&lt;/h2&gt;&lt;h3 class='header3'&gt;#= data.header3 #&lt;/h3&gt;&lt;h4 class='header4'&gt;#= data.header4 #&lt;/h4&gt;&lt;h5 class='header5'&gt;#= data.header5 #&lt;/h5&gt;&lt;h6 class='header6'&gt;#= data.header6 #&lt;/h6&gt;&lt;ul class='list'&gt;# for (var i = 0, l = data.list.length; i &lt; l; i++) { #&lt;li class='item'&gt;#= data.list[i] #&lt;/li&gt;# } #&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="sy0">,</span> <span class="br0">&#123;</span>useWithBlock<span class="sy0">:</span><span class="kw2">true</span><span class="br0">&#125;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">kendouiTemplate2</span> <span class="sy0">=</span> kendo.<span class="me1">template</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;#= data.header #&lt;/h1&gt;&lt;h2 class='header2'&gt;#= data.header2 #&lt;/h2&gt;&lt;h3 class='header3'&gt;#= data.header3 #&lt;/h3&gt;&lt;h4 class='header4'&gt;#= data.header4 #&lt;/h4&gt;&lt;h5 class='header5'&gt;#= data.header5 #&lt;/h5&gt;&lt;h6 class='header6'&gt;#= data.header6 #&lt;/h6&gt;&lt;ul class='list'&gt;# for (var i = 0, l = data.list.length; i &lt; l; i++) { #&lt;li class='item'&gt;#= data.list[i] #&lt;/li&gt;# } #&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="sy0">,</span> <span class="br0">&#123;</span>useWithBlock<span class="sy0">:</span><span class="kw2">false</span><span class="br0">&#125;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; <span class="co1">//Use external template definition</span><br>&nbsp; window.<span class="me1">kendoUIAlt</span> <span class="sy0">=</span> kendo.<span class="me1">template</span><span class="br0">&#40;</span>$<span class="br0">&#40;</span><span class="st0">&quot;#kendoUIextTemplate&quot;</span><span class="br0">&#41;</span>.<span class="me1">html</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; window.<span class="me1">kendoUIAlt2</span> <span class="sy0">=</span> kendo.<span class="me1">template</span><span class="br0">&#40;</span>$<span class="br0">&#40;</span><span class="st0">&quot;#kendoUIextTemplate&quot;</span><span class="br0">&#41;</span>.<span class="me1">html</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="sy0">,</span> <span class="br0">&#123;</span>useWithBlock<span class="sy0">:</span><span class="kw2">false</span><span class="br0">&#125;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">underscoreTemplate</span> <span class="sy0">=</span> _.<span class="me1">template</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;&lt;%= header %&gt;&lt;/h1&gt;&lt;h2 class='header2'&gt;&lt;%= header2 %&gt;&lt;/h2&gt;&lt;h3 class='header3'&gt;&lt;%= header3 %&gt;&lt;/h3&gt;&lt;h4 class='header4'&gt;&lt;%= header4 %&gt;&lt;/h4&gt;&lt;h5 class='header5'&gt;&lt;%= header5 %&gt;&lt;/h5&gt;&lt;h6 class='header6'&gt;&lt;%= header6 %&gt;&lt;/h6&gt;&lt;ul class='list'&gt;&lt;% for (var i = 0, l = list.length; i &lt; l; i++) { %&gt;&lt;li class='item'&gt;&lt;%= list[i] %&gt;&lt;/li&gt;&lt;% } %&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">underscoreTemplateNoWith</span> <span class="sy0">=</span> _.<span class="me1">template</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;&lt;%= data.header %&gt;&lt;/h1&gt;&lt;h2 class='header2'&gt;&lt;%= data.header2 %&gt;&lt;/h2&gt;&lt;h3 class='header3'&gt;&lt;%= data.header3 %&gt;&lt;/h3&gt;&lt;h4 class='header4'&gt;&lt;%= data.header4 %&gt;&lt;/h4&gt;&lt;h5 class='header5'&gt;&lt;%= data.header5 %&gt;&lt;/h5&gt;&lt;h6 class='header6'&gt;&lt;%= data.header6 %&gt;&lt;/h6&gt;&lt;ul class='list'&gt;&lt;% for (var i = 0, l = data.list.length; i &lt; l; i++) { %&gt;&lt;li class='item'&gt;&lt;%= data.list[i] %&gt;&lt;/li&gt;&lt;% } %&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="sy0">,</span> <span class="kw2">null</span><span class="sy0">,</span> <span class="br0">&#123;</span>variable<span class="sy0">:</span> <span class="st0">'data'</span><span class="br0">&#125;</span><span class="br0">&#41;</span><span class="sy0">;</span><br><br>&nbsp; window.<span class="me1">baseHtml</span> <span class="sy0">=</span> <span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;&lt;/h1&gt;&lt;h2 class='header2'&gt;&lt;/h2&gt;&lt;h3 class='header3'&gt;&lt;/h3&gt;&lt;h4 class='header4'&gt;&lt;/h4&gt;&lt;h5 class='header5'&gt;&lt;/h5&gt;&lt;h6 class='header6'&gt;&lt;/h6&gt;&lt;ul class='list'&gt;&lt;li class='item'&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="sy0">;</span><br>&nbsp;<br>window.<span class="me1">doTtemplate</span> <span class="sy0">=</span> doT.<span class="me1">template</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;{{=it.header}}&lt;/h1&gt;&lt;h2 class='header2'&gt;{{=it.header2}}&lt;/h2&gt;&lt;h3 class='header3'&gt;{{=it.header3}}&lt;/h3&gt;&lt;h4 class='header4'&gt;{{=it.header4}}&lt;/h4&gt;&lt;h5 class='header5'&gt;{{=it.header5}}&lt;/h5&gt;&lt;h6 class='header6'&gt;{{=it.header6}}&lt;/h6&gt;&lt;ul class='list'&gt;{{for(var i = 0,l=it.list.length;i&lt;l;i++) { }}&lt;li class='item'&gt;{{=it.list[i]}}&lt;/li&gt;{{ } }}&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span><br><br>&nbsp; <br>&nbsp; <span class="co1">//Resig Template Function (modified to support ')</span><br>&nbsp; <span class="kw2">function</span> tmpl<span class="br0">&#40;</span>str<span class="br0">&#41;</span> <span class="br0">&#123;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> strFunc <span class="sy0">=</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="st0">&quot;var p=[];&quot;</span> <span class="sy0">+</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="st0">&quot;with(obj){p.push('&quot;</span> <span class="sy0">+</span><br>&nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; str.<span class="me1">replace</span><span class="br0">&#40;</span><span class="co2">/[\r\t\n]/g</span><span class="sy0">,</span> <span class="st0">&quot; &quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">replace</span><span class="br0">&#40;</span><span class="co2">/'(?=[^#]*#&gt;)/g</span><span class="sy0">,</span> <span class="st0">&quot;<span class="es0">\t</span>&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;'&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;<span class="es0">\\</span>'&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;<span class="es0">\t</span>&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;'&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">replace</span><span class="br0">&#40;</span><span class="co2">/&lt;#=(.+?)#&gt;/g</span><span class="sy0">,</span> <span class="st0">&quot;',$1,'&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;#&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;');&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;#&gt;&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;p.push('&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="sy0">+</span> <span class="st0">&quot;');}return p.join('');&quot;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> <span class="kw2">new</span> <span class="kw2">Function</span><span class="br0">&#40;</span><span class="st0">&quot;obj&quot;</span><span class="sy0">,</span> strFunc<span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">&#125;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">resig</span> <span class="sy0">=</span> tmpl<span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;&lt;#= header #&gt;&lt;/h1&gt;&lt;h2 class='header2'&gt;&lt;#= header2 #&gt;&lt;/h2&gt;&lt;h3 class='header3'&gt;&lt;#= header3 #&gt;&lt;/h3&gt;&lt;h4 class='header4'&gt;&lt;#= header4 #&gt;&lt;/h4&gt;&lt;h5 class='header5'&gt;&lt;#= header5 #&gt;&lt;/h5&gt;&lt;h6 class='header6'&gt;&lt;#= header6 #&gt;&lt;/h6&gt;&lt;ul class='list'&gt;&lt;# for (var i = 0, l = list.length; i &lt; l; i++) { #&gt;&lt;li class='item'&gt;&lt;#= list[i] #&gt;&lt;/li&gt;&lt;# } #&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; <span class="co1">//Resig modified template function (no &quot;with&quot; block)</span><br>&nbsp; <span class="kw2">function</span> tmpl2<span class="br0">&#40;</span>str<span class="br0">&#41;</span> <span class="br0">&#123;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw2">var</span> strFunc <span class="sy0">=</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="st0">&quot;quot;var p=[];&quot;</span> <span class="sy0">+</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="st0">&quot;p.push('&quot;</span> <span class="sy0">+</span><br>&nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; str.<span class="me1">replace</span><span class="br0">&#40;</span><span class="co2">/[\r\t\n]/g</span><span class="sy0">,</span> <span class="st0">&quot; &quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">replace</span><span class="br0">&#40;</span><span class="co2">/'(?=[^#]*#&gt;)/g</span><span class="sy0">,</span> <span class="st0">&quot;<span class="es0">\t</span>&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;'&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;<span class="es0">\\</span>'&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;<span class="es0">\t</span>&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;'&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">replace</span><span class="br0">&#40;</span><span class="co2">/&lt;#=(.+?)#&gt;/g</span><span class="sy0">,</span> <span class="st0">&quot;',$1,'&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;#&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;');&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;.<span class="me1">split</span><span class="br0">&#40;</span><span class="st0">&quot;#&gt;&quot;</span><span class="br0">&#41;</span>.<span class="me1">join</span><span class="br0">&#40;</span><span class="st0">&quot;p.push('&quot;</span><span class="br0">&#41;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="sy0">+</span> <span class="st0">&quot;');return p.join('');&quot;</span><span class="sy0">;</span><br>&nbsp; <br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="kw1">return</span> <span class="kw2">new</span> <span class="kw2">Function</span><span class="br0">&#40;</span><span class="st0">&quot;data&quot;</span><span class="sy0">,</span> strFunc<span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="br0">&#125;</span><br>&nbsp; <br>&nbsp; window.<span class="me1">resig2</span> <span class="sy0">=</span> tmpl2<span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;&lt;#= data.header #&gt;&lt;/h1&gt;&lt;h2 class='header2'&gt;&lt;#= data.header2 #&gt;&lt;/h2&gt;&lt;h3 class='header3'&gt;&lt;#= data.header3 #&gt;&lt;/h3&gt;&lt;h4 class='header4'&gt;&lt;#= data.header4 #&gt;&lt;/h4&gt;&lt;h5 class='header5'&gt;&lt;#= data.header5 #&gt;&lt;/h5&gt;&lt;h6 class='header6'&gt;&lt;#= data.header6 #&gt;&lt;/h6&gt;&lt;ul class='list'&gt;&lt;# for (var i = 0, l = data.list.length; i &lt; l; i++) { #&gt;&lt;li class='item'&gt;&lt;#= data.list[i] #&gt;&lt;/li&gt;&lt;# } #&gt;&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span><br><br>&nbsp; window.<span class="me1">hoganTemplate</span> <span class="sy0">=</span> Hogan.<span class="me1">compile</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;div&gt;&lt;h1 class='header'&gt;{{{header}}}&lt;/h1&gt;&lt;h2 class='header2'&gt;{{{header2}}}&lt;/h2&gt;&lt;h3 class='header3'&gt;{{{header3}}}&lt;/h3&gt;&lt;h4 class='header4'&gt;{{{header4}}}&lt;/h4&gt;&lt;h5 class='header5'&gt;{{{header5}}}&lt;/h5&gt;&lt;h6 class='header6'&gt;{{{header6}}}&lt;/h6&gt;&lt;ul class='list'&gt;{{#list}}&lt;li class='item'&gt;{{{.}}}&lt;/li&gt;{{/list}}&lt;/ul&gt;&lt;/div&gt;&quot;</span><span class="br0">&#41;</span><span class="sy0">;</span><br><span class="sc2">&lt;<span class="sy0">/</span><span class="kw2">script</span>&gt;</span><br><br><span class="sc2">&lt;<span class="kw2">div</span> <span class="kw3">id</span><span class="sy0">=</span><span class="st0">&quot;template&quot;</span> <span class="kw3">style</span><span class="sy0">=</span><span class="st0">&quot;display:none&quot;</span>&gt;&lt;<span class="sy0">/</span><span class="kw2">div</span>&gt;</span></code></pre>
+</section>
+<section>
+<h2>Preparation code output</h2>
+<div class="user-output">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--External Template Definitions-->
+
+
+
+<div id="template" style="display:none"></div></div>
+</section>
+<section id="runner">
+<h2>Test runner</h2>
+<p id="firebug"><strong>Warning! For accurate results, please disable Firebug before running the tests. <a href="/faq#firebug-warning">(Why?)</a></strong></p>
+<p id="java"><strong>Java applet disabled.</strong></p>
+<p id="status"><noscript><strong>To run the tests, please <a href="//enable-javascript.com/">enable JavaScript</a> and reload the page.</strong></noscript></p>
+<div id="controls"><button id="run" type="button"></button></div>
+<table id="test-table">
+	<thead>
+		<tr>
+			<th colspan="2">Test</th>
+			<th title="Operations per second (higher is better)">Ops/sec</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<th scope="row" id="title-1"><div>doT.js</div></th>
+			<td class="code"><pre><code>doTtemplate<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-1" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-2"><div>Kendo UI Templates (Default)</div></th>
+			<td class="code"><pre><code>kendouiTemplate<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-2" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-3"><div>Kendo UI Templates (No &quot;with&quot; block)</div></th>
+			<td class="code"><pre><code>kendouiTemplate2<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-3" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-4"><div>Handlebars.js</div></th>
+			<td class="code"><pre><code>handlebarsTemplate<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-4" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-5"><div>Underscore.js Template</div></th>
+			<td class="code"><pre><code>underscoreTemplate<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-5" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-6"><div>Resig Micro Templates (modified)</div></th>
+			<td class="code"><pre><code>resig<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-6" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-7"><div>Resig Micro Templates (No &quot;with&quot; block)</div></th>
+			<td class="code"><pre><code>resig2<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-7" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-8"><div>Underscore.js Template (No &quot;with&quot;)</div></th>
+			<td class="code"><pre><code>underscoreTemplateNoWith<span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-8" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-9"><div>Hogan.js</div></th>
+			<td class="code"><pre><code>hoganTemplate.<span class="me1">render</span><span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-9" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-10"><div>JsRender</div></th>
+			<td class="code"><pre><code>jsRenderTemplate.<span class="me1">render</span><span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-10" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-11"><div>Mustache.js Template</div></th>
+			<td class="code"><pre><code>Mustache.<span class="me1">to_html</span><span class="br0">&#40;</span>mustacheTemplate<span class="sy0">,</span> sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span><br>&nbsp;</code></pre></td>
+			<td id="results-11" class="results">pending…</td>
+		</tr>
+		<tr>
+			<th scope="row" id="title-12"><div>doTA</div></th>
+			<td class="code"><pre><code>doTAtemplate<span class="me1"></span><span class="br0">&#40;</span>sharedVariables<span class="br0">&#41;</span><span class="sy0">;</span></code></pre></td>
+			<td id="results-12" class="results">pending…</td>
+		</tr>
+	</tbody>
+</table>
+</section>
+<section style="display:none">
+<div id="bs-results"></div>
+</section>
+<section>
+<h2>Revisions</h2>
+<p>You can <a href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating/1059/edit" rel="nofollow">edit these tests or add even more tests to this page</a> by appending <code>/edit</code> to the URL. Here’s a list of current revisions for this page:</p>
+<ul>
+	<li><a href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating">Revision 1</a>: published by Jeremy Ashkenas <time datetime="2010-08-25T20:21:45+02:00" pubdate>on 25th August 2010</time></li>
+  <li>...</li>
+	<li class="current"><a href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating/1059">Revision 1059</a>: published by Jarno <time datetime="2015-08-19T11:56:47+02:00" pubdate>2 days ago</time></li>
+</ul>
+</article>
+<footer><a href="http://jsperf.com/">Add test</a> · <a href="http://jsperf.com/faq">FAQ</a> · <a href="http://jsperf.com/faq#donate">Donate</a> · <a href="https://twitter.com/jsperf" rel="nofollow">twitter: @jsperf</a> · <a href="https://github.com/jsperf/jsperf.com">source on GitHub</a> · <a href="http://benchmarkjs.com/">Benchmark.js</a> · by <a href="https://mathiasbynens.be/">@mathias</a> and <a href="http://jsperf.com/contributors">contributors</a></footer>
+<script src="benchmark-47.js"></script><script>
+  ui.browserscope.key = 'ahBzfnVhLXByb2ZpbGVyLWhychELEgRUZXN0GICAgPPJmNoLDA';
+
+  ui.add('doT.js', '\
+    doTtemplate(sharedVariables);'
+  )
+  .add('Kendo UI Templates (Default)', '\
+    kendouiTemplate(sharedVariables);'
+  )
+  .add('Kendo UI Templates (No \"with\" block)', '\
+    kendouiTemplate2(sharedVariables);'
+  )
+  .add('Handlebars.js', '\
+    handlebarsTemplate(sharedVariables);'
+  )
+  .add('Underscore.js Template', '\
+    underscoreTemplate(sharedVariables);'
+  )
+  .add('Resig Micro Templates (modified)', '\
+    resig(sharedVariables);'
+  )
+  .add('Resig Micro Templates (No \"with\" block)', '\
+    resig2(sharedVariables);'
+  )
+  .add('Underscore.js Template (No \"with\")', '\
+    underscoreTemplateNoWith(sharedVariables);'
+  )
+  .add('Hogan.js', '\
+    hoganTemplate.render(sharedVariables);'
+  )
+  .add('JsRender', '\
+    jsRenderTemplate.render(sharedVariables);'
+  )
+  .add('Mustache.js Template', '\
+    Mustache.to_html(mustacheTemplate, sharedVariables);\n\
+    '
+  )
+  .add('doTA', '\
+    doTAtemplate(sharedVariables);'
+  );
+</script>
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+<script src="http://cdn.kendostatic.com/2013.3.1119/js/kendo.all.min.js"></script>
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/coffee-script/1.7.1/coffee-script.min.js"></script>
+<script type="text/javascript" src="http://borismoore.github.com/jsrender/jsrender.js"></script>
+<script type="text/javascript" src="http://twitter.github.io/hogan.js/builds/3.0.1/hogan-3.0.1.js"></script>
+<script type="text/javascript" src="http://olado.github.io/doT/doT.min.js"></script>
+<script type="text/javascript" src="https://rawgit.com/S-YOU/doTA/master/dist/doTA.min.js"></script>
+<script type="text/x-kendo-template" id="kendoUIextTemplate">
+<div>
+<h1 class='header'>#= data.header #</h1>
+<h2 class='header2'>#= data.header2 #</h2>
+<h3 class='header3'>#= data.header3 #</h3>
+<h4 class='header4'>#= data.header4 #</h4>
+<h5 class='header5'>#= data.header5 #</h5>
+<h6 class='header6'>#= data.header6 #</h6>
+<ul class='list'>
+   # for (var i = 0, l = data.list.length; i < l; i++) { #
+   <li class='item'>#= data.list[i] #</li>
+   # } #
+</ul>
+</div>
+</script>
+<script>
+  window.sharedVariables = {
+   header: "Header",
+   header2: "Header2",
+   header3: "Header3",
+   header4: "Header4",
+   header5: "Header5",
+   header6: "Header6",
+   list: ['1000000000', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+  };
+
+
+  //JsRender compiled template (no encoding)
+  window.jsRenderTemplate = $.templates("<div><h1 class='header'>{{:header}}</h1><h2 class='header2'>{{:header2}}</h2><h3 class='header3'>{{:header3}}</h3><h4 class='header4'>{{:header4}}</h4><h5 class='header5'>{{:header5}}</h5><h6 class='header6'>{{:header6}}</h6><ul class='list'>{{for list}}<li class='item'>{{:#data}}</li>{{/for}}</ul></div>");
+
+  window.mustacheTemplate = "<div><h1 class='header'>{{{header}}}</h1><h2 class='header2'>{{{header2}}}</h2><h3 class='header3'>{{{header3}}}</h3><h4 class='header4'>{{{header4}}}</h4><h5 class='header5'>{{{header5}}}</h5><h6 class='header6'>{{{header6}}}</h6><ul class='list'>{{#list}}<li class='item'>{{{.}}}</li>{{/list}}</ul></div>";
+
+  window.handlebarsTemplate = Handlebars.compile("<div><h1 class='header'>{{header}}</h1><h2 class='header2'>{{header2}}</h2><h3 class='header3'>{{header3}}</h3><h4 class='header4'>{{header4}}</h4><h5 class='header5'>{{header5}}</h5><h6 class='header6'>{{header6}}</h6><ul class='list'>{{#each list}}<li class='item'>{{this}}</li>{{/each}}</ul></div>");
+
+  window.kendouiTemplate = kendo.template("<div><h1 class='header'>#= data.header #</h1><h2 class='header2'>#= data.header2 #</h2><h3 class='header3'>#= data.header3 #</h3><h4 class='header4'>#= data.header4 #</h4><h5 class='header5'>#= data.header5 #</h5><h6 class='header6'>#= data.header6 #</h6><ul class='list'># for (var i = 0, l = data.list.length; i < l; i++) { #<li class='item'>#= data.list[i] #</li># } #</ul></div>", {useWithBlock:true});
+
+  window.kendouiTemplate2 = kendo.template("<div><h1 class='header'>#= data.header #</h1><h2 class='header2'>#= data.header2 #</h2><h3 class='header3'>#= data.header3 #</h3><h4 class='header4'>#= data.header4 #</h4><h5 class='header5'>#= data.header5 #</h5><h6 class='header6'>#= data.header6 #</h6><ul class='list'># for (var i = 0, l = data.list.length; i < l; i++) { #<li class='item'>#= data.list[i] #</li># } #</ul></div>", {useWithBlock:false});
+
+  //Use external template definition
+  window.kendoUIAlt = kendo.template($("#kendoUIextTemplate").html());
+  window.kendoUIAlt2 = kendo.template($("#kendoUIextTemplate").html(), {useWithBlock:false});
+
+  window.underscoreTemplate = _.template("<div><h1 class='header'><%= header %></h1><h2 class='header2'><%= header2 %></h2><h3 class='header3'><%= header3 %></h3><h4 class='header4'><%= header4 %></h4><h5 class='header5'><%= header5 %></h5><h6 class='header6'><%= header6 %></h6><ul class='list'><% for (var i = 0, l = list.length; i < l; i++) { %><li class='item'><%= list[i] %></li><% } %></ul></div>");
+
+  window.underscoreTemplateNoWith = _.template("<div><h1 class='header'><%= data.header %></h1><h2 class='header2'><%= data.header2 %></h2><h3 class='header3'><%= data.header3 %></h3><h4 class='header4'><%= data.header4 %></h4><h5 class='header5'><%= data.header5 %></h5><h6 class='header6'><%= data.header6 %></h6><ul class='list'><% for (var i = 0, l = data.list.length; i < l; i++) { %><li class='item'><%= data.list[i] %></li><% } %></ul></div>", null, {variable: 'data'});
+
+  window.baseHtml = "<div><h1 class='header'></h1><h2 class='header2'></h2><h3 class='header3'></h3><h4 class='header4'></h4><h5 class='header5'></h5><h6 class='header6'></h6><ul class='list'><li class='item'></li></ul></div>";
+
+window.doTtemplate = doT.template("<div><h1 class='header'>{{=it.header}}</h1><h2 class='header2'>{{=it.header2}}</h2><h3 class='header3'>{{=it.header3}}</h3><h4 class='header4'>{{=it.header4}}</h4><h5 class='header5'>{{=it.header5}}</h5><h6 class='header6'>{{=it.header6}}</h6><ul class='list'>{{for(var i = 0,l=it.list.length;i<l;i++) { }}<li class='item'>{{=it.list[i]}}</li>{{ } }}</ul></div>");
+
+
+  //Resig Template Function (modified to support ')
+  function tmpl(str) {
+              var strFunc =
+              "var p=[];" +
+                          "with(obj){p.push('" +
+
+              str.replace(/[\r\t\n]/g, " ")
+                 .replace(/'(?=[^#]*#>)/g, "\t")
+                 .split("'").join("\\'")
+                 .split("\t").join("'")
+                 .replace(/<#=(.+?)#>/g, "',$1,'")
+                 .split("<#").join("');")
+                 .split("#>").join("p.push('")
+                 + "');}return p.join('');";
+
+              return new Function("obj", strFunc);
+          }
+
+  window.resig = tmpl("<div><h1 class='header'><#= header #></h1><h2 class='header2'><#= header2 #></h2><h3 class='header3'><#= header3 #></h3><h4 class='header4'><#= header4 #></h4><h5 class='header5'><#= header5 #></h5><h6 class='header6'><#= header6 #></h6><ul class='list'><# for (var i = 0, l = list.length; i < l; i++) { #><li class='item'><#= list[i] #></li><# } #></ul></div>");
+
+  //Resig modified template function (no "with" block)
+  function tmpl2(str) {
+              var strFunc =
+              "var p=[];" +
+                          "p.push('" +
+
+              str.replace(/[\r\t\n]/g, " ")
+                 .replace(/'(?=[^#]*#>)/g, "\t")
+                 .split("'").join("\\'")
+                 .split("\t").join("'")
+                 .replace(/<#=(.+?)#>/g, "',$1,'")
+                 .split("<#").join("');")
+                 .split("#>").join("p.push('")
+                 + "');return p.join('');";
+
+              return new Function("data", strFunc);
+          }
+
+  window.resig2 = tmpl2("<div><h1 class='header'><#= data.header #></h1><h2 class='header2'><#= data.header2 #></h2><h3 class='header3'><#= data.header3 #></h3><h4 class='header4'><#= data.header4 #></h4><h5 class='header5'><#= data.header5 #></h5><h6 class='header6'><#= data.header6 #></h6><ul class='list'><# for (var i = 0, l = data.list.length; i < l; i++) { #><li class='item'><#= data.list[i] #></li><# } #></ul></div>");
+
+  window.hoganTemplate = Hogan.compile("<div><h1 class='header'>{{{header}}}</h1><h2 class='header2'>{{{header2}}}</h2><h3 class='header3'>{{{header3}}}</h3><h4 class='header4'>{{{header4}}}</h4><h5 class='header5'>{{{header5}}}</h5><h6 class='header6'>{{{header6}}}</h6><ul class='list'>{{#list}}<li class='item'>{{{.}}}</li>{{/list}}</ul></div>");
+
+  window.doTAtemplate = doTA.compile("<div><h1 class='header'>{{header}}</h1><h2 class='header2'>{{header2}}</h2><h3 class='header3'>{{header3}}</h3><h4 class='header4'>{{header4}}</h4><h5 class='header5'>{{header5}}</h5><h6 class='header6'>{{header6}}</h6><ul class='list'><li ng-repeat='x in list' class='item'>{{x}}</li></ul></div>");
+
+</script>
+</body>
+</html>

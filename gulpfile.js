@@ -73,7 +73,7 @@
   function makeExampleIndex() {
     var BASE = './examples';
     var TITLE = 'doTA - Examples Index';
-    var before = '<$2><head><title>' + TITLE + '</title></head><body><h1>' + TITLE + '</h1><ul>';
+    var before = '<html><head><meta charset="utf-8"><title>' + TITLE + '</title></head><body><h1>' + TITLE + '</h1><ul>';
     var fs = require('fs');
     var path = require('path');
     var dirs = fs.readdirSync(BASE);
@@ -95,8 +95,9 @@
       }
     });
     ret.sort(function(a, b) { return a[0] - b[0]; })
-    var after = '</ul></body></$2>';
-    fs.writeFileSync(path.join(BASE, 'index.$2'), before + ret.map(function(x){ return x[1]; }).join('') + after);
+    var after = '</ul></body></html>';
+    fs.writeFileSync(path.join(BASE, 'index.html'),
+      before + ret.map(function(x){ return x[1]; }).join('') + after);
     // return ret;
   }
 
