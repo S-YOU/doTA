@@ -349,8 +349,13 @@ var doTA = (function() {'use strict';
 
           //only attribute changes
           } else {
-            parsePatchAttr(part1, part2, elem1);
-            // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
+            if (elem1) {
+              parsePatchAttr(part1, part2, elem1);
+              // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
+            } else {
+              /**/console.error('elem not found', [tagId1, tagId2], [part1, part2]);
+              throw "no elem found";
+            }
           }
         } else {
           //clear node for textNode
@@ -375,6 +380,9 @@ var doTA = (function() {'use strict';
           // console.log('text diff', [tagId1, tagId2], [part1, part2]);
           if (!elem1) {
             elem1 = document.getElementById(tagId1);
+            if (!elem1) {
+              /** */console.error('node not found', [tagId1, tagId2], [part1, part2], [html1.substr(pos1, 15), html2.substr(pos2, 15)], [html1, html2]);
+            }
           }
           // console.log('part1,2', [part1, part2]);
           if (elem1.firstChild) {
@@ -394,6 +402,8 @@ var doTA = (function() {'use strict';
             elem1.appendChild(document.createTextNode(part2));
           }
         }
+      } else {
+        throw "different Id - not supported for now!";
       }
 
     } //infinite loop
@@ -767,6 +777,11 @@ var doTA = (function() {'use strict';
             attr.refresh = void 0;
           }
 
+          if (attr['ng-init']) {
+            FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
+            attr['ng-init'] = void 0;
+          }
+
           //ng-if to javascript if
           if (attr['ng-if']) {
             if (diffLevel) {
@@ -790,11 +805,6 @@ var doTA = (function() {'use strict';
             FnText += indent(level, 1) + 'else{\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             attr['else'] = void 0;
-          }
-
-          if (attr['ng-init']) {
-            FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
-            attr['ng-init'] = void 0;
           }
 
           if (attr['ng-class']) {
@@ -949,6 +959,29 @@ var doTA = (function() {'use strict';
       //void tag no need to write closing tag
       voidTag: function() {
         level--;
+
+        if (diffLevel && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
+          // console.log('ngIfLevelMap1', ngIfLevel, ngIfLevels, ngIfLevelMap);
+          if (ngIfLevelMap[ngIfLevel]) {
+            FnText += indent(level, 1) + "}else{" +
+              "R+='<span id=\"'+N+'." + uniqueId + '" hidden=""></span>\';' +
+              "N+=" + ngIfLevelMap[ngIfLevel] + ";}; \n";
+          }
+          //save counter
+          ngIfCounterTmp = ngIfLevelMap[ngIfLevel];
+          //clear counter
+          ngIfLevelMap[ngIfLevel] = void 0;
+          //remove last level
+          ngIfLevel = ngIfLevels[--ngIfLevels.length - 1];
+          //add up to previous level
+          if (ngIfLevel) {
+            ngIfLevelMap[ngIfLevel] += ngIfCounterTmp;
+          }
+          // console.log('ngIfLevelMap2', ngIfLevel, ngIfLevels, ngIfLevelMap);
+          if (LevelMap[level] > 0) {
+            LevelMap[level]--;
+          }
+        }
 
         //close "if", "for", "while" blocks
         //while is needed because loop and if can be in same tag

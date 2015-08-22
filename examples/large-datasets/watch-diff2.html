@@ -60,10 +60,10 @@
         ng-repeat="item in row.items"
         class="item"
         ng-class="{ 'hidden': item.isHiddenByFilter }">
-         <span ng-if="!item.isHiddenByFilter">{{ item.value }}</span>
-        <span ng-if="item.isHiddenByFilter">
-          <input value="test" ng-model="vm.value" ng-blur="vm.blur($event)" ng-value="item.value">
-        </span>
+          <span ng-if="!item.isHiddenByFilter">{{ item.value }}</span>
+          <span ng-if="item.isHiddenByFilter">
+            <input value="test" ng-model="vm.value" ng-blur="vm.blur($event)" ng-value="item.value">
+          </span>
         </td>
     </tr>
   </table>
