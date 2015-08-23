@@ -151,7 +151,6 @@
       attrVal = attributes[i].value;
       if (attrName.substr(0, 3) === 'de-') {
         //remove attribute, so never bind again
-        // partial.removeAttribute(attrName);
         partial[listenerName]((ie8 ? 'on' : '') + attrName.substr(3), (function(target, attrVal){
           return function(evt){
             if (ie8) {
@@ -186,27 +185,22 @@
       attrVal = partial.getAttribute(attrName);
       // console.log(i, [attrVal, events[i]])
       if (!attrVal) { continue; }
-      // if (attrName.substr(0, 3) === 'de-') {
-        //remove attribute, so never bind again
-        // partial.removeAttribute(attrName);
-        partial[listenerName]((ie8 ? 'on' : '') + events[i], (function(target, attrVal){
-          return function(evt){
-            if (ie8) {
-              //make $event.target always available
-              evt.target = evt.srcElement || document;
-              evt.returnValue = false;
-              evt.cancelBubble = true;
-            } else {
-              evt.preventDefault();
-              evt.stopPropagation();
-            }
+      partial[listenerName]((ie8 ? 'on' : '') + events[i], (function(target, attrVal){
+        return function(evt){
+          if (ie8) {
+            //make $event.target always available
+            evt.target = evt.srcElement || document;
+            evt.returnValue = false;
+            evt.cancelBubble = true;
+          } else {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
 
-            //isedom: disallow, so no $target here
-            scope.$evalAsync(attrVal, {$event: evt});
-          };
-        })(partial, attrVal));
-        // console.log('event added', uniqueId, attrName);
-      // }
+          //isedom: disallow, so no $target here
+          scope.$evalAsync(attrVal, {$event: evt});
+        };
+      })(partial, attrVal));
     }
   }
 
@@ -216,11 +210,6 @@
     console.time('find-nodes:');
     var elements = ie8 ? elem.querySelectorAll('.de') : elem.getElementsByClassName('de');
     console.timeEnd('find-nodes:');
-    // console.log(elements.length);
-    // console.time('querySelectotAll:');
-    // var elements = document.querySelectorAll('[de]');
-    // console.timeEnd('querySelectotAll:');
-    // console.log(elements.length);
     if (typeof attrs.event === 'number') {
       for (var i = 0, l = elements.length; i < l; i++) {
         addEventUnknown(elements[i], scope, attrs);
@@ -234,16 +223,12 @@
   }
 
   function addNgModels(elem, scope, uniqueId) {
-    forEachArray(elem.querySelectorAll('[ng-model]'), function(partial) {
+    forEachArray(elem.querySelectorAll('[dota-model]'), function(partial) {
       var dotaPass = partial.getAttribute('dota-pass');
       // console.log('dotaPass', [dotaPass]);
       if (dotaPass != undefined) { return; } //null or undefined
 
-      //override ng-model
-      var modelName = partial.getAttribute('ng-model');
-
-      //remove attribute, so never bind again
-      partial.removeAttribute('ng-model');
+      var modelName = partial.getAttribute('dota-model');
 
       //textbox default event is input unless IE8, all others are change event
       var updateOn = partial.getAttribute('update-on') ||
@@ -312,7 +297,7 @@
             var attrCacheDOM = attrs.cacheDom;
             var attrDoTARender = attrs.dotaRender;
             var attrScope = attrs.scope;
-            var attrNgController = attrs.ngController;
+            var attrDoTAController = attrs.dotaController;
             var attrLoose = attrs.loose;
             var attrEvent = attrs.event;
             var attrDebug = attrs.debug;
@@ -362,7 +347,7 @@
             }
 
             //create new scope if scope=1 or ng-controller is specified
-            if (attrScope || attrNgController) {
+            if (attrScope || attrDoTAController) {
               console.log('scope', attrScope);
               NewScope = $scope.$new();
               console.log('newScope created', attrDoTARender, NewScope);
@@ -371,17 +356,17 @@
             }
 
             //attach ng-controller, and remove attr to prevent angular running again
-            if (attrNgController) {
-              var asPos = attrNgController.indexOf(' as ');
+            if (attrDoTAController) {
+              var asPos = attrDoTAController.indexOf(' as ');
               if (asPos > 0) {
-                attrNgController = attrNgController.substr(0, asPos).trim();
+                attrDoTAController = attrDoTAController.substr(0, asPos).trim();
               }
-              console.log('new controller', attrNgController);
-              var l = {$scope: NewScope}, controller = $controller(attrNgController, l);
+              console.log('new controller', attrDoTAController);
+              var l = {$scope: NewScope}, controller = $controller(attrDoTAController, l);
+              //untested controller-as attr or as syntax
               if (attrs.controllerAs || asPos > 0) {
-                NewScope[attrs.controllerAs || attrNgController.substr(asPos + 4).trim()] = controller;
+                NewScope[attrs.controllerAs || attrDoTAController.substr(asPos + 4).trim()] = controller;
               }
-              elem[0].removeAttribute('ng-controller');
               elem.data('$ngControllerController', controller);
               elem.children().data('$ngControllerController', controller);
               console.log('new controller created', attrDoTARender);
@@ -465,10 +450,9 @@
               while (Watchers.length) {
                 Watchers.pop()();
               }
-              forEachArray(rawElem.querySelectorAll('[ng-bind]'), function(partial) {
+              forEachArray(rawElem.querySelectorAll('[dota-bind]'), function(partial) {
                 //override ng-bind
-                var bindExpr = partial.getAttribute('ng-bind');
-                partial.removeAttribute('ng-bind');
+                var bindExpr = partial.getAttribute('dota-bind');
 
                 if (BindValues[bindExpr]) {
                   partial.innerHTML = BindValues[bindExpr];

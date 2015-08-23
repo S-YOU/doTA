@@ -432,7 +432,7 @@ var doTA = (function() {'use strict';
         }
         posA2 += 2;
       } else {
-        throw console.error('tag id not found', [posA1, posA1, chunkA, chunkB]);
+        throw console.error('id not found', [posA1, posA1, chunkA, chunkB]);
       }
     } else {
       //first char is always space
@@ -685,7 +685,7 @@ var doTA = (function() {'use strict';
       //open tag with attributes
       openTag: function(tagName, attr, selfClosing) {
         // debug && console.log('openTag', [tagName, attr]);
-        var interpolatedAttr = {}, customId, tagId, noValAttr = '';
+        var parsedAttr = {}, customId, tagId, noValAttr = '';
         var attrName, attrVal, attrSkip, oneTimeBinding;
 
         //skip parsing ng-if, ng-repeat, ng-class with, dota
@@ -822,39 +822,72 @@ var doTA = (function() {'use strict';
             attr['else'] = void 0;
           }
 
+          //remove +''+ from class, for unnecessary string concat
+          if (attr.class) {
+            parsedAttr.class = interpolate(attr.class);
+            attr.class = void 0;
+          }
+
           if (attr['ng-class']) {
-            var ngScopedClass = attachScope(attr['ng-class']), match;
-            interpolatedAttr.class = (attr.class ? interpolate(attr.class) : '');
+            var match;
+            var ngScopedClass = attachScope(attr['ng-class']);
+            parsedAttr.class = parsedAttr.class || '';
             while((match = ngClassRegex.exec(ngScopedClass)) !== null) {
-              interpolatedAttr.class +=
+              parsedAttr.class +=
                 ("'+(" + match[2] + '?' +
-                  "'" + (interpolatedAttr.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
+                  "'" + (parsedAttr.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
                   "':'')+'");
             }
             attr['ng-class'] = void 0;
           }
 
           if (attr['ng-show']) {
-            interpolatedAttr.class = (interpolatedAttr.class || attr.class || '');
-            interpolatedAttr.class += "'+(" + attachScope(attr['ng-show']) +
-              "?'':'" + (interpolatedAttr.class ? ' ' : '') + "ng-hide')+'";
+            parsedAttr.class = parsedAttr.class || '';
+            parsedAttr.class += "'+(" + attachScope(attr['ng-show']) +
+              "?'':'" + (parsedAttr.class ? ' ' : '') + "ng-hide')+'";
             attr['ng-show'] = void 0;
           }
 
           if (attr['ng-hide']) {
-            interpolatedAttr.class = (interpolatedAttr.class || attr.class || '');
-            interpolatedAttr.class += "'+(" + attachScope(attr['ng-hide']) +
-              "?'" + (interpolatedAttr.class ? ' ' : '') + "ng-hide':'')+'";
+            parsedAttr.class = parsedAttr.class || '';
+            parsedAttr.class += "'+(" + attachScope(attr['ng-hide']) +
+              "?'" + (parsedAttr.class ? ' ' : '') + "ng-hide':'')+'";
             attr['ng-hide'] = void 0;
           }
 
-          //remove +''+ from class, for unnecessary string concat
-          if (interpolatedAttr.class) {
-            interpolatedAttr.class = interpolatedAttr.class.replace(/\+''\+/g, '+');
-            attr.class = void 0;
-          } else if (attr.class) {
-            interpolatedAttr.class = interpolate(attr.class);
-            attr.class = void 0;
+          if (options.model && attr['ng-model']) {
+            if (attr['ng-model'].indexOf('$index') >= 0) {
+              parsedAttr['dota-model'] =
+                attr['ng-model'].replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
+            } else {
+              parsedAttr['dota-model'] = attr['ng-model'];
+            }
+            attr['ng-model'] = void 0;
+          }
+
+          if (options.bind && attr['ng-bind']) {
+            if (attr['ng-bind'].indexOf('$index') >= 0) {
+              parsedAttr['dota-bind'] =
+                attr['ng-bind'].replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
+            } else {
+              parsedAttr['dota-bind'] = attr['ng-bind'];
+            }
+            attr['ng-bind'] = void 0;
+          }
+
+          if (attr['ng-value']) {
+            parsedAttr.value = "'+(" + attachScope(attr['ng-value']) + ")+'";
+            attr['ng-value'] = void 0;
+          }
+
+          if (attr['ng-controller']) {
+            parsedAttr['dota-controller'] = attr['ng-controller'];
+            attr['ng-controller'] = void 0;
+          }
+
+          //some cleanup
+          if (parsedAttr.class) {
+            parsedAttr.class = parsedAttr.class.replace(/\+''\+/g, '+');
           }
 
           // expand interpolations on attributes, and some more
@@ -872,9 +905,9 @@ var doTA = (function() {'use strict';
 
               //convert ng-events to dota-events, to be bind later with native events
               } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
-                //adding attr "de" for querySelectorAll in ngDoTA
-                interpolatedAttr.class = interpolatedAttr.class ? 'de ' + interpolatedAttr.class : 'de';
-                // interpolatedAttr.de = 1;
+                //add class 'de' for one time querying
+                parsedAttr.class = parsedAttr.class ? 'de ' + parsedAttr.class : 'de';
+                // parsedAttr.de = 1;
                 x = 'de-' + attrName;
 
               } else if (noValAttrRegex.test(attrName)) {
@@ -882,10 +915,6 @@ var doTA = (function() {'use strict';
                 //noValAttr will attach later
                 continue;
 
-              //ng-value
-              } else if (attrName === 'value') {
-                interpolatedAttr.value = "'+(" + attachScope(attrVal) + ")+'";
-                continue;
               }
             }
 
@@ -893,33 +922,19 @@ var doTA = (function() {'use strict';
             // only way to acccess is to use $index like "data[$index]"
             // instead of "item" as in "item in data"
             if (attrVal.indexOf('$index') >= 0) {
-              //console.log([val], LevelMap[level]);
-              //for(var j = level; j >= 0; j--) {
-              //  if (LevelVarMap[j]) {
-                  interpolatedAttr[x] = interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
-              //    break;
-              //  }
-              //}
+              parsedAttr[x] = interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
             } else {
-              interpolatedAttr[x] = interpolate(attrVal);
+              parsedAttr[x] = interpolate(attrVal);
             }
           }
 
         // pass all attributes to angular, except interpolation and $index
         } else {
           for (x in attr) {
-            //or just do use escapeSingleQuote
-
             if (attr[x].indexOf('$index') >= 0) {
-              //console.log([val], LevelMap[level]);
-              //for(var j = level; j >= 0; j--) {
-              //  if (LevelVarMap[j]) {
-                  interpolatedAttr[x] = interpolate(attr[x]).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
-              //    break;
-              //  }
-              //}
+              parsedAttr[x] = interpolate(attr[x]).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
             } else {
-              interpolatedAttr[x] = interpolate(attr[x]);
+              parsedAttr[x] = interpolate(attr[x]);
             }
           }
         }
@@ -929,16 +944,16 @@ var doTA = (function() {'use strict';
 
         //make id attr come before anything
         if (customId || watchDiff) {
-          tagId = idHash[uniqueId + '.' + level] = interpolatedAttr.id || ("'+N+++'." + uniqueId);
+          tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ("'+N+++'." + uniqueId);
           FnText += ' id="' + tagId + '"';
-          if (interpolatedAttr.id) {
-            interpolatedAttr.id = void 0;
+          if (parsedAttr.id) {
+            parsedAttr.id = void 0;
           }
         }
 
         //write back attributes
-        for(var k in interpolatedAttr) {
-          FnText += " " + k + '="' + interpolatedAttr[k] + '"';
+        for(var k in parsedAttr) {
+          FnText += " " + k + '="' + parsedAttr[k] + '"';
         }
 
         //attach boolean attributes at last
