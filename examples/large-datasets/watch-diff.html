@@ -19,9 +19,10 @@
 		Rendering Large Datasets With AngularJS
 	</h1>
 
+<div dota-render=3 model=1 inline=1 event=1 loose=0 watch-diff="[vm.grid,vm.form.filter]" diff-level=2>
 	<form>
 		<strong>Filter Data</strong>:
-		<input type="text" ng-model="vm.form.filter" />
+		<input type="text" ng-model="vm.form.filter" throtte=15 />
 
 		<!--
 			If the user is filtering the data, we want to offer some insight into
@@ -38,6 +39,7 @@
 		<a ng-if="vm.grid.length" ng-click="vm.unmountGrid()">Unmount Grid</a>
 		<a ng-if="! vm.grid.length" ng-click="vm.remountGrid()">Remount Grid</a>
 	</form>
+</div>
 
 <div dota-render=2 inline=1 strip=1 watch="vm.grid.length"
   watch-diff="vm.form.filter" loose=0 event=0 debug=0>
@@ -59,6 +61,8 @@
 
 	<!-- Load scripts. -->
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+  <!--<script src="https://rawgit.com/S-YOU/angular-defer/master/dist/angular-defer.min.js"></script>-->
+  <!--<script src="../../../angular-defer/dist/angular-defer.js"></script>-->
   <script type="text/javascript" src="../../dist/ngDoTA.min.js"></script>
 	<script type="text/javascript">
 
@@ -225,6 +229,8 @@
 
 			}
 		);
+
+    // angular.bootstrap(document, ["Demo"]);
 
 	</script>
 

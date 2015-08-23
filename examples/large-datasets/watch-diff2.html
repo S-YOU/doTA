@@ -19,7 +19,8 @@
     Rendering Large Datasets With AngularJS
   </h1>
 
-  <form>
+<div dota-render=4 model=1 inline=1 event=1 loose=0 watch-diff="[vm.grid,vm.form.filter]" diff-level=2>
+	<form>
     <strong>Filter Data</strong>:
     <input type="text" ng-model="vm.form.filter" />
 
@@ -38,6 +39,8 @@
     <a ng-if="vm.grid.length" ng-click="vm.unmountGrid()">Unmount Grid</a>
     <a ng-if="! vm.grid.length" ng-click="vm.remountGrid()">Remount Grid</a>
   </form>
+</div>
+
 <!--
 <div dota-render=3 inline=1 debug=0 compile-all=1>
   <div>
@@ -50,7 +53,7 @@
 </div>-->
 
 <!--bind=1 model=1 event=1 -->
-<div dota-render=2 strip=1 inline=1 watch="vm.grid.length" watch-diff="vm.form.filter" diff-level=2 event=0 loose=0 debug=0>
+<div dota-render=2 strip=1 inline=1 watch="vm.grid.length" watch-diff="vm.form.filter" diff-level=2 event=1 loose=0 debug=0>
   <table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
     <tr ng-repeat="row in vm.grid">
       <td class="test">
@@ -62,7 +65,7 @@
         ng-class="{ 'hidden': item.isHiddenByFilter }">
           <span ng-if="!item.isHiddenByFilter">{{ item.value }}</span>
           <span ng-if="item.isHiddenByFilter">
-            <input value="test" ng-model="vm.value" ng-blur="vm.blur($event)" ng-value="item.value">
+            <input ng-blur="vm.blur($event)" ng-value="item.value">
           </span>
         </td>
     </tr>
@@ -90,6 +93,8 @@
 
   <!-- Load scripts. -->
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+  <!--<script src="https://rawgit.com/S-YOU/angular-defer/master/dist/angular-defer.min.js"></script>-->
+  <!--<script src="../../../angular-defer/dist/angular-defer.js"></script>-->
   <script type="text/javascript" src="../../dist/ngDoTA.min.js"></script>
   <script type="text/javascript">
 

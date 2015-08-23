@@ -25,6 +25,7 @@ table.filtered td.item.hidden {
 }
 
 a[ ng-click ],
+a[ de-click ],
 a[ data-reactid ] {
 	color: red ;
 	cursor: pointer ;

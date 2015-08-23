@@ -411,42 +411,57 @@ var doTA = (function() {'use strict';
   }
 
   // parse attributes from html open tag and patch DOM when different
-  function parsePatchAttr(chunk1, chunk2, elem) {
+  function parsePatchAttr(chunkA, chunkB, elem) {
     var tagId;
-    var pos1 = chunk1.indexOf(' ');
-    var eqPos1, eqPos2;
-    var valEndPos1, valEndPos2, posDiff = 0;
+    var posA1, posA2, posB1, posB2;
+    var posDiff = 0;
     var attrName, attrVal1, attrVal2;
-    var len1 = chunk1.length;
-    // console.log('chunks', [chunk1, chunk2]);
-    if (pos1 !== -1) {
-      while (++pos1 < len1) {
-        eqPos1 = chunk1.indexOf('="', pos1);
-        if (eqPos1 < 0) break;
-        attrName = chunk1.slice(pos1, eqPos1);
+    // var len1 = chunk1.length;
+    // console.log('chunks', [chunkA, chunkB]);
 
-        valEndPos1 = chunk1.indexOf('"', eqPos1 + 2);
-        attrVal1 =  chunk1.slice(eqPos1 + 2, valEndPos1);
-        if (!elem && attrName === 'id') {
-          tagId = attrVal1;
-          elem = document.getElementById(tagId);
-          if (!elem) {
-            return console.log('tag not found', [tagId]);
-          }
-        } else {
-          eqPos2 = eqPos1 + posDiff;
-          valEndPos2 = chunk2.indexOf('"', eqPos2 + 2);
-          attrVal2 =  chunk2.slice(eqPos2 + 2, valEndPos2);
-          posDiff = valEndPos2 - valEndPos1;
-          if (attrVal1 !== attrVal2) {
-            // console.log('setAttribute', [attrName, attrVal1, attrVal2], [chunk1, chunk2])
-            elem.setAttribute(attrName, attrVal2);
-          }
+    //extract id to tag, if no elem specified
+    if (!elem) {
+      posA1 = chunkA.indexOf(' id="', posA1);
+      if (posA1 >= 0) {
+        posA1 += 5;
+        posA2 = chunkA.indexOf('"', posA1);
+        tagId = chunkA.slice(posA1, posA2);
+        elem = document.getElementById(tagId);
+        if (!elem) {
+          throw console.error('tag not found', [posA1, posA2, tagId, elem, chunkA, chunkB]);
         }
-        pos1 = valEndPos1 + 1;
-
-      } //while
+        posA2 += 2;
+      } else {
+        throw console.error('tag id not found', [posA1, posA1, chunkA, chunkB]);
+      }
+    } else {
+      //first char is always space
+      posA2 = posB2 = 1;
     }
+
+    for(;;) {
+      //attr name
+      posA1 = chunkA.indexOf('="', posA2);
+      if (posA1 < 0) break;
+      attrName = chunkA.slice(posA2, posA1);
+
+      //attr values
+      posA2 = chunkA.indexOf('"', posA1 + 2);
+      attrVal1 =  chunkA.slice(posA1 + 2, posA2);
+
+      posB1 = posA1 + posDiff;
+      posB2 = chunkB.indexOf('"', posB1 + 2);
+      attrVal2 =  chunkB.slice(posB1 + 2, posB2);
+
+      if (attrVal1 !== attrVal2) {
+        // console.log('setAttribute', [attrName, attrVal1, attrVal2], [chunk1, chunk2])
+        elem.setAttribute(attrName, attrVal2);
+        posDiff = posB2 - posA2;
+      }
+
+      posA2 += 2;
+    }
+
     return tagId;
   }
 
