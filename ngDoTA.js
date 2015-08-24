@@ -360,10 +360,10 @@
               //$destroy previously created scope or will leak.
               if (scopes[attrDoTARender]) {
                 scopes[attrDoTARender].$destroy();
-                console.log('newScope $destroy', attrDoTARender, NewScope);
+                // /**/console.log('newScope $destroy', attrDoTARender, NewScope);
               }
               NewScope = scopes[attrDoTARender] = $scope.$new();
-              console.log('newScope created', attrDoTARender, NewScope);
+              // /**/console.log('newScope created', attrDoTARender, NewScope);
             } else {
               NewScope = $scope;
             }
@@ -717,10 +717,12 @@
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
+            var attrCompile = makeBool(attrs.compile, 1);
+
             console.log('dotaInclude', attrs.dotaInclude);
             $http.get(attrs.dotaInclude, {cache: $templateCache}).success(function (data) {
               elem.html(data);
-              if (attrs.compile !== 'false') {
+              if (attrCompile !== 0) {
                 $compile(elem.contents())(scope);
               }
             });
@@ -735,12 +737,15 @@
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
+            var attrCompile = makeBool(attrs.compile, 1);
+
             scope.$watch(attrs.dotaTemplate, function(newVal, oldVal) {
               if (newVal) {
                 console.log('dotaTemplate', newVal);
                 $http.get(newVal, {cache: $templateCache}).success(function (data) {
                   elem.html(data);
-                  if (attrs.compile !== 'false') {
+                  if (attrCompile !== 0) {
+                    console.log('dotaTemplate $compile', newVal, data);
                     $compile(elem.contents())(scope);
                   }
                 });
