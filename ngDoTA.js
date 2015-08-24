@@ -471,17 +471,21 @@
               forEachArray(rawElem.querySelectorAll('[dota-bind]'), function(partial) {
                 //override ng-bind
                 var bindExpr = partial.getAttribute('dota-bind');
+                var oneTimePos = bindExpr.indexOf('::');
+                if (oneTimePos >= 0) {
+                  bindExpr = bindExpr.slice(oneTimePos + 2);
+                }
 
                 if (BindValues[bindExpr]) {
                   partial.innerHTML = BindValues[bindExpr];
                 }
-                Watchers.push(scope.$watchCollection(bindExpr, function(newVal, oldVal){
-                  if(newVal !== oldVal) {
-                    console.log(attrDoTARender, 'watch before bindExpr', newVal);
-                    partial[textContent] = BindValues[bindExpr] = newVal || '';
-                    console.log(attrDoTARender, 'watch after render');
-                  }
-                }));
+                var oneTimeExp = scope.$watchCollection(bindExpr, function(newVal, oldVal){
+                  if (newVal && oneTimePos >= 0) { oneTimeExp(); }
+                  console.log(attrDoTARender, 'watch before bindExpr', [newVal, oldVal]);
+                  partial[textContent] = BindValues[bindExpr] = newVal || '';
+                  console.log(attrDoTARender, 'watch after render');
+                });
+                Watchers.push(oneTimeExp);
               });
             }
 
