@@ -388,8 +388,13 @@
             // watch and re-render the whole template when change
             if(attrWatch) {
               console.log(attrDoTARender, 'registering watch for', attrWatch);
-              NewScope.$watchCollection(attrWatch, function(newVal, oldVal){
-                if(newVal !== oldVal && doTA.C[attrDoTARender]) {
+              var oneTimePos = attrWatch.indexOf('::');
+              if (oneTimePos >= 0) {
+                attrWatch = attrWatch.slice(oneTimePos + 2);
+              }
+              var oneTimeExp = NewScope.$watchCollection(attrWatch, function(newVal, oldVal){
+                if(newVal !== undefined && newVal !== oldVal && doTA.C[attrDoTARender]) {
+                  if (oneTimePos >= 0) oneTimeExp();
                   console.log(attrDoTARender, 'watch before render');
                   render(doTA.C[attrDoTARender]);
                   console.log(attrDoTARender, 'watch after render');
