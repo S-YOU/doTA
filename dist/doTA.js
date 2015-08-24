@@ -880,11 +880,6 @@ var doTA = (function() {'use strict';
             attr['ng-value'] = void 0;
           }
 
-          if (attr['ng-controller']) {
-            parsedAttr['dota-controller'] = attr['ng-controller'];
-            attr['ng-controller'] = void 0;
-          }
-
           //some cleanup
           if (parsedAttr.class) {
             parsedAttr.class = parsedAttr.class.replace(/\+''\+/g, '+');

@@ -283,6 +283,8 @@
 
     .directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', '$controller',
       function(doTA, $http, $filter, $templateCache, $compile, $controller) {
+      var scopes = {}; //scope management
+
       return {
         restrict: 'A',
         priority: 10000,
@@ -290,14 +292,14 @@
         controller: angular.noop,
         link: angular.noop,
         compile: function() {
-          var Watchers = [], BindValues = {}; //New scope flag, new Scope
+          var Watchers = [], BindValues = {};
 
           return function($scope, elem, attrs) {
             //used attributes, good for minification with closure compiler;
             var attrCacheDOM = attrs.cacheDom;
             var attrDoTARender = attrs.dotaRender;
             var attrScope = attrs.scope;
-            var attrDoTAController = attrs.dotaController;
+            var attrNgController = attrs.ngController;
             var attrLoose = attrs.loose;
             var attrEvent = attrs.event;
             var attrDebug = attrs.debug;
@@ -312,6 +314,7 @@
             var attrInline = attrs.inline;
             var attrWatchDiff = attrs.watchDiff;
             var origAttrMap = attrs.$attr;
+            var params = {};
             var NewScope;
 
             attrs.loose = makeBool(attrLoose, 1); //if set, falsy => ''
@@ -320,7 +323,11 @@
             attrDebug = attrs.debug = makeBool(attrDebug, 0);
             attrEvent = attrs.event = makeBool(attrEvent, 1); //ng-click to native click
             attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
-            var params = {};
+
+            //to prevent angular binding this
+            if (attrNgController) {
+              elem[0].removeAttribute('ng-controller');
+            }
 
             if (attrCacheDOM && doTA.D[attrDoTARender]) {
               // alert( doTA.D[attrDoTARender].innerHTML);
@@ -347,25 +354,31 @@
             }
 
             //create new scope if scope=1 or ng-controller is specified
-            if (attrScope || attrDoTAController) {
-              console.log('scope', attrScope);
-              NewScope = $scope.$new();
+            if (attrScope || attrNgController) {
+              console.log('scope', attrScope, elem, elem.scope());
+
+              //$destroy previously created scope or will leak.
+              if (scopes[attrDoTARender]) {
+                scopes[attrDoTARender].$destroy();
+                console.log('newScope $destroy', attrDoTARender, NewScope);
+              }
+              NewScope = scopes[attrDoTARender] = $scope.$new();
               console.log('newScope created', attrDoTARender, NewScope);
             } else {
               NewScope = $scope;
             }
 
             //attach ng-controller, and remove attr to prevent angular running again
-            if (attrDoTAController) {
-              var asPos = attrDoTAController.indexOf(' as ');
+            if (attrNgController) {
+              var asPos = attrNgController.indexOf(' as ');
               if (asPos > 0) {
-                attrDoTAController = attrDoTAController.substr(0, asPos).trim();
+                attrNgController = attrNgController.substr(0, asPos).trim();
               }
-              console.log('new controller', attrDoTAController);
-              var l = {$scope: NewScope}, controller = $controller(attrDoTAController, l);
+              console.log('new controller', attrNgController);
+              var l = {$scope: NewScope}, controller = $controller(attrNgController, l);
               //untested controller-as attr or as syntax
               if (attrs.controllerAs || asPos > 0) {
-                NewScope[attrs.controllerAs || attrDoTAController.substr(asPos + 4).trim()] = controller;
+                NewScope[attrs.controllerAs || attrNgController.substr(asPos + 4).trim()] = controller;
               }
               elem.data('$ngControllerController', controller);
               elem.children().data('$ngControllerController', controller);
