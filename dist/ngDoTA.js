@@ -1349,7 +1349,30 @@ if (typeof module !== "undefined" && module.exports) {
     })
   }
 
+  function eventHandlerFn(scope, expr) {
+    return function(evt){
+      if (ie8) {
+        //make $event.target always available
+        evt.target = evt.srcElement || document;
+        evt.returnValue = false;
+        evt.cancelBubble = true;
+      } else {
+        evt.preventDefault();
+        evt.stopPropagation();
+      }
 
+      // if (scope.$evalAsync) {
+        //isedom: disallow, so no $target here
+        scope.$evalAsync(expr, {$event: evt});
+      // } else {
+      //   scope.$event = evt;
+      //   // var locals = {$event: evt};
+      //   var fn = new Function('with(this){' + expr + '}');
+      //   console.log('eventHandlerFn', fn, scope);
+      //   fn.apply(scope);
+      // }
+    };
+  }
 
   function addEventUnknown(partial, scope, attrs) {
     if (partial.de) { return; } //only attach events once
@@ -1362,22 +1385,8 @@ if (typeof module !== "undefined" && module.exports) {
       attrVal = attributes[i].value;
       if (attrName.substr(0, 3) === 'de-') {
         //remove attribute, so never bind again
-        partial[listenerName]((ie8 ? 'on' : '') + attrName.substr(3), (function(target, attrVal){
-          return function(evt){
-            if (ie8) {
-              //make $event.target always available
-              evt.target = evt.srcElement || document;
-              evt.returnValue = false;
-              evt.cancelBubble = true;
-            } else {
-              evt.preventDefault();
-              evt.stopPropagation();
-            }
-
-            //isedom: disallow, so no $target here
-            scope.$evalAsync(attrVal, {$event: evt});
-          };
-        })(partial, attrVal));
+        partial[listenerName]((ie8 ? 'on' : '') + attrName.substr(3),
+          eventHandlerFn(scope, attrVal));
         // console.log('event added', uniqueId, attrName);
       }
     }
@@ -1396,31 +1405,17 @@ if (typeof module !== "undefined" && module.exports) {
       attrVal = partial.getAttribute(attrName);
       // console.log(i, [attrVal, events[i]])
       if (!attrVal) { continue; }
-      partial[listenerName]((ie8 ? 'on' : '') + events[i], (function(target, attrVal){
-        return function(evt){
-          if (ie8) {
-            //make $event.target always available
-            evt.target = evt.srcElement || document;
-            evt.returnValue = false;
-            evt.cancelBubble = true;
-          } else {
-            evt.preventDefault();
-            evt.stopPropagation();
-          }
-
-          //isedom: disallow, so no $target here
-          scope.$evalAsync(attrVal, {$event: evt});
-        };
-      })(partial, attrVal));
+      partial[listenerName]((ie8 ? 'on' : '') + events[i],
+        eventHandlerFn(scope, attrVal));
     }
   }
 
   function addEvents(elem, scope, attrs) {
     //getElementsByClassName is faster than querySelectorAll
     //http://jsperf.com/queryselectorall-vs-getelementsbytagname/20
-    console.time('find-nodes:');
+    // console.time('find-nodes:');
     var elements = ie8 ? elem.querySelectorAll('.de') : elem.getElementsByClassName('de');
-    console.timeEnd('find-nodes:');
+    // console.timeEnd('find-nodes:');
     if (typeof attrs.event === 'number') {
       for (var i = 0, l = elements.length; i < l; i++) {
         addEventUnknown(elements[i], scope, attrs);
