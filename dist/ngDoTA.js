@@ -354,8 +354,8 @@ var doTA = (function() {'use strict';
               // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
             }
           } else {
-            /**/console.error('elem not found', [tagId1, tagId2], [part1, part2]);
-            throw "no elem found";
+            console.error('elem not found', [tagId1, tagId2], [part1, part2]);
+            return;
           }
         } else {
           //clear node for textNode
@@ -381,7 +381,8 @@ var doTA = (function() {'use strict';
           if (!elem1) {
             elem1 = document.getElementById(tagId1);
             if (!elem1) {
-              /** */console.error('node not found', [tagId1, tagId2], [part1, part2], [html1.substr(pos1, 15), html2.substr(pos2, 15)], [html1, html2]);
+              console.error('node not found', [tagId1, tagId2], [part1, part2], [html1.substr(pos1, 15), html2.substr(pos2, 15)], [html1, html2]);
+              return;
             }
           }
           // console.log('part1,2', [part1, part2]);
@@ -403,7 +404,8 @@ var doTA = (function() {'use strict';
           }
         }
       } else {
-        throw "different Id - not supported for now!";
+        console.error("different Id - not supported for now!", [tagId1, tagId2]);
+        return;
       }
 
     } //infinite loop
