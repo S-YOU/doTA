@@ -648,12 +648,12 @@ var doTA = (function() {'use strict';
         //ToDo: check this line later
         var v = splitFilters($1, pos);
         var val = attachScope(v[0]);
-        var prevColonPos = 0, colonPos;
+        var prevColonPos, colonPos;
         var filter;
 
         //parse each filters
         for(var i = 1; i < v.length; i++) {
-          filter = v[i];
+          filter = v[i], prevColonPos = 0;
 
           colonPos = filter.indexOf(':');
           //filter with params

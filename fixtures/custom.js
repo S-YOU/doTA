@@ -21,12 +21,14 @@ module.exports = {
   'ngShowHideWithClass': '<div ng-repeat="x in data"><div class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old">FALSE</div></div>',
   'ngShowHideWithNgClass': '<div ng-repeat="x in data"><div ng-class="{shiny:1}" class="new" ng-show="x">TRUE</div><div ng-hide="x" class="old" ng-class="{darky:0}">FALSE</div></div>',
 
+  'complexFilters': '<div>{{car.incharge_stock|filterBy:"purchaser"|short|cut:0:10}}</div>',
+
   // 'else': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div else>else</div></div>',
   // 'elif': '<div ng-repeat="x in data"><div ng-if="x===1">1</div><div elif="x===2">2</div><div else>else</div></div>',
 
   'ngValue': '<div ng-repeat="x in data"><input ng-value="x"></div>',
   'diffLvl2': "<table width=\"100%\" cellspacing=\"2\" ng-class=\"{ 'filtered': vm.form.filter }\">\n    <tr ng-repeat=\"row in vm.grid\">\n      <td class=\"test\">\n        {{ row.id }}\n      </td>\n      <td\n        ng-repeat=\"item in row.items\"\n        class=\"item\"\n        ng-class=\"{ 'hidden': item.isHiddenByFilter }\">\n        <span ng-if=\"item.isHiddenByFilter\">0</span>\n        <span ng-if=\"!item.isHiddenByFilter\" skip=200>{{ item.value }}\n          <span ng-if=\"item.isHiddenByFilter\">0</span>\n          <span ng-repeat=\"x in vm.someArr\"></span>\n          <span ng-if=\"item.isHiddenByFilter\">0</span>\n          <span ng-repeat=\"k,v in vm.someObj\"></span>\n          <span ng-if=\"item.isHiddenByFilter\">0</span>\n          <span ng-repeat=\"i in 1:10\"></span>\n        </span>\n        <span ng-if=\"item.isHiddenByFilter\"><input value=\"test\" ng-model=\"vm.value\" ng-blur=\"vm.blur($event)\" ng-value=\"item.value\"></span>\n        <span ng-if=\"item.isHiddenByFilter\">1</span>\n        <span ng-if=\"item.isHiddenByFilter\" ng-bind=\"vm.value\">2</span>\n        </td>\n    </tr>\n  </table>"
-  
+
   // `<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
   //   <tr ng-repeat="row in vm.grid">
   //     <td class="test">
