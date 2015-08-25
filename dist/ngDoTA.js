@@ -332,30 +332,30 @@ var doTA = (function() {'use strict';
         //attr really different
         if (part1 !== part2) {
           elem1 = document.getElementById(tagId1);
-          //nodes to be inserted or deleted
-          if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
-            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
-            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+          if (elem1) {
+            //nodes to be inserted or deleted
+            if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
 
-            // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
-            // console.warn('replaceChild', [tagId2, tagId1], [
-            //   html2.substring(tagStartPos2, getOuterHTMLEnd(html2, tagStartPos2)),
-            //   html1.substring(tagStartPos1, getOuterHTMLEnd(html1, pos1))]);
+              // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
+              // console.warn('replaceChild', [tagId2, tagId1], [
+              //   html2.substring(tagStartPos2, getOuterHTMLEnd(html2, tagStartPos2)),
+              //   html1.substring(tagStartPos1, getOuterHTMLEnd(html1, pos1))]);
 
-            elem1.parentNode.replaceChild(newNode.firstChild, elem1);
+              elem1.parentNode.replaceChild(newNode.firstChild, elem1);
 
-            LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
 
-          //only attribute changes
-          } else {
-            if (elem1) {
+            //only attribute changes
+            } else {
               parsePatchAttr(part1, part2, elem1);
               // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
-            } else {
-              /**/console.error('elem not found', [tagId1, tagId2], [part1, part2]);
-              throw "no elem found";
             }
+          } else {
+            /**/console.error('elem not found', [tagId1, tagId2], [part1, part2]);
+            throw "no elem found";
           }
         } else {
           //clear node for textNode
