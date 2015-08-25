@@ -480,11 +480,7 @@ var doTA = (function() {'use strict';
   }
 
   // split filters into array, take care of | and || as different
-  function splitFilters(input) {
-    var pos = input.indexOf('|');
-    if (pos === -1) {
-      return [input];
-    }
+  function splitFilters(input, pos) {
     var prevPos = 0;
     var ret = [];
     while (pos !== -1) {
@@ -650,7 +646,7 @@ var doTA = (function() {'use strict';
         return attachScope($1);
       } else {
         //ToDo: check this line later
-        var v = splitFilters($1);
+        var v = splitFilters($1, pos);
         var val = attachScope(v[0]);
         var prevColonPos = 0, colonPos;
         var filter;
