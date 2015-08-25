@@ -27,20 +27,25 @@
     }
   }
 
-  //something like $eval to read value from nested objects with dots
+  //retrieve nested value from object, support a.b or a[b]
   function resolveObject(path, obj) {
-    return path.indexOf('.') >= 0 ? path.split('.').reduce(function (prev, curr) {
-      return prev ? prev[curr] : undefined;
-    }, obj) : obj[path];
+    if (path.indexOf('.') >= 0 || path.indexOf('[') >= 0) {
+      var chunks = path.replace(/[\]]$/, '').split(/[.\[\]"']+/g);
+      return chunks.reduce(function (prev, curr) {
+        return prev ? prev[curr] : undefined;
+      }, obj);
+    } else {
+      return obj[path];
+    }
   }
 
-  //something like $parse
+  //get nested value as assignable fn like $parse.assign
   function parseObject(path, obj) {
-    if (path.indexOf('.') >= 0) {
-      var paths = path.split('.');
-      path = paths.splice(-1, 1)[0];
-      // console.log('path, last', paths, last)
-      obj = paths.reduce(function (prev, curr) {
+    if (path.indexOf('.') >= 0 || path.indexOf('[') >= 0) {
+      var chunks = path.replace(/[\]]$/, '').split(/[.\[\]"']+/g);
+      path = chunks.splice(-1, 1)[0];
+      // console.log('path, last', chunks, path)
+      obj = chunks.reduce(function (prev, curr) {
         // console.log('parseObject', [prev, curr])
         if (!prev[curr]) {
           prev[curr] = {};
@@ -235,7 +240,7 @@
         ((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
       var curValue = resolveObject(modelName, scope) || '';
 
-      // console.log('partial', [partial.tagName, partial.type])
+      console.log('partial', [partial.tagName, partial.type, curValue]);
       if (bindProp) {
         //set true or false on dom properties
         partial[bindProp] = partial.value === curValue;

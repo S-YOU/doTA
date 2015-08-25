@@ -14,10 +14,11 @@
 
     <div dota-render=1 inline=1 watch-diff=data model=1 bind=1 event=1>
       <button ng-click="refresh()">Refresh Data</button>
-      <div>Interpolate: <span>{{[name,name2,name3,select,checkbox1,checkbox2,radio]}}</span></div>
-      <div>ngBind: <span ng-bind="[name,name2,name3,select,checkbox1,checkbox2,radio]"></span></div>
+      <div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]}}</span></div>
+      <div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]"></span></div>
       <input ng-model="name" throttle="15">
       <input ng-model="name2" ng-value="name3">
+      <input ng-model="params.x.y.z">
       <select ng-model="select">
         <option value="">default</option>
         <option value="1st">FIRST</option>
@@ -56,7 +57,7 @@
   </div>
 
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
-  <!--<script src="./angular.min.js"></script>-->
+  <!--<script src="../../../angular-defer/dist/angular-defer.js"></script>-->
   <script src="../../dist/ngDoTA.min.js"></script>
   <script>
   angular.module('fasterAngular', ['doTA']).
@@ -75,6 +76,7 @@
         // console.timeEnd('data refresh');
       }
       $scope.refresh();
+      $scope.params = {x: {y: {z: 1}}};
       $scope.name = "test123";
       $scope.checkbox2 = "c2";
       // $scope.radio = "r1"
