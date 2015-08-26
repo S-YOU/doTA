@@ -29,6 +29,7 @@ var doTA = (function() {'use strict';
   function parseAttr(chunk, func) {
     var attr = {}, tagName;
     var pos = chunk.indexOf(' ');
+    var spPos;
     var len, attrName, attrVal;
     var valStart, valEndPos;
 
@@ -52,14 +53,13 @@ var doTA = (function() {'use strict';
           break;
         }
 
-        // uncomment this if you need no value attribute in the middle
-        // ** attribute without value (middle attribute) **
-        // var sp_pos = chunk.indexOf(' ', pos);
-        // if (sp_pos > 0 && sp_pos < eqPos) {
-        //   attr[chunk.slice(pos, sp_pos)] = "";
-        //   pos = sp_pos;
-        //   continue;
-        // }
+        // no val attr in middle
+        spPos = chunk.indexOf(' ', pos);
+        if (spPos > 0 && spPos < eqPos) {
+          attr[chunk.slice(pos, spPos)] = "";
+          pos = spPos;
+          continue;
+        }
 
         //console.log(33, [eqPos]);
         attrName = chunk.slice(pos, eqPos);
@@ -686,14 +686,12 @@ var doTA = (function() {'use strict';
         var parsedAttr = {}, customId, tagId, noValAttr = '';
         var attrName, attrVal, attrSkip, oneTimeBinding;
 
-        //skip parsing ng-if, ng-repeat, ng-class with, dota
-        // but interpolation will still be evaluated (by-design)
-        // to avoid this behavior, use ng-bind instead of {{}}
-        //  and create new scope with scope=1 in dota-render, or $watchers will never destroy.
-        if (attr['dota-pass']) {
+        //skip parsing if dota-pass is specified (interpolation will still be expanded)
+        // https://jsperf.com/hasownproperty-vs-in-vs-undefined/12
+        if (typeof attr['dota-pass'] !== 'undefined') {
           doTAPass = level; doTAContinue = 0;
         //re-enable dota parsing
-        } else if (attr['dota-continue']) {
+        } else if (typeof attr['dota-continue'] !== 'undefined') {
           doTAContinue = level;
         }
 
@@ -808,13 +806,13 @@ var doTA = (function() {'use strict';
             attr['ng-if'] = void 0;
           }
 
-          if (attr['elif'] !== void 0) {
+          if (attr['elif']) {
             FnText += indent(level, 1) + 'else if('+ attachScope(attr['elif']) +'){\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             attr['elif'] = void 0;
           }
 
-          if (attr['else'] !== void 0 && !watchDiff) {
+          if (typeof attr['else'] !== 'undefined' && !watchDiff) {
             FnText += indent(level, 1) + 'else{\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
             attr['else'] = void 0;
@@ -1230,9 +1228,9 @@ if (typeof module !== "undefined" && module.exports) {
       return src.forEach(iter);
     }
     for (var key = 0, length = src.length; key < length; key++) {
-      if (key in src) {
+      // if (key in src) {
         iter.call(ctx, src[key], key);
-      }
+      // }
     }
   }
 

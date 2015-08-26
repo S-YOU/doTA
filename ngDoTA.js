@@ -21,9 +21,9 @@
       return src.forEach(iter);
     }
     for (var key = 0, length = src.length; key < length; key++) {
-      if (key in src) {
+      // if (key in src) {
         iter.call(ctx, src[key], key);
-      }
+      // }
     }
   }
 
