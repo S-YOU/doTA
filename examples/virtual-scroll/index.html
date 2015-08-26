@@ -1,0 +1,57 @@
+<!doctype html>
+<html ng-app="app">
+<head>
+  <meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge,chrome=1">
+  <title>Virtual Scroll with doTA (1 Miliion Rows)</title>
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body ng-controller="ctrl">
+
+<div style="float:right;text-align:right;padding:5px;">
+<div>Inspired from
+  <a href="http://mleibman.github.io/SlickGrid/examples/example-optimizing-dataview.html" target="_blank">SlickGrid</a></div>
+<div>Back to <a href="../">Examples Index</a></div>
+</div>
+
+<h3>Virtual Scroll with
+  <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> (FlatDOM) - 1 Million Rows</h3>
+
+<div ng-if="!data">Generating Data...</div>
+
+<div ng-if="data">
+  <div class="grid" dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="offset" diff-level=2>
+    <div class="viewport" style="height:{{height}}px;" onscroll="virtualScroll(this)">
+      <div class="canvas" style="height:{{totalHeight}}px;">
+        <div class="row" index="{{i+offset}}" ng-repeat="i in 0:rows" ng-class="{odd:i%2,even:i%2===0}"
+          style="top:{{scrollTop+(i*cellHeight)}}px">
+          <div class="cell" ng-init="x=data[i + offset]">
+            <input type="text" value="{{x.id}}" disabled/>
+          </div>
+          <div class="cell">
+            {{x.label}}
+          </div>
+          <div class="cell">
+            <span class="percent" style="width:{{x.percent}}px;" ng-class="{green:x.percent>50,red:x.percent<30}"></span>
+          </div>
+          <div class="cell">
+            {{x.field1}}
+          </div>
+          <div class="cell">
+            {{x.field2}}
+          </div>
+          <div class="cell">
+            <input type="date" value="{{x.field3}}" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--transform:translateY-->
+
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+<script src="../../dist/ngDoTA.min.js"></script>
+<script src="scripts.js"></script>
+
+</body>
+</html>

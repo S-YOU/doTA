@@ -139,7 +139,7 @@ var doTA = (function() {'use strict';
 
   }
 
-  var events = ' change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
+  var events = ' scroll change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
   var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
   // minimal stripped down html parser
@@ -745,20 +745,20 @@ var doTA = (function() {'use strict';
               repeatSrcNew = attachFilter(repeatSrc);
             } else {
               colonPos = repeatSrc.indexOf(':');
-              if (colonPos < 0) {
+              // if (colonPos < 0) {
                 repeatSrcNew = attachScope(repeatSrc);
-              }
+              // }
             }
 
             // Range: "i in 1:10" ==> (for i = 1; i < 10; i++)
-            if (colonPos > 0) {
-              var start = repeatSrc.substr(0, colonPos), end, step;
-              var anotherColon = repeatSrc.indexOf(':', ++colonPos);
+            if (colonPos >= 0) {
+              var start = repeatSrcNew.substr(0, colonPos) || 0, end, step;
+              var anotherColon = repeatSrcNew.indexOf(':', ++colonPos);
               if (anotherColon > 0) {
-                end = repeatSrc.substring(colonPos, anotherColon);
-                step = repeatSrc.substr(anotherColon + 1);
+                end = repeatSrcNew.substring(colonPos, anotherColon);
+                step = repeatSrcNew.substr(anotherColon + 1);
               } else {
-                end = repeatSrc.substr(colonPos);
+                end = repeatSrcNew.substr(colonPos);
                 step = 1;
               }
               // console.log([start, end, step])
@@ -1339,6 +1339,7 @@ if (typeof module !== "undefined" && module.exports) {
       timeoutId = setTimeout(throttled, timeout);
     };
   }
+  doTA.throttle = throttle; //export
 
   //hide and destroy children
   function destroyChildren(elem) {

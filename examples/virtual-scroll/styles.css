@@ -1,0 +1,57 @@
+.grid {
+  width: 800px;
+  font-family: arial;
+  font-size: 12pt;
+  margin: 0;
+  padding: 0;
+}
+
+.viewport {
+  background-color: #eee;
+  border: 1px solid gray;
+  overflow: auto;
+  position:relative;
+  outline: 0;
+  margin: 0;
+}
+
+.canvas {
+  outline: 0;
+  position:relative;
+  margin: 0;
+}
+
+.row {
+  position: absolute;
+  border-bottom: 1px solid silver;
+  height: 23px;
+  margin: 0;
+}
+
+.cell, .cell input {
+  border: 0;
+  border-right: 1px dotted silver;
+  cursor: default;
+  width: 125px;
+  float: left;
+  line-height: 22px;
+  margin: 0;
+  padding: 0 0 0 2px;
+}
+
+.row.odd {
+  background: #f9f9f9;
+}
+
+.percent {
+  display: inline-block;
+  background-color: gray;
+  height: 6px;
+}
+
+.percent.green {
+  background-color: green;
+}
+.percent.red {
+  background-color: red;
+}

@@ -118,6 +118,7 @@
       timeoutId = setTimeout(throttled, timeout);
     };
   }
+  doTA.throttle = throttle; //export
 
   //hide and destroy children
   function destroyChildren(elem) {
