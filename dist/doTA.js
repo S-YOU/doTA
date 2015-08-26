@@ -508,6 +508,7 @@ var doTA = (function() {'use strict';
   // https://github.com/kangax/html-minifier/issues/63
   var noValAttrRegex = /^(?:checked|selected|disabled|readonly|multiple|required|hidden|nowrap)/;
   var $indexRegex = /\$index/g;
+  var $parent$indexRegex = /(?:\$parent\.)+\$index/g;
 
   // exported as doTA.compile
   function compileHTML(template, options) {
@@ -567,13 +568,8 @@ var doTA = (function() {'use strict';
             vv += 'S.' + matches[i];
           } else {
             if (matches[i].indexOf('$index') >= 0) {
-              //console.log([val], LevelMap[level]);
-              //for(var j = level; j >= 0; j--) {
-              //  if (LevelVarMap[j]) {
-                  vv += matches[i].replace($indexRegex, LevelVarMap[ngRepeatLevel]);
-                  //break;
-                //}
-              //}
+              //only support last level for now
+              vv += matches[i].replace($indexRegex, LevelVarMap[ngRepeatLevel]);
             } else {
               vv += matches[i];
             }
@@ -678,25 +674,49 @@ var doTA = (function() {'use strict';
       }
     }
 
+    function apply$index(attrVal) {
+      var count, tmpRepeatLevel;
+
+      if (attrVal.indexOf('$parent.$index') >= 0) {
+        tmpRepeatLevel = ngRepeatLevel;
+        attrVal = attrVal.replace($parent$indexRegex, function($0) {
+          count = $0.match(/\$parent/g).length; //may need to rewrite with indexOf
+          while (count>0) {
+            while (tmpRepeatLevel >= 0 && typeof LevelVarMap[--tmpRepeatLevel] === 'undefined') {}
+            --count;
+          }
+          return "'+" + LevelVarMap[tmpRepeatLevel] + "+'";
+        });
+      }
+      if (attrVal.indexOf('$index') >= 0) {
+        return attrVal.replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
+      }
+      return attrVal;
+    }
+
     //parse the element
     parseHTML(template, {
       //open tag with attributes
       openTag: function(tagName, attr, selfClosing) {
         // debug && console.log('openTag', [tagName, attr]);
         var parsedAttr = {}, customId, tagId, noValAttr = '';
-        var attrName, attrVal, attrSkip, oneTimeBinding;
+        var attrName, attrVal, attrSkip, oneTimeBinding, doTAPassThis;
 
         //skip parsing if dota-pass is specified (interpolation will still be expanded)
         // https://jsperf.com/hasownproperty-vs-in-vs-undefined/12
         if (typeof attr['dota-pass'] !== 'undefined') {
-          doTAPass = level; doTAContinue = 0;
+          if (attr['dota-pass'] === 'this') {
+            doTAPass = doTAPassThis = 1;
+          } else {
+            doTAPass = level; doTAContinue = 0;
+          }
         //re-enable dota parsing
         } else if (typeof attr['dota-continue'] !== 'undefined') {
           doTAContinue = level;
         }
 
         //unless dota-pass or with dota-continue
-        if (!doTAPass || doTAContinue) {
+        if (doTAPass === void 0 || doTAContinue) {
           if (diffLevel && attr.skip) {
             skipLevel = level;
             attrSkip = attr.skip;
@@ -853,8 +873,7 @@ var doTA = (function() {'use strict';
 
           if (options.model && attr['ng-model']) {
             if (attr['ng-model'].indexOf('$index') >= 0) {
-              parsedAttr['dota-model'] =
-                attr['ng-model'].replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
+              parsedAttr['dota-model'] = apply$index(attr['ng-model']);
             } else {
               parsedAttr['dota-model'] = attr['ng-model'];
             }
@@ -863,8 +882,7 @@ var doTA = (function() {'use strict';
 
           if (options.bind && attr['ng-bind']) {
             if (attr['ng-bind'].indexOf('$index') >= 0) {
-              parsedAttr['dota-bind'] =
-                attr['ng-bind'].replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
+              parsedAttr['dota-bind'] = apply$index(attr['ng-bind']);
             } else {
               parsedAttr['dota-bind'] = attr['ng-bind'];
             }
@@ -912,21 +930,17 @@ var doTA = (function() {'use strict';
             //ng-repeat loop variables are not available!
             // only way to acccess is to use $index like "data[$index]"
             // instead of "item" as in "item in data"
-            if (attrVal.indexOf('$index') >= 0) {
-              parsedAttr[x] = interpolate(attrVal).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
-            } else {
-              parsedAttr[x] = interpolate(attrVal);
-            }
+            parsedAttr[x] = apply$index(interpolate(attrVal));
           }
 
         // pass all attributes to angular, except interpolation and $index
         } else {
+          if (doTAPassThis) {
+            doTAPass = void 0;
+          }
+          //still expand interpolation even if dota-pass is set
           for (x in attr) {
-            if (attr[x].indexOf('$index') >= 0) {
-              parsedAttr[x] = interpolate(attr[x]).replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
-            } else {
-              parsedAttr[x] = interpolate(attr[x]);
-            }
+            parsedAttr[x] = apply$index(interpolate(attr[x]));;
           }
         }
 
@@ -1014,12 +1028,12 @@ var doTA = (function() {'use strict';
         //clear ng-repeat $index
         if (ngRepeatLevel === level) {
           LevelVarMap[level] = 0;
-          ngRepeatLevel = void 0;
+          while (ngRepeatLevel >=0 && typeof LevelVarMap[--ngRepeatLevel] === 'undefined') {}
         }
 
         //reset dota-pass when out of scope
-        if (doTAPass && doTAPass >= level) {
-          doTAPass = 0;
+        if (doTAPass >= level) {
+          doTAPass = void 0;
         }
       },
 
@@ -1078,7 +1092,7 @@ var doTA = (function() {'use strict';
         //clear ng-repeat $index
         if (ngRepeatLevel === level) {
           LevelVarMap[level] = 0;
-          ngRepeatLevel = void 0;
+          while (ngRepeatLevel >=0 && typeof LevelVarMap[--ngRepeatLevel] === 'undefined') {}
         }
 
         //add blank node if $watch block return nothing, mostly occur with ng-if
@@ -1092,8 +1106,8 @@ var doTA = (function() {'use strict';
         }
 
         //reset dota-pass when out of scope
-        if (doTAPass && doTAPass >= level) {
-          doTAPass = 0;
+        if (doTAPass >= level) {
+          doTAPass = void 0;
         }
       },
 
