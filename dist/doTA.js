@@ -1,4 +1,6 @@
 var doTA = (function() {'use strict';
+  var msie = typeof document !== 'undefined' && document.documentMode;
+
   /* for ie8 */
   if (!String.prototype.trim) {
     String.prototype.trim = function() {
@@ -16,6 +18,16 @@ var doTA = (function() {'use strict';
   function indent(n, x) {
     var ret = new Array(n + 2).join('    ');
     return x ? ret.slice(0, -2 * x) : ret;
+  }
+
+  function forEachArray(src, iter, ctx) {
+    if (!src) { return; }
+    if (src.forEach) {
+      return src.forEach(iter);
+    }
+    for (var key = 0, length = src.length; key < length; key++) {
+      iter.call(ctx, src[key], key);
+    }
   }
 
   // decode html entities
@@ -457,7 +469,25 @@ var doTA = (function() {'use strict';
 
       if (attrVal1 !== attrVal2) {
         // console.log('setAttribute', [attrName, attrVal1, attrVal2], [chunk1, chunk2])
-        elem.setAttribute(attrName, attrVal2);
+        if (attrName === 'value') {
+          elem[attrName] = attrVal2;
+        } else {
+          if (msie) {
+            if (attrName === 'class') {
+              elem.className = attrVal2;
+            } else if (attrName === 'style') {
+              forEachArray(attrVal2.split(';'), function(item){
+                var colonPos = item.indexOf(':');
+                // console.log('style', [item.substr(0, colonPos).trim(), item.slice(colonPos+1).trim()])
+                elem.style[item.substr(0, colonPos).trim()] = item.slice(colonPos+1).trim();
+              })
+            } else {
+              elem.setAttribute(attrName, attrVal2);
+            }
+          } else {
+            elem.setAttribute(attrName, attrVal2);
+          }
+        }
         posDiff = posB2 - posA2;
       }
 
