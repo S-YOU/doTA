@@ -18,6 +18,11 @@
 
 <div ng-if="!data">Generating Data...</div>
 
+<label>
+<input type="checkbox" ng-model="chkRIC" value=1 ng-disabled="!hasRIC" />
+<span> Use requestIdleCallback</span>
+</label>
+
 <div class="grid" dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="0" diff-level=2>
   <div class="viewport" ng-style="height:{{height}}px" onscroll="virtualScroll(this)">
     <div class="canvas" ng-style="height:{{totalHeight}}px">

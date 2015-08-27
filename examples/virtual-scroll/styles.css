@@ -72,3 +72,8 @@ input::-webkit-clear-button { display: none; }
 .percent.red {
   background-color: red;
 }
+
+label [disabled] + span {
+  color: gray;
+  text-decoration: line-through;
+}

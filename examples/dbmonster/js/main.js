@@ -110,8 +110,8 @@ function main() {
     // console.log(+new Date() - start);
     // start = +new Date();
 
-    // setTimeout(domUpdate);
-    requestAnimationFrame(domUpdate);
+    setTimeout(domUpdate);
+    // requestAnimationFrame(domUpdate);
   }
   domUpdate();
   // setInterval(domUpdate, 0)

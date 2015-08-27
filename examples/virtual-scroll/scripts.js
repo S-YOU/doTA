@@ -4,6 +4,8 @@ angular.module('app', ['doTA'])
   var maxScrollTop = window.mozRequestAnimationFrame ? 4e6 :
     document.documentMode || /Edge/.test(navigator.userAgent) ? 1e6 : 1e7;
 
+  $scope.hasRIC = !!window.requestIdleCallback;
+
   window.virtualScroll = doTA.throttle(function(elem) {
     $scope.scrollTop = elem.scrollTop;
     $scope.offset = (((elem.scrollTop * $scope.scale) / $scope.cellHeight) | 0) || 0;
@@ -12,7 +14,13 @@ angular.module('app', ['doTA'])
       $scope.offset = $scope.data.length - $scope.rows;
     }
     // console.log('offset', $scope.offset, $scope.scrollTop);
-    doTA.C[1]($scope, 0, 0, 1);
+    if ($scope.chkRIC && window.requestIdleCallback) { //Test for requestIdleCallback
+      requestIdleCallback(function(){
+        doTA.C[1]($scope, 0, 0, 1);
+      })
+    } else {
+      doTA.C[1]($scope, 0, 0, 1);
+    }
   }, 7);
 
   var random1 = makeRandom(100, function(){return Math.random().toFixed(2) * 100 | 0;});
