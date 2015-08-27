@@ -18,19 +18,20 @@
 
 <div ng-if="!data">Generating Data...</div>
 
-<div class="grid" dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="offset" diff-level=2>
-  <div class="viewport" style="height:{{height}}px;" onscroll="virtualScroll(this)">
-    <div class="canvas" style="height:{{totalHeight}}px;">
+<div class="grid" dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="0" diff-level=2>
+  <div class="viewport" ng-style="height:{{height}}px" onscroll="virtualScroll(this)">
+    <div class="canvas" ng-style="height:{{totalHeight}}px">
       <div class="row" index="{{i+offset}}" ng-repeat="i in 0:rows" ng-class="{odd:i%2,even:i%2===0}"
-        style="top:{{scrollTop+(i*cellHeight)}}px">
+        ng-style="top:{{scrollTop+(i*cellHeight)}}px">
         <div class="cell" ng-init="x=data[i + offset]">
-          <input type="text" value="{{x.id}}" disabled />
+          <input type="text" ng-value="x.id" disabled />
         </div>
         <div class="cell">
           {{x.label}}
         </div>
         <div class="cell">
-          <span class="percent" style="width:{{x.percent}}px;" ng-class="{green:x.percent>50,red:x.percent<30}"></span>
+          <span class="percent" ng-style="width:{{x.percent}}px"
+            ng-class="{green:x.percent>50,red:x.percent<30}"></span>
         </div>
         <div class="cell">
           {{x.field1}}
@@ -39,7 +40,7 @@
           {{x.field2}}
         </div>
         <div class="cell">
-          <input type="date" value="{{x.field3}}" />
+          <input type="date" ng-value="x.field3" />
         </div>
       </div>
     </div>

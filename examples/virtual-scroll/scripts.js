@@ -1,7 +1,8 @@
 angular.module('app', ['doTA'])
 .controller('ctrl', function($scope) {
   //scrollTop limit: firefox: 4M, IE: 1M, others 10M
-  var maxScrollTop = window.mozRequestAnimationFrame ? 4e6 : document.documentMode ? 1e6 : 1e7;
+  var maxScrollTop = window.mozRequestAnimationFrame ? 4e6 :
+    document.documentMode || /Edge/.test(navigator.userAgent) ? 1e6 : 1e7;
 
   window.virtualScroll = doTA.throttle(function(elem) {
     $scope.scrollTop = elem.scrollTop;
@@ -12,7 +13,7 @@ angular.module('app', ['doTA'])
     }
     // console.log('offset', $scope.offset, $scope.scrollTop);
     doTA.C[1]($scope, 0, 0, 1);
-  }, 5);
+  }, 7);
 
   var random1 = makeRandom(100, function(){return Math.random().toFixed(2) * 100 | 0;});
   var random2 = makeRandom(100, function(){return Math.random().toFixed(5);});
@@ -36,7 +37,7 @@ angular.module('app', ['doTA'])
     $scope.totalHeight = maxScrollTop + $scope.height + ($scope.cellHeight / $scope.scale) - ($scope.height / $scope.scale);
   }
 
-  console.log('scale', $scope.scale, $scope.rows, $scope.totalHeight, $scope.data.length);
+  console.log('scale', $scope.scale, $scope.rows, maxScrollTop, $scope.totalHeight, $scope.data.length);
 
   function makeData(count) {
     // console.time('makeData');

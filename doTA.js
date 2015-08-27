@@ -1,5 +1,6 @@
 var doTA = (function() {'use strict';
-  var msie = typeof document !== 'undefined' && document.documentMode;
+  // var msie = (typeof document !== 'undefined' && document.documentMode) ||
+  //   (typeof navigator !== 'undefined' && /Edge/.test(navigator.userAgent) && 12);
 
   /* for ie8 */
   if (!String.prototype.trim) {
@@ -20,15 +21,15 @@ var doTA = (function() {'use strict';
     return x ? ret.slice(0, -2 * x) : ret;
   }
 
-  function forEachArray(src, iter, ctx) {
-    if (!src) { return; }
-    if (src.forEach) {
-      return src.forEach(iter);
-    }
-    for (var key = 0, length = src.length; key < length; key++) {
-      iter.call(ctx, src[key], key);
-    }
-  }
+  // function forEachArray(src, iter, ctx) {
+  //   if (!src) { return; }
+  //   if (src.forEach) {
+  //     return src.forEach(iter);
+  //   }
+  //   for (var key = 0, length = src.length; key < length; key++) {
+  //     iter.call(ctx, src[key], key);
+  //   }
+  // }
 
   // decode html entities
   function decodeEntities(text) {
@@ -472,21 +473,38 @@ var doTA = (function() {'use strict';
         if (attrName === 'value') {
           elem[attrName] = attrVal2;
         } else {
-          if (msie) {
-            if (attrName === 'class') {
-              elem.className = attrVal2;
-            } else if (attrName === 'style') {
-              forEachArray(attrVal2.split(';'), function(item){
-                var colonPos = item.indexOf(':');
-                // console.log('style', [item.substr(0, colonPos).trim(), item.slice(colonPos+1).trim()])
-                elem.style[item.substr(0, colonPos).trim()] = item.slice(colonPos+1).trim();
-              })
-            } else {
-              elem.setAttribute(attrName, attrVal2);
-            }
-          } else {
+          /*if (attrName === 'class') {
+            elem.className = attrVal2;
+          } else */
+          //IE or Edge can't set dynamic styles
+          // if (msie && attrName === 'style') {
+          //   var prevSCPpos = 0, SCPos = attrVal2.indexOf(';'), aStyle, colonPos;
+          //   while (SCPos > 0) {
+          //     aStyle = attrVal2.slice(prevSCPpos, SCPos);
+          //     colonPos = aStyle.indexOf(':');
+          //     if (colonPos > 0) {
+          //       elem.style[aStyle.substr(0, colonPos).trim()] = aStyle.slice(colonPos+1);
+          //     }
+          //     prevSCPpos = SCPos + 1;
+          //     SCPos = attrVal2.indexOf(';', prevSCPpos);
+          //   }
+          //   if (prevSCPpos < attrVal2.length) {
+          //     aStyle = attrVal2.slice(prevSCPpos);
+          //     colonPos = aStyle.indexOf(':');
+          //     if (colonPos > 0) {
+          //       elem.style[aStyle.substr(0, colonPos).trim()] = aStyle.slice(colonPos+1);
+          //     }
+          //   }
+          //   // forEachArray(attrVal2.match(/[^;]+/g), function(item){
+          //   //   var colonPos = item.indexOf(':');
+          //   //   if (colonPos > 0) {
+          //   //     // console.log('style', [item.substr(0, colonPos).trim(), item.slice(colonPos+1).trim()])
+          //   //     elem.style[item.substr(0, colonPos).trim()] = item.slice(colonPos+1);
+          //   //   }
+          //   // })
+          // } else {
             elem.setAttribute(attrName, attrVal2);
-          }
+          // }
         }
         posDiff = posB2 - posA2;
       }
@@ -524,6 +542,14 @@ var doTA = (function() {'use strict';
     }
     if (prevPos < input.length) {
       ret.push(input.substr(prevPos));
+    }
+    return ret;
+  }
+
+  function parseStyle(styleObj) {
+    var ret = '';
+    for (var x in styleObj) {
+      ret += x + ':' + styleObj[x] + ';';
     }
     return ret;
   }
@@ -663,6 +689,37 @@ var doTA = (function() {'use strict';
         return escapeSingleQuote(str);
       }
     }
+
+    // // interpolation
+    // function interpolateInner(str) {
+    //   var pos = str.indexOf('{{');
+    //   if (pos >= 0) {
+    //     var prevPos = 0;
+    //     var ret = '';
+    //     var outsideStr, insideStr;
+    //     do {
+    //       outsideStr = str.substring(prevPos, pos);
+    //       ret += outsideStr;
+
+    //       //skip {{
+    //       prevPos = pos + 2;
+    //       pos = str.indexOf('}}', prevPos);
+
+    //       insideStr = str.substring(prevPos, pos);
+    //       ret += "(" + attachFilter(insideStr) + val_mod + ")";
+
+    //       //skip }} for next
+    //       prevPos = pos + 2;
+    //       pos = str.indexOf('{{', prevPos);
+    //     } while (pos > 0);
+
+    //     //remaining text outside interpolation
+    //     ret += str.substr(prevPos);
+    //     return ret;
+    //   } else {
+    //     return str;
+    //   }
+    // }
 
     // attach $filters
     function attachFilter($1) {
@@ -892,6 +949,13 @@ var doTA = (function() {'use strict';
             parsedAttr.class += "'+(" + attachScope(attr['ng-show']) +
               "?'':'" + (parsedAttr.class ? ' ' : '') + "ng-hide')+'";
             attr['ng-show'] = void 0;
+          }
+
+          if (attr['ng-style']) {
+            parsedAttr.style = (attr.style ? attr.style + ';' : '') + interpolate(attr['ng-style']);
+              // "'+doTA.PS(" + interpolateInner(attr['ng-style']) + ")+'";
+            attr['ng-style'] = void 0;
+            attr.style = void 0;
           }
 
           if (attr['ng-hide']) {
@@ -1229,6 +1293,7 @@ var doTA = (function() {'use strict';
     getId: getUniqueId,
     initCH: initCompileHash,
     compile: compileHTML,
+    PS: parseStyle,
     C: {}, //Cached compiled functions
     D: {}, //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
     H: {} //HashMap for TextDiff

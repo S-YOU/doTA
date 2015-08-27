@@ -73,6 +73,8 @@ This project has two libraries, doTA, and ngDoTA.
   - `ng-alt` - expand interpolation and set `alt` attribute
   - `ng-title` - expand interpolation and set `title` attribute
   - `ng-href` - expand interpolation and set `href` attribute
+  - `ng-style="height:{{height}}px"` - expand interpolation and set/merge `style` attribute
+    - this is basically for IE/Edge, but does not accept objects like angular does
 
 - ng-model
   - experimental, disabled by default

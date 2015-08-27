@@ -1,9 +1,18 @@
+*, :before, :after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  outline: 0;
+}
+
+body {
+  padding: 10px;
+}
+
 .grid {
   width: 800px;
   font-family: arial;
   font-size: 12pt;
-  margin: 0;
-  padding: 0;
 }
 
 .viewport {
@@ -11,37 +20,45 @@
   border: 1px solid gray;
   overflow: auto;
   position:relative;
-  outline: 0;
-  margin: 0;
 }
 
 .canvas {
-  outline: 0;
   position:relative;
-  margin: 0;
 }
 
 .row {
   position: absolute;
-  border-bottom: 1px solid silver;
-  height: 23px;
-  margin: 0;
+  line-height: 25px;
 }
-
-.cell, .cell input {
-  border: 0;
-  border-right: 1px dotted silver;
-  cursor: default;
-  width: 125px;
-  float: left;
-  line-height: 22px;
-  margin: 0;
-  padding: 0 0 0 2px;
+.row + .row {
+  border-top: 1px solid silver;
 }
-
 .row.odd {
   background: #f9f9f9;
 }
+
+.cell {
+  cursor: default;
+  width: 125px;
+  float: left;
+  height: 25px;
+  padding: 0;
+  margin: 0;
+}
+.cell + .cell {
+  border-left: 1px dotted silver;
+}
+
+.cell input {
+  border: 0;
+  line-height: 25px;
+  height: 100%;
+  width: 100%;
+  padding: 0 2px 0 2px;
+}
+
+input::-webkit-inner-spin-button { display: none; }
+input::-webkit-clear-button { display: none; }
 
 .percent {
   display: inline-block;
