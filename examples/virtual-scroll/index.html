@@ -19,10 +19,16 @@
 
 <div ng-if="!data">Generating Data...</div>
 
-<label>
-<input type="checkbox" ng-model="chkRIC" value=1 ng-disabled="!hasRIC" />
-<span> Use requestIdleCallback</span>
-</label>
+<div style="padding: 5px 0 5px 0">
+  <label><input type="radio" ng-model="useWhat" value=0 checked />
+  <span> Synchronous</span></label>
+  <label><input type="radio" ng-model="useWhat" value=1 ng-disabled="!hasRAF" />
+  <span> Use requestAnimationFrame</span></label>
+  <label><input type="radio" ng-model="useWhat" value=2 ng-disabled="!hasRIC" />
+  <span> Use requestIdleCallback</span></label>
+  <label><input type="radio" ng-model="useWhat" value=3 />
+  <span> Use setTimeout</span></label>
+</div>
 
 <div dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="0" diff-level=2 debug=0>
   <div class="grid" ng-style="height:{{height}}px" onscroll="virtualScroll(this)">

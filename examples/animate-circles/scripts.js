@@ -249,25 +249,25 @@ var N = 100;
 // Incremental DOM Implementation
 (function(){
   var patch = IncrementalDOM.patch,
-    ie_open = IncrementalDOM.ie_open,
-    ie_void = IncrementalDOM.ie_void,
-    ie_close = IncrementalDOM.ie_close,
-    itext = IncrementalDOM.itext;
+    elementOpen = IncrementalDOM.elementOpen,
+    elementVoid = IncrementalDOM.elementVoid,
+    elementClose = IncrementalDOM.elementClose,
+    text = IncrementalDOM.text;
   var grid = document.getElementById('grid');
 
   function update(data) {
     patch(grid, function() {
       data.forEach(function(x){
-        ie_open('div', '', ['class', 'box-view']);
-          ie_open('div', '', ['class', 'box'],
+        elementOpen('div', '', ['class', 'box-view']);
+          elementOpen('div', '', ['class', 'box'],
             'style', {
               top: Math.sin(x / 10) * 10 + 'px',
               left: Math.cos(x/10) * 10 + 'px',
               background: 'rgb(0,0,' + (x % 255) +')'
             });
-            itext(x % 100);
-          ie_close('div');
-        ie_close('div');
+            text(x % 100);
+          elementClose('div');
+        elementClose('div');
       });
     });
   }

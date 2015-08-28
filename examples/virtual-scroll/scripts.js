@@ -5,23 +5,35 @@ angular.module('app', ['doTA'])
     document.documentMode || /Edge/.test(navigator.userAgent) ? 1e6 : 1e7;
 
   $scope.hasRIC = !!window.requestIdleCallback;
+  $scope.hasRAF = !!window.requestAnimationFrame;
 
-  window.virtualScroll = doTA.throttle(function(elem) {
+  $scope.useWhat = 0;
+
+  window.virtualScroll = function(elem) {
     $scope.scrollTop = elem.scrollTop;
     $scope.offset = (((elem.scrollTop * $scope.scale) / $scope.cellHeight) | 0) || 0;
     if ($scope.offset + $scope.rows > $scope.data.length) {
       // console.log('offset over', $scope.offset, $scope.scrollTop);
       $scope.offset = $scope.data.length - $scope.rows;
     }
-    // console.log('offset', $scope.offset, $scope.scrollTop);
-    if ($scope.chkRIC && window.requestIdleCallback) { //Test for requestIdleCallback
-      requestIdleCallback(function(){
-        doTA.C[1]($scope, 0, 0, 1);
-      })
-    } else {
-      doTA.C[1]($scope, 0, 0, 1);
+    // console.log('offset', [$scope.offset, $scope.scrollTop, $scope.useWhat]);
+    switch (+$scope.useWhat) {
+      case 0:
+        return doTA.C[1]($scope, 0, 0, 1);
+      case 1:
+        return requestAnimationFrame(function(){
+          doTA.C[1]($scope, 0, 0, 1);
+        });
+      case 2:
+        return requestIdleCallback(function(){
+          doTA.C[1]($scope, 0, 0, 1);
+        });
+      case 3:
+        return setTimeout(function(){
+          doTA.C[1]($scope, 0, 0, 1);
+        });
     }
-  }, 7);
+  };
 
   var random1 = makeRandom(100, function(){return Math.random().toFixed(2) * 100 | 0;});
   var random2 = makeRandom(100, function(){return Math.random().toFixed(5);});
