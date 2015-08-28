@@ -4,9 +4,8 @@ angular.module('app', ['doTA'])
   var maxScrollTop = window.mozRequestAnimationFrame ? 4e6 :
     document.documentMode || /Edge/.test(navigator.userAgent) ? 1e6 : 1e7;
 
-  $scope.hasRIC = !!window.requestIdleCallback;
-  $scope.hasRAF = !!window.requestAnimationFrame;
-
+  $scope.hasRIC = typeof requestIdleCallback !== 'undefined';
+  $scope.hasRAF = typeof requestAnimationFrame !== 'undefined';
   $scope.useWhat = 0;
 
   window.virtualScroll = function(elem) {
@@ -19,21 +18,19 @@ angular.module('app', ['doTA'])
     // console.log('offset', [$scope.offset, $scope.scrollTop, $scope.useWhat]);
     switch (+$scope.useWhat) {
       case 0:
-        return doTA.C[1]($scope, 0, 0, 1);
+        return patch();
       case 1:
-        return requestAnimationFrame(function(){
-          doTA.C[1]($scope, 0, 0, 1);
-        });
+        return requestAnimationFrame(patch);
       case 2:
-        return requestIdleCallback(function(){
-          doTA.C[1]($scope, 0, 0, 1);
-        });
+        return requestIdleCallback(patch);
       case 3:
-        return setTimeout(function(){
-          doTA.C[1]($scope, 0, 0, 1);
-        });
+        return setTimeout(patch);
     }
   };
+
+  function patch(){
+    doTA.C[1]($scope, 0, 0, 1);
+  }
 
   var random1 = makeRandom(100, function(){return Math.random().toFixed(2) * 100 | 0;});
   var random2 = makeRandom(100, function(){return Math.random().toFixed(5);});
