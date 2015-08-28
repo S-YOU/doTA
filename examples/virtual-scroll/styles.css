@@ -10,25 +10,30 @@ body {
 }
 
 .grid {
+  display:block;
+  background-color: #eee;
+  border: 1px solid gray;
+  overflow: auto;
   width: 800px;
   font-family: arial;
   font-size: 12pt;
 }
 
-.viewport {
-  background-color: #eee;
-  border: 1px solid gray;
-  overflow: auto;
+.canvas {
+  display: block;
   position:relative;
 }
 
-.canvas {
-  position:relative;
+.viewport {
+  display: block;
+  position: absolute;
 }
 
 .row {
-  position: absolute;
+  display: block;
+  height: 25px;
   line-height: 25px;
+  clear: both;
 }
 .row + .row {
   border-top: 1px solid silver;
@@ -38,20 +43,19 @@ body {
 }
 
 .cell {
+  display: block;
   cursor: default;
   width: 125px;
   float: left;
-  height: 25px;
-  padding: 0;
-  margin: 0;
+  height: 100%;
 }
 .cell + .cell {
   border-left: 1px dotted silver;
 }
 
 .cell input {
+  display: block;
   border: 0;
-  line-height: 25px;
   height: 100%;
   width: 100%;
   padding: 0 2px 0 2px;

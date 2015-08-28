@@ -14,7 +14,8 @@
 </div>
 
 <h3>Virtual Scroll with
-  <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> (FlatDOM) - 1 Million Rows</h3>
+  <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> (FlatDOM) - 1 Million Rows
+</h3>
 
 <div ng-if="!data">Generating Data...</div>
 
@@ -23,36 +24,39 @@
 <span> Use requestIdleCallback</span>
 </label>
 
-<div class="grid" dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="0" diff-level=2>
-  <div class="viewport" ng-style="height:{{height}}px" onscroll="virtualScroll(this)">
+<div dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="0" diff-level=2>
+  <div class="grid" ng-style="height:{{height}}px" onscroll="virtualScroll(this)">
     <div class="canvas" ng-style="height:{{totalHeight}}px">
-      <div class="row" index="{{i+offset}}" ng-repeat="i in 0:rows" ng-class="{odd:i%2,even:i%2===0}"
-        ng-style="top:{{scrollTop+(i*cellHeight)}}px">
-        <div class="cell" ng-init="x=data[i + offset]">
-          <input type="text" ng-value="x.id" disabled />
-        </div>
-        <div class="cell">
-          {{x.label}}
-        </div>
-        <div class="cell">
-          <span class="percent" ng-style="width:{{x.percent}}px"
-            ng-class="{green:x.percent>50,red:x.percent<30}"></span>
-        </div>
-        <div class="cell">
-          {{x.field1}}
-        </div>
-        <div class="cell">
-          {{x.field2}}
-        </div>
-        <div class="cell">
-          <input type="date" ng-value="x.field3" />
+      <div class="viewport" ng-style="top:{{scrollTop}}px">
+        <div class="row {{i%2?'odd':'even'}}" index="{{i+offset}}" ng-repeat="i in 0:rows">
+          <div class="cell" ng-init="x=data[i + offset]">
+            <input type="text" ng-value="x.id" disabled />
+          </div>
+          <div class="cell">
+            {{x.label}}
+          </div>
+          <div class="cell">
+            <span class="percent" ng-style="width:{{x.percent}}px"
+              ng-class="{green:x.percent>50,red:x.percent<30}"></span>
+          </div>
+          <div class="cell">
+            {{x.field1}}
+          </div>
+          <div class="cell">
+            {{x.field2}}
+          </div>
+          <div class="cell">
+            <input type="date" ng-value="x.field3" />
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!--transform:translateY-->
+<!--top:{{scrollTop}}px-->
+<!--transform:translateY({{scrollTop}}px)-->
+<!--transform:translate(0,{{scrollTop}}px)-->
 
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
 <script src="../../dist/ngDoTA.min.js"></script>
