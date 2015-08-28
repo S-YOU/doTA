@@ -587,7 +587,7 @@ var doTA = (function() {'use strict';
     var idHash = {};
 
     var FnText = indent(level) + "'use strict';var " +
-      (watchDiff ? 'N=1,J=' + uniqueId + ',' : '') +
+      (watchDiff ? 'N=1,' : '') +
       "R='';\n"; //ToDO: check performance on var declaration
 
     //clean up extra white spaces and line break
@@ -896,7 +896,19 @@ var doTA = (function() {'use strict';
           }
 
           if (attr['ng-init']) {
-            FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
+            var eqPos = attr["ng-init"].indexOf('=');
+            if (eqPos > 0) {
+              var varName = attr["ng-init"].substr(0, eqPos);
+              if (varName.indexOf('.') < 0 && varName.indexOf('[') < 0) {
+                FnText += indent(level) + 'var ' + varName + '=' +
+                  attachScope(attr["ng-init"].substr(eqPos + 1)) + '; \n';
+                VarMap[varName] = 1;
+              } else {
+                FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
+              }
+            } else {
+              FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
+            }
             attr['ng-init'] = void 0;
           }
 
@@ -1079,7 +1091,8 @@ var doTA = (function() {'use strict';
           }
           FnText += indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attr['dota-render'] + '";\n';
           //only expand if renderFn is ready in cache, but not in cache-dom (which unneeded)
-          FnText += indent(level) + 'doTA.C[U]&&!doTA.D[U]&&(R+=doTA.C[U](S,F,P,X)); \n';
+          FnText += indent(level) + 'if(typeof doTA.C[U]!=="undefined"&&typeof doTA.D[U]==="undefined"){' +
+            'R+=doTA.C[U](S,F,P,X)}; \n';
         }
 
         level++;
@@ -1222,8 +1235,9 @@ var doTA = (function() {'use strict';
     });
 
     if (watchDiff) {
-      FnText += indent(0) + 'if(X&&J in doTA.H){doTA.diff' + (diffLevel || '') + '(J,R)}' +
-        'doTA.H[J]=R;\n';
+      //http://jsperf.com/hasownproperty-vs-in-vs-undefined/87
+      FnText += indent(0) + 'if(X&&typeof doTA.H[' + uniqueId + ']!=="undefined"){doTA.diff' + (diffLevel || '') + '( '+ uniqueId + ',R)}' +
+        'doTA.H[' + uniqueId + ']=R;\n';
     }
 
     FnText += indent(0) +'return R;\n';

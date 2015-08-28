@@ -246,6 +246,53 @@ var N = 100;
 
 })();
 
+// Incremental DOM Implementation
+(function(){
+  var patch = IncrementalDOM.patch,
+    ie_open = IncrementalDOM.ie_open,
+    ie_void = IncrementalDOM.ie_void,
+    ie_close = IncrementalDOM.ie_close,
+    itext = IncrementalDOM.itext;
+  var grid = document.getElementById('grid');
+
+  function update(data) {
+    patch(grid, function() {
+      data.forEach(function(x){
+        ie_open('div', '', ['class', 'box-view']);
+          ie_open('div', '', ['class', 'box'],
+            'style', {
+              top: Math.sin(x / 10) * 10 + 'px',
+              left: Math.cos(x/10) * 10 + 'px',
+              background: 'rgb(0,0,' + (x % 255) +')'
+            });
+            itext(x % 100);
+          ie_close('div');
+        ie_close('div');
+      });
+    });
+  }
+
+  var BoxView;
+
+  var init = function() {
+    BoxView =  _.map(_.range(N), function() { return 0; });
+    update(BoxView);
+  };
+
+  var animate = function() {
+    for (var i = 0; i < BoxView.length; i++) {
+      BoxView[i]++;
+    }
+    update(BoxView);
+  };
+
+  window.runIDOM = function() {
+    reset();
+    init();
+    benchmarkLoop(animate);
+  };
+})();
+
 // doTA Implementation
 (function(){
   var renderFn = doTA.compile($('#dota-template').text().trim(), {watchDiff: 1, diffLevel: 2,

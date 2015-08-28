@@ -24,27 +24,21 @@
 <span> Use requestIdleCallback</span>
 </label>
 
-<div dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="0" diff-level=2>
+<div dota-render=1 inline=1 event=0 strip=1 encode=1 loose=0 watch-diff="0" diff-level=2 debug=0>
   <div class="grid" ng-style="height:{{height}}px" onscroll="virtualScroll(this)">
     <div class="canvas" ng-style="height:{{totalHeight}}px">
       <div class="viewport" ng-style="top:{{scrollTop}}px">
-        <div class="row {{i%2?'odd':'even'}}" index="{{i+offset}}" ng-repeat="i in 0:rows">
+        <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows">
           <div class="cell" ng-init="x=data[i + offset]">
             <input type="text" ng-value="x.id" disabled />
           </div>
-          <div class="cell">
-            {{x.label}}
-          </div>
+          <div class="cell">{{x.label}}</div>
           <div class="cell">
             <span class="percent" ng-style="width:{{x.percent}}px"
               ng-class="{green:x.percent>50,red:x.percent<30}"></span>
           </div>
-          <div class="cell">
-            {{x.field1}}
-          </div>
-          <div class="cell">
-            {{x.field2}}
-          </div>
+          <div class="cell">{{x.field1}}</div>
+          <div class="cell">{{x.field2}}</div>
           <div class="cell">
             <input type="date" ng-value="x.field3" />
           </div>
@@ -57,6 +51,7 @@
 <!--top:{{scrollTop}}px-->
 <!--transform:translateY({{scrollTop}}px)-->
 <!--transform:translate(0,{{scrollTop}}px)-->
+<!--index="{{i+offset}}"-->
 
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
 <script src="../../dist/ngDoTA.min.js"></script>
