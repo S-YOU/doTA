@@ -53,10 +53,16 @@ var doTA = (function() {'use strict';
       //console.log(222, [pos, chunk]);
       while (++pos < len) {
         var eqPos = chunk.indexOf('=', pos);
+        // console.log('chunk', [chunk, pos, eqPos, chunk.slice(pos)]);
 
         // ** attribute without value (last attribute) **
         if (eqPos === -1) {
-          attrName = chunk.slice(pos);
+          spPos = chunk.indexOf(' ', pos);
+          if (spPos > 0) {
+            attrName = chunk.slice(pos, spPos);
+          } else {
+            attrName = chunk.slice(pos);
+          }
           // console.log('eqPos === -1', [attrName, pos, chunk])
           if (attrName !== '/') {
             attr[attrName] = '';
@@ -66,7 +72,10 @@ var doTA = (function() {'use strict';
           break;
         }
 
+
         spPos = chunk.indexOf(' ', pos);
+        // console.log('chunk', [chunk, eqPos, pos, spPos, chunk.slice(pos, spPos)]);
+
         if (spPos > 0 && spPos < eqPos) {
           attr[chunk.slice(pos, spPos)] = "";
           pos = spPos;
@@ -424,6 +433,11 @@ var doTA = (function() {'use strict';
 
   }
 
+  var camelCaseRE = /-(.)/g;
+  function camelCase(str) {
+    return str.replace(camelCaseRE, function($0, $1){ return $1.toUpperCase(); });
+  }
+
   // parse attributes from html open tag and patch DOM when different
   function parsePatchAttr(chunkA, chunkB, elem) {
     var tagId;
@@ -471,6 +485,9 @@ var doTA = (function() {'use strict';
         // console.log('setAttribute', [attrName, attrVal1, attrVal2], [chunk1, chunk2])
         if (attrName === 'value') {
           elem[attrName] = attrVal2;
+        } else if (attrName.charAt(0) === '-') {
+          elem[attrName.substr(1)] = attrVal2;
+          // console.log('prop-', attrName.substr(1), attrVal2, elem[attrName.substr(1)]);
         } else {
           /*if (attrName === 'class') {
             elem.className = attrVal2;
@@ -1030,6 +1047,10 @@ var doTA = (function() {'use strict';
                 continue;
 
               }
+            } else if (x.charAt(0) === '-') {
+              x = '-' + camelCase(x.substr(1));
+              parsedAttr[x] = "'+(" + attachScope(attrVal) + ")+'";
+              continue;
             }
 
             //ng-repeat loop variables are not available!
@@ -1235,7 +1256,8 @@ var doTA = (function() {'use strict';
 
     if (watchDiff) {
       //http://jsperf.com/hasownproperty-vs-in-vs-undefined/87
-      FnText += indent(0) + 'if(X&&typeof doTA.H[' + uniqueId + ']!=="undefined"){doTA.diff' + (diffLevel || '') + '( '+ uniqueId + ',R)}' +
+      FnText += indent(0) + 'if(X&&typeof doTA.H[' + uniqueId + ']!=="undefined"){doTA.diff' + (diffLevel || '') +
+        '(' + uniqueId + ',R)}' +
         'doTA.H[' + uniqueId + ']=R;\n';
     }
 

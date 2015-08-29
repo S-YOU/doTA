@@ -180,6 +180,9 @@ This project has two libraries, doTA, and ngDoTA.
   - all `scope-XX` attibutes on directive will be avaialble as `$attr.XX` on templates
   - attr without `.` or `[` will be `$scope[attr]` or it will `$scope.$eval`
 
+- attrbutes startsith '-' will treat as property
+  - `-scroll-left=expr` - primitive or scope property can be used, no interpolations.
+
 - debug
   - some debugging output - also need to use with non-minified version of doTA.js or ngDoTA.js
 

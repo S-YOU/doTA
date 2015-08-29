@@ -10,13 +10,16 @@ body {
 }
 
 .grid {
+  width: 800px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.body, .header {
   display:block;
   background-color: #eee;
   border: 1px solid gray;
   overflow: auto;
-  width: 800px;
-  font-family: arial;
-  font-size: 12pt;
 }
 
 .canvas {
@@ -33,6 +36,7 @@ body {
   display: block;
   height: 25px;
   line-height: 25px;
+  float: left;
   clear: both;
 }
 .row + .row {
@@ -42,12 +46,21 @@ body {
   background: #f9f9f9;
 }
 
+.header {
+  overflow: hidden;
+}
+.header .cell {
+  padding: 3px;
+  text-align: center;
+}
+
 .cell {
   display: block;
   cursor: default;
-  width: 125px;
   float: left;
   height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cell + .cell {
   border-left: 1px dotted silver;
