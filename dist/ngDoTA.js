@@ -66,7 +66,6 @@ var doTA = (function() {'use strict';
           break;
         }
 
-        // no val attr in middle
         spPos = chunk.indexOf(' ', pos);
         if (spPos > 0 && spPos < eqPos) {
           attr[chunk.slice(pos, spPos)] = "";
