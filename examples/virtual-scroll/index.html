@@ -38,21 +38,20 @@
 <div id="grid">Generating Data...</div>
 
 <script type="text/template" id="grid-template">
-  <div class="grid">
-    <div class="header" -scroll-left="scrollLeft">
-      <div class="canvas" ng-style="width:{{totalWidthHeader}}px">
-        <div class="row">
-          <div class="header-group">
-            <div class="header-group-cell"></div>
-            <div class="cell" ng-repeat="col in gridOptions" ng-style="width:{{col.width}}px">{{col.name}}</div>
+  <div class="grid" ng-style="width:{{width}}px">
+    <div class="header">
+      <div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
+        <div class="viewport" ng-style="left:{{scrollOffsetLeft-scrollLeft}}px">
+          <div class="row" key=1>
+            {header-outlet}
           </div>
         </div>
       </div>
     </div>
     <div class="body" ng-style="height:{{bodyHeight}}px" onscroll="virtualScroll(this)">
       <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
-        <div class="viewport" ng-style="top:{{scrollTop}}px">
-          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" ng-init="x=data[i + offset]">
+        <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
+          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" key=1 ng-init="x=data[i + offsetTop]" index="{{i+offsetTop}}">
             {cell-outlet}
           </div>
         </div>
@@ -61,13 +60,14 @@
   </div>
 </script>
 
+<!-- -scroll-left="scrollLeft"-->
 <!--top:{{scrollTop}}px-->
 <!--transform:translateY({{scrollTop}}px)-->
 <!--transform:translate(0,{{scrollTop}}px)-->
-<!--index="{{i+offset}}"-->
+<!--index="{{i+offsetTop}}"-->
 
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
-<script src="../../dist/ngDoTA.min.js"></script>
+<script src="../../dist/ngDoTA.js"></script>
 <script src="scripts.js"></script>
 
 </body>

@@ -8,38 +8,61 @@ angular.module('app', ['doTA'])
   $scope.hasRAF = typeof requestAnimationFrame !== 'undefined';
   $scope.useWhat = 0;
   $scope.dataType = 0;
-  var lastOffset = 0;
-  var lastScrollLeft = 0;
-  var scrollElem;
+  var scrollElem; //keep it for scroll to top later
 
   window.virtualScroll = function(elem) {
+    var scrollTop = elem.scrollTop;
+    var scrollLeft = elem.scrollLeft;
     scrollElem = elem;
-    $scope.scrollTop = elem.scrollTop;
-    $scope.scrollLeft = elem.scrollLeft;
-    // console.log('scrollLeft', elem.scrollLeft)
-    var offset = (((elem.scrollTop * $scope.scale) / $scope.cellHeight) | 0) || 0;
-    if (offset + $scope.rows > $scope.dataLength) {
-      // console.log('offset over', $scope.offset, $scope.scrollTop);
-      offset = $scope.dataLength - $scope.rows;
-    }
 
-    if (lastOffset !== offset) {
+    // Find Row Index
+    var offsetTop = (((scrollTop * $scope.scale) / $scope.cellHeight) | 0) || 0;
+    if (offsetTop + $scope.rows > $scope.dataLength) {
+      // console.log('offsetTop over', $scope.offsetTop, scrollTop);
+      offsetTop = $scope.dataLength - $scope.rows;
+    }
+    if ($scope.offsetTop !== offsetTop) {
       if (+$scope.dataType === 1) {
         initData();
-        $scope.data = makeData($scope.rows, offset);
-        $scope.offset = 0;
+        $scope.data = makeData($scope.rows, offsetTop);
+        offsetTop = 0;
       } else {
-        $scope.offset = offset;
+        offsetTop = offsetTop;
       }
     }
 
-    // if offset don't change, just return
-    if (lastOffset === offset && lastScrollLeft === $scope.scrollLeft) { return; }
-    lastOffset = offset;
-    lastScrollLeft = $scope.scrollLeft;
+    // Find Column Index
+    console.time('column');
+    var offsetLeft = 0, offsetRight = widthMap.length - 1, scrollOffsetLeft = 0;
+    for (var i = 0; i < widthMap.length; i++) {
+      if (scrollLeft < widthMap[i]) {
+        offsetLeft = i;
+        scrollOffsetLeft = widthMap[i - 1] || 0;
+        for (var j = i; j < widthMap.length; j++) {
+          if (scrollLeft + $scope.width < widthMap[j]) {
+            offsetRight = j;
+            break;
+          }
+        }
+        break;
+      }
+    }
+    console.timeEnd('column');
+    // console.log('offsetLeft/offsetRight', [offsetLeft, offsetRight]);
 
-    // console.log('useWhat/dataType', [+$scope.useWhat, +$scope.dataType],
-    //   'offset/scrollLeft/scrollTop/totalHeight', [$scope.offset, $scope.scrollLeft, $scope.scrollTop, $scope.totalHeight]);
+    // if offsetTop don't change, just return
+    if ($scope.offsetTop === offsetTop && $scope.scrollLeft === scrollLeft) { return; }
+
+    $scope.offsetTop = offsetTop
+    $scope.offsetLeft = offsetLeft;
+    $scope.offsetRight = offsetRight;
+    $scope.scrollTop = scrollTop;
+    $scope.scrollLeft = scrollLeft;
+    $scope.scrollOffsetLeft = scrollOffsetLeft;
+
+    console.log('useWhat/dataType', [+$scope.useWhat, +$scope.dataType],
+      'scrollLeft/scrollTop/scrollOffsetLeft', [scrollLeft, offsetTop, scrollOffsetLeft],
+      'offsetTop/offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
 
     switch (+$scope.useWhat) {
       case 0:
@@ -54,15 +77,21 @@ angular.module('app', ['doTA'])
   };
 
   function patch(){
+    console.time('patch');
     compileFn($scope, 0, 0, 1);
+    console.timeEnd('patch');
   }
 
   $scope.height = 500; //grid (viewport) height
+  $scope.width = 750;
   $scope.cellHeight = 25; //height of each cells
-  $scope.offset = 0; //data array offset
-  $scope.scrollTop = $scope.scrollLeft = 0; //in pixel
+  $scope.offsetTop = 0; //data array offsetTop
+  $scope.offsetLeft = 0;
+  $scope.offsetRight = 6;
+  $scope.scrollTop = $scope.scrollLeft = $scope.scrollOffsetLeft = 0; //in pixel
   $scope.rows = ($scope.height / $scope.cellHeight) | 0; //dynamic row count
   $scope.bodyHeight = $scope.height + 16; //+ scroll bar height
+  $scope.headerHeight = $scope.cellHeight;
 
   function calcScale() {
     $scope.totalHeight = $scope.cellHeight * $scope.dataLength; //calc total height
@@ -100,21 +129,36 @@ angular.module('app', ['doTA'])
     {id: 'field8', name: 'Col 11', width: 125},
     {id: 'field9', name: 'Col 12', width: 125},
   ];
+  // var i = 12;
+  // while (i < 100) {
+  //   $scope.gridOptions.push({id: 'field4', name: 'Col ' + (++i), width: 125});
+  //   $scope.gridOptions.push({id: 'field5', name: 'Col ' + (++i), width: 125});
+  //   $scope.gridOptions.push({id: 'field6', name: 'Col ' + (++i), width: 125});
+  //   $scope.gridOptions.push({id: 'field7', name: 'Col ' + (++i), width: 125});
+  //   $scope.gridOptions.push({id: 'field8', name: 'Col ' + (++i), width: 125});
+  //   $scope.gridOptions.push({id: 'field9', name: 'Col ' + (++i), width: 125});
+  // }
 
   // apply cell template to grid template
   $scope.totalWidth = 0;
-  var cellOutlet = '';
+  var cellOutlet = '', headerOutlet = '', widthMap = [];
   $scope.gridOptions.forEach(function(col, i) {
-    cellOutlet += '<div class="cell col-' + i + '" style="width:' + col.width + 'px">' +
+    headerOutlet += '<div class="cell" style="width:' + col.width + 'px" ' +
+      'offset="' + i + '" ng-if="offsetLeft<='+ i + '&&offsetRight>='+ i + '">' +
+      (col.headerTemplate || col.name) +
+      '</div>';
+    cellOutlet += '<div class="cell" style="width:' + col.width + 'px" ' +
+      'offset="' + i + '" ng-if="offsetLeft<='+ i + '&&offsetRight>='+ i + '">' +
       (col.template || '{{x.' + col.id + '}}') +
       '</div>';
     $scope.totalWidth += col.width || 100;
+    widthMap[i] = $scope.totalWidth;
   });
-  $scope.totalWidthHeader = $scope.totalWidth + ($scope.gridOptions[$scope.gridOptions.length - 1].width || 100);
-  template = template.replace('{cell-outlet}', cellOutlet);
+  // console.log(widthMap);
+  template = template.replace('{cell-outlet}', cellOutlet).replace('{header-outlet}', headerOutlet);
 
   var compileFn = doTA.compile(template, {strip: 1, encode: 1, loose: 0,
-    watchDiff: "updated", diffLevel: 2, debug: 0});
+    watchDiff: "updated", diffLevel: 3, debug: 0});
 
   //write to dom
   var gridRoot = document.getElementById('grid');
@@ -127,14 +171,14 @@ angular.module('app', ['doTA'])
       $scope.data = +newVal === 1 ? makeData($scope.rows) : $scope.fixedData;
       $scope.dataLength = +newVal === 1 ? 1e9 : $scope.data.length;
       $scope.totalHeight = $scope.cellHeight * $scope.dataLength;
-      $scope.offset = $scope.scrollTop = 0;
+      $scope.offsetTop = $scope.scrollTop = 0;
       if (scrollElem) { scrollElem.scrollTop = 0; } //bring scrollbar to top manually
       calcScale();
       $scope.updated++;
 
       console.log(
         'scale/rows/totalHeight', [$scope.scale, $scope.rows, $scope.totalHeight],
-        'scrollLeft/scrollTop/offset', [$scope.scrollLeft, $scope.scrollTop, $scope.offset],
+        'scrollLeft/scrollTop/offsetTop', [$scope.scrollLeft, $scope.scrollTop, $scope.offsetTop],
         'data/dataLength', [$scope.data.length, $scope.dataLength]
       );
     }

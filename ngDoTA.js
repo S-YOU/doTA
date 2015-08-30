@@ -321,6 +321,9 @@
             attrs.comment = makeBool(attrs.comment, 1); //if 0, remove comments
             attrDebug = attrs.debug = makeBool(attrDebug, 0);
             attrEvent = attrs.event = makeBool(attrEvent, 1); //ng-click to native click
+            if (attrs.diffLevel) {
+              attrs.diffLevel = +attrs.diffLevel;
+            }
             attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
 
             //to prevent angular binding this

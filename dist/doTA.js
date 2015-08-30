@@ -295,7 +295,7 @@ var doTA = (function() {'use strict';
   }
 
   // FlatDOM: diff html as text and patch dom nodes
-  function diffPatchChildren(prevKey, html2) {
+  function diff2(prevKey, html2) {
     var html1 = doTA.H[prevKey];
     var prevPos1 = 0, pos1 = html1.indexOf('<');
     var prevPos2 = 0, pos2 = html2.indexOf('<');
@@ -426,6 +426,299 @@ var doTA = (function() {'use strict';
         }
       } else {
         console.error("different Id - not supported for now!", [tagId1, tagId2]);
+        return;
+      }
+
+    } //infinite loop
+
+  }
+
+  // FlatDOM: diff html as text and patch dom nodes
+  function diff3(prevKey, html2) {
+    var html1 = doTA.H[prevKey];
+    var prevPos1, lastPos1, pos1 = html1.indexOf('<');
+    var prevPos2, lastPos2, pos2 = html2.indexOf('<');
+    var tagId1, tagId2, prevTagId1, prevTagId2, elem1, part1, part2;
+    // var tagNo1 = 0, tagNo2 = 0;
+    var newNode = document.createElement('div');
+    var tagStartPos1, tagStartPos2;
+    var LVL; //this is needed for fnInline
+    // console.log(html1);
+    // console.log(html2);
+    var logger = [];
+
+    for (;;) {
+      // console.log('before', [dirty1, dirty2], [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
+
+      if (pos1 >= 0) {
+        lastPos1 = pos1;
+        pos1 = html1.indexOf(' id="', pos1);
+        if (pos1 > 0) {
+          prevPos1 = pos1 + 5;
+          pos1 = html1.indexOf('"', prevPos1);
+          prevTagId1 = tagId1;
+          tagId1 = html1.substring(prevPos1, pos1);
+        }
+      }
+
+      // console.log('middle', [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
+
+      if (pos2 >= 0) {
+        lastPos2 = pos2;
+        pos2 = html2.indexOf(' id="', pos2);
+        if (pos2 > 0) {
+          prevPos2 = pos2 + 5;
+          pos2 = html2.indexOf('"', prevPos2);
+          prevTagId2 = tagId2;
+          tagId2 = html2.substring(prevPos2, pos2);
+        }
+      }
+
+      // console.log('after', [dirty1, dirty2], [tagId1, tagId2],
+      //   [pos1, pos2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
+
+      //exist inifite loop
+      if (pos1 < 0 && pos2 < 0) break;
+
+      //same node
+      if (tagId1 === tagId2) {
+        tagStartPos1 = ++pos1;
+        pos1 = html1.indexOf('>', pos1);
+        part1 = html1.substring(tagStartPos1, pos1);
+
+        tagStartPos2 = ++pos2;
+        pos2 = html2.indexOf('>', pos2);
+        part2 = html2.substring(tagStartPos2, pos2);
+
+        // console.log('same node', [part1, part2]);
+
+        //attr really different
+        if (part1 !== part2) {
+          elem1 = document.getElementById(tagId1);
+          if (elem1) {
+            //nodes to be inserted or deleted
+            if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+              // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
+              // console.warn('replaceChild', [tagId2, tagId1], [
+              //   html2.substring(tagStartPos2, getOuterHTMLEnd(html2, tagStartPos2)),
+              //   html1.substring(tagStartPos1, getOuterHTMLEnd(html1, pos1))]);
+
+              elem1.parentNode.replaceChild(newNode.firstChild, elem1);
+
+              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+
+            //only attribute changes
+            } else {
+              parsePatchAttr(part1, part2, elem1);
+              // console.warn('patch node', [tagId1, tagId2], [pos1, pos2], [tagStartPos1, tagStartPos2], [part1, part2])
+            }
+          } else {
+            console.error('elem not found', [tagId1, tagId2], [part1, part2]);
+            return;
+          }
+        } else {
+          //clear node for textNode
+          elem1 = void 0;
+        }
+
+        //if blank text node, skip early
+        if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
+          pos1++, pos2++;
+          continue;
+        }
+
+        prevPos1 = pos1;
+        pos1 = html1.indexOf('<', prevPos1);
+        part1 = html1.substring(prevPos1 + 1, pos1);
+        prevPos2 = pos2;
+        pos2 = html2.indexOf('<', prevPos2);
+        part2 = html2.substring(prevPos2 + 1, pos2);
+
+        //for text node really diff
+        if (part1 !== part2) {
+          // console.log('text diff', [tagId1, tagId2], [part1, part2]);
+          if (!elem1) {
+            elem1 = document.getElementById(tagId1);
+            if (!elem1) {
+              console.error('node not found', [tagId1, tagId2], [part1, part2], [html1.substr(pos1, 15), html2.substr(pos2, 15)], [html1, html2]);
+              return;
+            }
+          }
+          // console.log('part1,2', [part1, part2]);
+          if (elem1.firstChild) {
+            //overwrite textNode value
+            if (elem1.firstChild.nodeType === 3) {
+              elem1.firstChild.nodeValue = part2;
+              // console.warn('textNode overwritten', elem1, elem1.firstChild)
+
+            //not textNode, so, insertBefore
+            } else {
+              elem1.insertBefore(document.createTextNode(part2), elem1.firstChild);
+              // console.warn('textNode inserted', elem1, elem1.firstChild)
+            }
+
+          //no childNodes, so append one
+          } else {
+            elem1.appendChild(document.createTextNode(part2));
+          }
+        }
+      } else {
+        //["43.28.1", "42.28.1"] ["42.28.1", "41.28.1"] [14510, -1]
+        //unknown ["5.1", "18.5.1"] ["5.1", "5.1"] [-1, 231]
+
+        if (pos1 < 0) {
+          // ["38.28.1", "39.28.1"] ["37.28.1", "38.28.1"] [-1, 17139]
+          if (  prevTagId1.slice(prevTagId1.indexOf('.')) ===  prevTagId2.slice(prevTagId2.indexOf('.')) ) {
+            elem1 = document.getElementById(prevTagId1);
+
+            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+            elem1.parentNode.appendChild(newNode.firstChild);
+            logger.push(["appendChild[parent.last]<0", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+            // pos2 = lastPos2;
+            // tagId1 = prevTagId1;
+            // tagId2 = prevTagId2;
+            continue;
+
+             // ["5.1", "30.5.1"] ["5.1", "29.5.1"] [-1, 305]
+          }
+
+        //["43.28.1", "42.28.1"] ["42.28.1", "41.28.1"], [15011, -1]
+        } else if (pos2 < 0) {
+          if ( tagId1.slice(tagId1.indexOf('.')) === prevTagId1.slice(prevTagId1.indexOf('.')) ) {
+            elem1 = document.getElementById(tagId1);
+            elem1.parentNode.removeChild(elem1);
+            if (pos1 > 0) {
+              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+            }
+            logger.push(["removeChild[last]<0", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+            // pos1 = lastPos1;
+            // tagId1 = prevTagId1;
+            // tagId2 = prevTagId2;
+            continue;
+          }
+        }
+        // different Id - not supported for now! ["7.5.1", "8.5.1"] ["6.5.1", "7.5.1"] [296, 298]
+
+        //new node to append ["6.1", "13.5.1"] ["12.5.1", "12.5.1"]
+        if (prevTagId1 === prevTagId2) {
+
+          if (tagId2.slice(tagId2.indexOf('.')) === prevTagId2.slice(prevTagId2.indexOf('.'))) {
+            elem1 = document.getElementById(prevTagId1);
+
+            if (!elem1) {
+              logger.push(["no existing node", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
+              console.log([html1]);
+              console.log([html2]);
+            }
+
+            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+            if (elem1.nextSibling) {
+              elem1.parentNode.insertBefore(newNode.firstChild, elem1.nextSibling);
+              logger.push(["insertBefore[parent.first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+            } else {
+              elem1.parentNode.appendChild(newNode.firstChild);
+              logger.push(["appendChild[parent.last]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+            }
+            //["6.1", "13.5.1"] ["12.5.1", "12.5.1"]
+            pos1 = lastPos1;
+            tagId1 = prevTagId1;
+            tagId2 = prevTagId2;
+            continue;
+
+          // ["6.5.1", "7.5.1"] ["5.1", "5.1"]
+          } else if ( tagId1.slice(tagId1.indexOf('.')) === tagId2.slice(tagId2.indexOf('.')) ) {
+
+            var tagNo1 = tagId1.substr(0, tagId1.indexOf('.')) ^ 0, tagNo2 = tagId2.substr(0, tagId2.indexOf('.')) ^ 0;
+
+            // ["6.5.1", "7.5.1"] ["5.1", "5.1"]
+            if (tagNo1 < tagNo2) {
+              elem1 = document.getElementById(tagId1);
+              if (!elem1) {
+                logger.push(["no existing node", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
+              } else {
+                elem1.parentNode.removeChild(elem1);
+                if (pos1 > 0) {
+                  LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+                }
+                logger.push(["removeChild[first]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                pos2 = lastPos2;
+                tagId1 = prevTagId1; //need for removing multiple
+                tagId2 = prevTagId2;
+                continue;
+              }
+
+            // ["12.5.1", "11.5.1"] ["5.1", "5.1"]
+            } else if (tagNo1 > tagNo2) {
+              elem1 = document.getElementById(prevTagId2);
+              if (!elem1) {
+                logger.push(["no existing node", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
+              } else {
+                tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+                LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+                newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+                if (elem1.firstChild) {
+                  elem1.insertBefore(newNode.firstChild, elem1.firstChild);
+                  logger.push(["insertBefore[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                } else {
+                  elem1.appendChild(newNode.firstChild);
+                  logger.push(["appendChild[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                }
+                pos1 = lastPos1;
+                // tagId1 = prevTagId1;
+                // tagId2 = prevTagId2;
+                continue;
+              }
+            }
+
+          // ["17.5.1", "6.1"] ["16.5.1", "16.5.1"]
+          } else if ( tagId1.indexOf('.') !== tagId1.lastIndexOf('.') &&
+          tagId1.slice(tagId1.indexOf('.')) === prevTagId1.slice(prevTagId1.indexOf('.')) &&
+          tagId2.slice(tagId2.indexOf('.')) !== prevTagId2.slice(prevTagId2.indexOf('.'))
+          ) {
+            elem1 = document.getElementById(tagId1);
+            elem1.parentNode.removeChild(elem1);
+            if (pos1 > 0) {
+              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+            }
+            logger.push(["removeChild[1.first]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+            pos2 = lastPos2;
+            // tagId1 = prevTagId1;
+            tagId2 = prevTagId2;
+            continue;
+
+          //["6.1", "17.5.1"] ["5.1", "5.1"]
+          } else if (tagId2.slice(tagId2.indexOf('.') + 1) === prevTagId2) {
+            elem1 = document.getElementById(prevTagId2);
+
+            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+            elem1.appendChild(newNode.firstChild);
+            logger.push(["appendChild[2.last]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+
+          }
+
+        }
+
+        console.log('====')
+        logger.slice(-10).forEach(function(item){
+          console.info.apply(console, item)
+        })
+        console.error("different Id - not supported for now!", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
+        console.log([html1.substr(pos1 - 100, 100), html1.substr(pos1, 20)]);
+        console.log([html2.substr(pos2 - 100, 100), html2.substr(pos2, 20)]);
         return;
       }
 
@@ -596,6 +889,7 @@ var doTA = (function() {'use strict';
     var level = 0, ngRepeatLevel;
     var ngIfLevel, skipLevel, ngIfCounterTmp, ngIfLevels = [], ngIfLevelMap = {};
     var LevelMap = {}, LevelVarMap = {};
+    var KeyMap = [], keyLevel = 0;
     var WatchMap = {}, Watched;
     var doTAPass, doTAContinue;
     var compiledFn;
@@ -820,7 +1114,8 @@ var doTA = (function() {'use strict';
 
         //unless dota-pass or with dota-continue
         if (doTAPass === void 0 || doTAContinue) {
-          if (diffLevel && attr.skip) {
+
+          if (diffLevel === 2 && attr.skip) {
             skipLevel = level;
             attrSkip = attr.skip;
             attr.skip = void 0;
@@ -894,6 +1189,14 @@ var doTA = (function() {'use strict';
             }
             //remote attribute not to get forwarded to angular
             attr['ng-repeat'] = void 0;
+          }
+
+          if (diffLevel === 3 && attr.key) {
+            keyLevel = level;
+            KeyMap[level] = 'O' + level;
+            // parsedAttr.key = "'+O" + level + "+'";
+            attr.key = void 0;
+            FnText += indent(level, 1) + 'var O'+ level + '=N; \n';
           }
 
           //re-render sub template
@@ -1075,7 +1378,9 @@ var doTA = (function() {'use strict';
 
         //make id attr come before anything
         if (customId || watchDiff) {
-          tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ("'+N+++'." + uniqueId);
+          tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ("'+N+++'." + (
+            diffLevel === 3 && keyLevel < level && KeyMap[keyLevel] ? "'+" + KeyMap[keyLevel] + "+'." : ''
+          ) + uniqueId);
           FnText += ' id="' + tagId + '"';
           if (parsedAttr.id) {
             parsedAttr.id = void 0;
@@ -1122,7 +1427,7 @@ var doTA = (function() {'use strict';
       voidTag: function() {
         level--;
 
-        if (diffLevel && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
+        if (diffLevel === 2 && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
           // console.log('ngIfLevelMap1', ngIfLevel, ngIfLevels, ngIfLevelMap);
           if (ngIfLevelMap[ngIfLevel]) {
             FnText += indent(level, 1) + "}else{" +
@@ -1171,8 +1476,20 @@ var doTA = (function() {'use strict';
         //just write closing tag back
         FnText += indent(level) + "R+='</" + tagName + ">';\n";
 
+        if (diffLevel === 3) {
+          if (level === ngIfLevel && ngIfLevelMap[ngIfLevel]) {
+            FnText += indent(level, 1) + "}else{N+=" + ngIfLevelMap[ngIfLevel] + '} \n';
+            if (LevelMap[level] > 0) {
+              LevelMap[level]--;
+            }
+          }
+          if (level === keyLevel) {
+            FnText += indent(level, 1) + 'N=O' + level + '+1; \n';
+          }
+        }
+
         //ngIfCounter for most possible uniqueId generation; don't work with loop inside!
-        if (diffLevel && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
+        if (diffLevel === 2 && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
           // console.log('ngIfLevelMap1', ngIfLevel, ngIfLevels, ngIfLevelMap);
           if (ngIfLevelMap[ngIfLevel]) {
             FnText += indent(level, 1) + "}else{" +
@@ -1180,7 +1497,7 @@ var doTA = (function() {'use strict';
               (tagName === 'img' || tagName === 'input' || tagName === 'br' || tagName === 'hr' ?
                 '/>' : '></' + tagName + '>')
               + '\';' +
-              "N+=" + ngIfLevelMap[ngIfLevel] + ";}; \n";
+              "N+=" + ngIfLevelMap[ngIfLevel] + "} \n";
           }
           //save counter
           ngIfCounterTmp = ngIfLevelMap[ngIfLevel];
@@ -1206,7 +1523,7 @@ var doTA = (function() {'use strict';
         }
         // console.log('LevelMap2', LevelMap);
 
-        if (diffLevel) {
+        if (diffLevel === 2) {
           if (level === skipLevel) {
             // console.log('ngIfLevel', [level, skipLevel, ngRepeatLevel])
             FnText += indent(level, 1) + 'N=O' + level + '; \n';
@@ -1324,7 +1641,8 @@ var doTA = (function() {'use strict';
 
   var doTAObj = {
     diff: diffPatchExact,
-    diff2: diffPatchChildren,
+    diff2: diff2,
+    diff3: diff3,
     getId: getUniqueId,
     initCH: initCompileHash,
     compile: compileHTML,
