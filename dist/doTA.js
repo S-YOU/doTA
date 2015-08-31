@@ -357,7 +357,7 @@ var doTA = (function() {'use strict';
             //nodes to be inserted or deleted
             if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
               tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++}pos2++; //INLINE
               newNode.innerHTML = html2.substring(tagStartPos2, pos2);
 
               // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
@@ -367,7 +367,7 @@ var doTA = (function() {'use strict';
 
               elem1.parentNode.replaceChild(newNode.firstChild, elem1);
 
-              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++}pos1++; //INLINE
 
             //only attribute changes
             } else {
@@ -433,19 +433,22 @@ var doTA = (function() {'use strict';
 
   }
 
-  // FlatDOM: diff html as text and patch dom nodes
+  var newNode = typeof document !== 'undefined' && document.createElement('div');
+  var html1, part1, part2, elem1;
+  var logger;
+
+  // diff3: no place holder nodes
   function diff3(prevKey, html2) {
-    var html1 = doTA.H[prevKey];
+    html1 = doTA.H[prevKey];
     var prevPos1, lastPos1, pos1 = html1.indexOf('<');
     var prevPos2, lastPos2, pos2 = html2.indexOf('<');
-    var tagId1, tagId2, prevTagId1, prevTagId2, elem1, part1, part2;
-    // var tagNo1 = 0, tagNo2 = 0;
-    var newNode = document.createElement('div');
+    var tagId1, tagId2, prevTagId1, prevTagId2;
+    var tagNo1, tagNo2, subNo1, subNo2, dotPos1, dotPos2;
     var tagStartPos1, tagStartPos2;
     var LVL; //this is needed for fnInline
     // console.log(html1);
     // console.log(html2);
-    var logger = [];
+    // logger = [];
 
     for (;;) {
       // console.log('before', [dirty1, dirty2], [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
@@ -499,7 +502,7 @@ var doTA = (function() {'use strict';
             //nodes to be inserted or deleted
             if ((part1.substr(1, 6) === 'hidden') !== (part2.substr(1, 6) === 'hidden')) {
               tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++}pos2++; //INLINE
               newNode.innerHTML = html2.substring(tagStartPos2, pos2);
 
               // tagStartPos1 = html1.lastIndexOf('<', pos1 - 6);
@@ -509,7 +512,7 @@ var doTA = (function() {'use strict';
 
               elem1.parentNode.replaceChild(newNode.firstChild, elem1);
 
-              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++}pos1++; //INLINE
 
             //only attribute changes
             } else {
@@ -566,159 +569,204 @@ var doTA = (function() {'use strict';
             elem1.appendChild(document.createTextNode(part2));
           }
         }
+
+
+      //when id is different
       } else {
-        //["43.28.1", "42.28.1"] ["42.28.1", "41.28.1"] [14510, -1]
-        //unknown ["5.1", "18.5.1"] ["5.1", "5.1"] [-1, 231]
 
-        if (pos1 < 0) {
-          // ["38.28.1", "39.28.1"] ["37.28.1", "38.28.1"] [-1, 17139]
-          if (  prevTagId1.slice(prevTagId1.indexOf('.')) ===  prevTagId2.slice(prevTagId2.indexOf('.')) ) {
-            elem1 = document.getElementById(prevTagId1);
+        dotPos1 = tagId1.indexOf('.');
+        tagNo1 = tagId1.slice(0, dotPos1) ^ 0;
+        dotPos2 = tagId1.indexOf('.', ++dotPos1);
+        subNo1 = dotPos2 > 0 && tagId1.slice(dotPos1, dotPos2) ^ 0;
 
-            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
-            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+        dotPos2 = tagId2.indexOf('.');
+        tagNo2 = tagId2.slice(0, dotPos2) ^ 0;
+        dotPos1 = tagId2.indexOf('.', ++dotPos2);
+        subNo2 = dotPos1 > 0 && tagId2.slice(dotPos2, dotPos1) ^ 0;
 
-            elem1.parentNode.appendChild(newNode.firstChild);
-            logger.push(["appendChild[parent.last]<0", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
-            // pos2 = lastPos2;
-            // tagId1 = prevTagId1;
-            // tagId2 = prevTagId2;
-            continue;
+        if (prevTagId1 === prevTagId2 && pos1 > 0 && pos2 > 0) {
 
-             // ["5.1", "30.5.1"] ["5.1", "29.5.1"] [-1, 305]
-          }
-
-        //["43.28.1", "42.28.1"] ["42.28.1", "41.28.1"], [15011, -1]
-        } else if (pos2 < 0) {
-          if ( tagId1.slice(tagId1.indexOf('.')) === prevTagId1.slice(prevTagId1.indexOf('.')) ) {
-            elem1 = document.getElementById(tagId1);
-            elem1.parentNode.removeChild(elem1);
-            if (pos1 > 0) {
-              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
-            }
-            logger.push(["removeChild[last]<0", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-            // pos1 = lastPos1;
-            // tagId1 = prevTagId1;
-            // tagId2 = prevTagId2;
-            continue;
-          }
-        }
-        // different Id - not supported for now! ["7.5.1", "8.5.1"] ["6.5.1", "7.5.1"] [296, 298]
-
-        //new node to append ["6.1", "13.5.1"] ["12.5.1", "12.5.1"]
-        if (prevTagId1 === prevTagId2) {
-
-          if (tagId2.slice(tagId2.indexOf('.')) === prevTagId2.slice(prevTagId2.indexOf('.'))) {
-            elem1 = document.getElementById(prevTagId1);
-
+          //["6.1", "5.7.1"] ["5.6.1", "5.6.1"]
+          if (tagNo1 > tagNo2) {
+            elem1 = document.getElementById(prevTagId2);
             if (!elem1) {
-              logger.push(["no existing node", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
-              console.log([html1]);
-              console.log([html2]);
-            }
-
-            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
-            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
-
-            if (elem1.nextSibling) {
-              elem1.parentNode.insertBefore(newNode.firstChild, elem1.nextSibling);
-              logger.push(["insertBefore[parent.first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+              console.warn(["no existing node 5", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
             } else {
-              elem1.parentNode.appendChild(newNode.firstChild);
-              logger.push(["appendChild[parent.last]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++}pos2++; //INLINE
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+              //huge scroll - hack
+              if (tagId2.length - prevTagId2.length >= 2) {
+                elem1.appendChild(newNode.firstChild);
+                // logger.push(["this.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+              } else {
+                // if (elem1.nextSibling) {
+                //   elem1.parentNode.insertBefore(newNode.firstChild, elem1.nextSibling);
+                //   // logger.push(["parent.insertBefore[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                // } else {
+                  elem1.parentNode.appendChild(newNode.firstChild);
+                  // logger.push(["parent.appendChild[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                // }
+              }
+              pos1 = lastPos1;
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2;
+              continue;
             }
-            //["6.1", "13.5.1"] ["12.5.1", "12.5.1"]
-            pos1 = lastPos1;
-            tagId1 = prevTagId1;
-            tagId2 = prevTagId2;
-            continue;
 
-          // ["6.5.1", "7.5.1"] ["5.1", "5.1"]
-          } else if ( tagId1.slice(tagId1.indexOf('.')) === tagId2.slice(tagId2.indexOf('.')) ) {
+          // [5, 6] [24, false] ["5.24.1", "6.1"] ["5.23.1", "5.23.1"] [673, 770]
+          } else if (tagNo1 < tagNo2) {
+            elem1 = document.getElementById(tagId1);
+            if (!elem1) {
+              console.warn(["no existing node 4", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
+            } else {
+              elem1.parentNode.removeChild(elem1);
+              if (pos1 > 0) {
+                LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++}pos1++; //INLINE
+              }
+              // logger.push(["removeChild[first]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+              pos2 = lastPos2;
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2;
+              continue;
+            }
+          }
 
-            var tagNo1 = tagId1.substr(0, tagId1.indexOf('.')) ^ 0, tagNo2 = tagId2.substr(0, tagId2.indexOf('.')) ^ 0;
 
-            // ["6.5.1", "7.5.1"] ["5.1", "5.1"]
-            if (tagNo1 < tagNo2) {
+
+          //same level
+          if (tagNo1 === tagNo2) {
+
+            // [5, 5] [1, 2] ["5.1.1", "5.2.1"] ["5.1", "5.1"] [229, 227]
+            if ( subNo1 < subNo2 ) {
               elem1 = document.getElementById(tagId1);
               if (!elem1) {
-                logger.push(["no existing node", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
+                console.warn(["no existing node 4", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
               } else {
                 elem1.parentNode.removeChild(elem1);
                 if (pos1 > 0) {
-                  LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
+                  LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++}pos1++; //INLINE
                 }
-                logger.push(["removeChild[first]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                // logger.push(["removeChild[backward.last]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
                 pos2 = lastPos2;
-                tagId1 = prevTagId1; //need for removing multiple
+                tagId1 = prevTagId1;
                 tagId2 = prevTagId2;
                 continue;
               }
 
-            // ["12.5.1", "11.5.1"] ["5.1", "5.1"]
-            } else if (tagNo1 > tagNo2) {
-              elem1 = document.getElementById(prevTagId2);
-              if (!elem1) {
-                logger.push(["no existing node", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
-              } else {
-                tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-                LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
-                newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+            //[5, 5] [19, 18] ["5.19.1", "5.18.1"] ["5.1", "5.1"] [229, 231]
+            } else if ( subNo1 > subNo2 ) {
+              elem1 = document.getElementById(tagId1);
 
-                if (elem1.firstChild) {
-                  elem1.insertBefore(newNode.firstChild, elem1.firstChild);
-                  logger.push(["insertBefore[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-                } else {
-                  elem1.appendChild(newNode.firstChild);
-                  logger.push(["appendChild[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-                }
-                pos1 = lastPos1;
-                // tagId1 = prevTagId1;
-                // tagId2 = prevTagId2;
-                continue;
-              }
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++}pos2++; //INLINE
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+              elem1.parentNode.insertBefore(newNode.firstChild, elem1);
+              // if (elem1.firstChild) {
+              //   elem1.insertBefore(newNode.firstChild, elem1.firstChild);
+              //   // logger.push(["this.insertBefore[firstChild]", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+              // } else {
+              //   elem1.appendChild(newNode.firstChild);
+              //   // logger.push(["this.appendChild[firstChild]", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+              // }
+
+              pos1 = lastPos1;
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2; //check later
+              continue;
             }
 
-          // ["17.5.1", "6.1"] ["16.5.1", "16.5.1"]
-          } else if ( tagId1.indexOf('.') !== tagId1.lastIndexOf('.') &&
-          tagId1.slice(tagId1.indexOf('.')) === prevTagId1.slice(prevTagId1.indexOf('.')) &&
-          tagId2.slice(tagId2.indexOf('.')) !== prevTagId2.slice(prevTagId2.indexOf('.'))
-          ) {
-            elem1 = document.getElementById(tagId1);
-            elem1.parentNode.removeChild(elem1);
-            if (pos1 > 0) {
-              LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++} //INLINE
-            }
-            logger.push(["removeChild[1.first]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-            pos2 = lastPos2;
-            // tagId1 = prevTagId1;
-            tagId2 = prevTagId2;
-            continue;
+          } //same parent
 
-          //["6.1", "17.5.1"] ["5.1", "5.1"]
-          } else if (tagId2.slice(tagId2.indexOf('.') + 1) === prevTagId2) {
+        } //prevTagId1 === prevTagId2
+
+
+
+        if (pos1 < 0) {
+
+          // ["28.9.1", "28.10.1"] ["28.8.1", "28.9.1"] [-1, 16911]
+          if ( tagNo1 === tagNo2 && subNo1 < subNo2 ) {
             elem1 = document.getElementById(prevTagId2);
 
             tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++} //INLINE
+            LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++}pos2++; //INLINE
             newNode.innerHTML = html2.substring(tagStartPos2, pos2);
 
-            elem1.appendChild(newNode.firstChild);
-            logger.push(["appendChild[2.last]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+            //huge scroll - hack
+            if (tagId2.length - prevTagId2.length >= 2) {
+              elem1.appendChild(newNode.firstChild);
+              // logger.push(["this.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+            } else {
+              elem1.parentNode.appendChild(newNode.firstChild);
+              // logger.push(["appendChild[parent.last]1<0", [tagId1, tagId2], [subNo1, subNo2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+            }
 
+            tagId1 = prevTagId1;
+            tagId2 = prevTagId2;
+            continue;
+          } else {
+            console.warn('not impl1', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
           }
-
         }
 
-        console.log('====')
-        logger.slice(-10).forEach(function(item){
-          console.info.apply(console, item)
-        })
-        console.error("different Id - not supported for now!", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
+
+        if (pos2 < 0) {
+
+          if (tagNo1 === tagNo2) {
+
+            // [28, 28] [undefined, 13] ["28.1", "28.13.1"] ["28.1", "28.1"] [-1, 12127]
+            if (subNo1 < subNo2) {
+              elem1 = document.getElementById(prevTagId2);
+
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              LVL=1,pos2=tagStartPos2;for(;;){pos2=html2.indexOf(">",pos2);if("/"===html2.charAt(pos2-1)&&(LVL--,0>=LVL))break;pos2=html2.indexOf("<",pos2);if("/"===html2.charAt(pos2+1)){if(LVL--,0>=LVL){pos2=html2.indexOf(">",pos2+2);break}}else"!"!==html2.charAt(pos2+1)&&LVL++}pos2++; //INLINE
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+              elem1.appendChild(newNode.firstChild);
+              // logger.push(["appendChild[parent.last]2<0", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+
+              // pos1 = prevPos1;
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2;
+              continue;
+
+            //[28, 28] [27, 26] ["28.27.1", "28.26.1"] ["28.26.1", "28.25.1"] [12548, -1]
+            } else if (subNo1 > subNo2) {
+
+              elem1 = document.getElementById(tagId1);
+              if (!elem1) {
+                console.warn(["no existing node 4", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
+              } else {
+                elem1.parentNode.removeChild(elem1);
+                if (pos1 > 0) {
+                  LVL=1,pos1=pos1;for(;;){pos1=html1.indexOf(">",pos1);if("/"===html1.charAt(pos1-1)&&(LVL--,0>=LVL))break;pos1=html1.indexOf("<",pos1);if("/"===html1.charAt(pos1+1)){if(LVL--,0>=LVL){pos1=html1.indexOf(">",pos1+2);break}}else"!"!==html1.charAt(pos1+1)&&LVL++}pos1++; //INLINE
+                }
+                // logger.push(["removeChild[backward.last]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                // pos2 = lastPos2;
+                tagId1 = prevTagId1;
+                tagId2 = prevTagId2;
+                continue;
+              }
+
+            } else {
+              console.warn('not impl3', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+            }
+          }
+        }
+
+
+
+        // console.log('====')
+        // logger.slice(-10).forEach(function(item){
+        //   console.info.apply(console, item)
+        // })
+        console.error("different Id - not supported for now!", [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
         console.log([html1.substr(pos1 - 100, 100), html1.substr(pos1, 20)]);
         console.log([html2.substr(pos2 - 100, 100), html2.substr(pos2, 20)]);
+        // console.log(html1);
+        // console.log(html2)
         return;
       }
 
@@ -897,7 +945,7 @@ var doTA = (function() {'use strict';
     var idHash = {};
 
     var FnText = indent(level) + "'use strict';var " +
-      (watchDiff ? 'N=1,' : '') +
+      (watchDiff ? 'M,N=1,' : '') +
       "R='';\n"; //ToDO: check performance on var declaration
 
     //clean up extra white spaces and line break
@@ -1196,7 +1244,7 @@ var doTA = (function() {'use strict';
             KeyMap[level] = 'O' + level;
             // parsedAttr.key = "'+O" + level + "+'";
             attr.key = void 0;
-            FnText += indent(level, 1) + 'var O'+ level + '=N; \n';
+            FnText += indent(level, 1) + 'var O'+ level + '=N,M=1; \n';
           }
 
           //re-render sub template
@@ -1378,8 +1426,10 @@ var doTA = (function() {'use strict';
 
         //make id attr come before anything
         if (customId || watchDiff) {
-          tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ("'+N+++'." + (
-            diffLevel === 3 && keyLevel < level && KeyMap[keyLevel] ? "'+" + KeyMap[keyLevel] + "+'." : ''
+          tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ( (
+            diffLevel === 3 && keyLevel < level && KeyMap[keyLevel] ?
+            "'+" + KeyMap[keyLevel] + "+'.'+M+++'." :
+            "'+N+++'."
           ) + uniqueId);
           FnText += ' id="' + tagId + '"';
           if (parsedAttr.id) {
@@ -1478,7 +1528,7 @@ var doTA = (function() {'use strict';
 
         if (diffLevel === 3) {
           if (level === ngIfLevel && ngIfLevelMap[ngIfLevel]) {
-            FnText += indent(level, 1) + "}else{N+=" + ngIfLevelMap[ngIfLevel] + '} \n';
+            FnText += indent(level, 1) + "}else{M+=" + ngIfLevelMap[ngIfLevel] + '} \n';
             if (LevelMap[level] > 0) {
               LevelMap[level]--;
             }

@@ -11,9 +11,10 @@ angular.module('app', ['doTA'])
   var scrollElem; //keep it for scroll to top later
 
   window.virtualScroll = function(elem) {
+    scrollElem = elem;
     var scrollTop = elem.scrollTop;
     var scrollLeft = elem.scrollLeft;
-    scrollElem = elem;
+    // var virtual = 0;
 
     // Find Row Index
     var offsetTop = (((scrollTop * $scope.scale) / $scope.cellHeight) | 0) || 0;
@@ -21,18 +22,21 @@ angular.module('app', ['doTA'])
       // console.log('offsetTop over', $scope.offsetTop, scrollTop);
       offsetTop = $scope.dataLength - $scope.rows;
     }
-    if ($scope.offsetTop !== offsetTop) {
+
+    // if ($scope.offsetTop !== offsetTop) {
       if (+$scope.dataType === 1) {
+        // console.log('create virtual data', offsetTop, scrollTop);
         initData();
         $scope.data = makeData($scope.rows, offsetTop);
         offsetTop = 0;
+        // virtual = 1;
       } else {
         offsetTop = offsetTop;
       }
-    }
+    // }
 
     // Find Column Index
-    console.time('column');
+    // console.time('column');
     var offsetLeft = 0, offsetRight = widthMap.length - 1, scrollOffsetLeft = 0;
     for (var i = 0; i < widthMap.length; i++) {
       if (scrollLeft < widthMap[i]) {
@@ -47,11 +51,11 @@ angular.module('app', ['doTA'])
         break;
       }
     }
-    console.timeEnd('column');
-    // console.log('offsetLeft/offsetRight', [offsetLeft, offsetRight]);
+    // console.timeEnd('column');
+    // console.log('offsetTop|offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
 
     // if offsetTop don't change, just return
-    if ($scope.offsetTop === offsetTop && $scope.scrollLeft === scrollLeft) { return; }
+    // if ( ($scope.offsetTop === offsetTop && !virtual) && $scope.scrollLeft === scrollLeft) { return; }
 
     $scope.offsetTop = offsetTop
     $scope.offsetLeft = offsetLeft;
@@ -60,9 +64,9 @@ angular.module('app', ['doTA'])
     $scope.scrollLeft = scrollLeft;
     $scope.scrollOffsetLeft = scrollOffsetLeft;
 
-    console.log('useWhat/dataType', [+$scope.useWhat, +$scope.dataType],
-      'scrollLeft/scrollTop/scrollOffsetLeft', [scrollLeft, offsetTop, scrollOffsetLeft],
-      'offsetTop/offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
+    // console.log('useWhat/dataType', [+$scope.useWhat, +$scope.dataType],
+    //   'scrollLeft/scrollTop/scrollOffsetLeft', [scrollLeft, offsetTop, scrollOffsetLeft],
+    //   'offsetTop/offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
 
     switch (+$scope.useWhat) {
       case 0:
@@ -77,9 +81,9 @@ angular.module('app', ['doTA'])
   };
 
   function patch(){
-    console.time('patch');
+    // console.time('patch');
     compileFn($scope, 0, 0, 1);
-    console.timeEnd('patch');
+    // console.timeEnd('patch');
   }
 
   $scope.height = 500; //grid (viewport) height
@@ -122,22 +126,12 @@ angular.module('app', ['doTA'])
     {id: 'field2', name: 'Num ...', width: 125},
     {id: 'field3', name: 'Date', width: 110,
       template: '<input type="date" ng-value="x.field3" />'},
-    {id: 'field4', name: 'Col 7', width: 125},
-    {id: 'field5', name: 'Col 8', width: 125},
-    {id: 'field6', name: 'Col 9', width: 125},
-    {id: 'field7', name: 'Col 10', width: 125},
-    {id: 'field8', name: 'Col 11', width: 125},
-    {id: 'field9', name: 'Col 12', width: 125},
+    {id: 'field4', name: 'Col 7', width: 125}
   ];
-  // var i = 12;
-  // while (i < 100) {
-  //   $scope.gridOptions.push({id: 'field4', name: 'Col ' + (++i), width: 125});
-  //   $scope.gridOptions.push({id: 'field5', name: 'Col ' + (++i), width: 125});
-  //   $scope.gridOptions.push({id: 'field6', name: 'Col ' + (++i), width: 125});
-  //   $scope.gridOptions.push({id: 'field7', name: 'Col ' + (++i), width: 125});
-  //   $scope.gridOptions.push({id: 'field8', name: 'Col ' + (++i), width: 125});
-  //   $scope.gridOptions.push({id: 'field9', name: 'Col ' + (++i), width: 125});
-  // }
+  var i = $scope.gridOptions.length;
+  do {
+    $scope.gridOptions.push({id: 'field' + (i % 5 + 1), name: 'Col ' + i, width: 125});
+  } while (++i <= 1000);
 
   // apply cell template to grid template
   $scope.totalWidth = 0;
@@ -197,11 +191,7 @@ angular.module('app', ['doTA'])
         field2: 'Num ' + random3[i % 100],
         field3: random4[i % 100],
         field4: random2[i % 100],
-        field5: random3[i % 100],
-        field6: random2[i % 100],
-        field7: random4[i % 100],
-        field8: random2[i % 100],
-        field9: random3[i % 100]
+        field5: random3[i % 100]
       });
     }
     // console.timeEnd('makeData');
@@ -209,11 +199,12 @@ angular.module('app', ['doTA'])
   }
 
   function initData() {
-    random1 = makeRandom(100, function(){return Math.random().toFixed(2) * 100 | 0;});
-    random2 = makeRandom(100, function(){return Math.random().toFixed(5);});
-    random3 = makeRandom(100, function(){return Math.random().toFixed(5);});
+    random1 = makeRandom(100, function(){ return Math.random().toFixed(2) * 100 | 0;});
+    random2 = makeRandom(100, function(){ return Math.random().toFixed(5); });
+    random3 = makeRandom(100, function(){ return Math.random().toFixed(5); });
     random4 = makeRandom(100, function(){
-      return new Date((Math.random() + 0.3) * +new Date()).toISOString().slice(0,10);});
+      return new Date((Math.random() + 0.3) * +new Date()).toISOString().slice(0,10);
+    });
   }
 
   function makeRandom(count, fn) {
