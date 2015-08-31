@@ -57,16 +57,20 @@ var doTA = (function() {'use strict';
 
         // ** attribute without value (last attribute) **
         if (eqPos === -1) {
-          spPos = chunk.indexOf(' ', pos);
-          if (spPos > 0) {
-            attrName = chunk.slice(pos, spPos);
-          } else {
-            attrName = chunk.slice(pos);
-          }
-          // console.log('eqPos === -1', [attrName, pos, chunk])
-          if (attrName !== '/') {
-            attr[attrName] = '';
-          }
+          do {
+            spPos = chunk.indexOf(' ', pos);
+            if (spPos > 0) {
+              attrName = chunk.slice(pos, spPos);
+            } else {
+              attrName = chunk.slice(pos);
+            }
+            // console.log('eqPos === -1', [attrName, pos, chunk])
+            if (attrName !== '/') {
+              attr[attrName] = '';
+            }
+            pos = spPos + 1;
+
+          } while (spPos > 0);
           //attr required will be required="", while is valid syntax
           //http://www.w3.org/TR/html-markup/syntax.html#syntax-attr-empty
           break;
@@ -1868,11 +1872,12 @@ if (typeof module !== "undefined" && module.exports) {
               if (attrCompile){
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
-                console.time('compile:' + attrDoTARender);
+                console.time('$compile:' + attrDoTARender);
                 forEachArray(rawElem.querySelectorAll('[dota-pass]'), function(partial){
+                  // console.log('$compile:partial:' + attrDoTARender, partial);
                   $compile(partial)(scope);
                 });
-                console.timeEnd('compile:' + attrDoTARender);
+                console.timeEnd('$compile:' + attrDoTARender);
                 console.log(attrDoTARender,'after $compile partial');
 
               } else if (attrCompileAll){
@@ -2096,6 +2101,7 @@ if (typeof module !== "undefined" && module.exports) {
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
+            console.log('dotaTemplate - compile', [attrs.dotaTemplate])
             var attrCompile = makeBool(attrs.compile, 1);
 
             scope.$watch(attrs.dotaTemplate, function(newVal, oldVal) {

@@ -517,11 +517,12 @@
               if (attrCompile){
                 //partially compile each dota-pass and its childs,
                 // not sure this is suitable if you have so many dota-passes
-                console.time('compile:' + attrDoTARender);
+                console.time('$compile:' + attrDoTARender);
                 forEachArray(rawElem.querySelectorAll('[dota-pass]'), function(partial){
+                  // console.log('$compile:partial:' + attrDoTARender, partial);
                   $compile(partial)(scope);
                 });
-                console.timeEnd('compile:' + attrDoTARender);
+                console.timeEnd('$compile:' + attrDoTARender);
                 console.log(attrDoTARender,'after $compile partial');
 
               } else if (attrCompileAll){
@@ -745,6 +746,7 @@
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
+            console.log('dotaTemplate - compile', [attrs.dotaTemplate])
             var attrCompile = makeBool(attrs.compile, 1);
 
             scope.$watch(attrs.dotaTemplate, function(newVal, oldVal) {

@@ -57,16 +57,20 @@ var doTA = (function() {'use strict';
 
         // ** attribute without value (last attribute) **
         if (eqPos === -1) {
-          spPos = chunk.indexOf(' ', pos);
-          if (spPos > 0) {
-            attrName = chunk.slice(pos, spPos);
-          } else {
-            attrName = chunk.slice(pos);
-          }
-          // console.log('eqPos === -1', [attrName, pos, chunk])
-          if (attrName !== '/') {
-            attr[attrName] = '';
-          }
+          do {
+            spPos = chunk.indexOf(' ', pos);
+            if (spPos > 0) {
+              attrName = chunk.slice(pos, spPos);
+            } else {
+              attrName = chunk.slice(pos);
+            }
+            // console.log('eqPos === -1', [attrName, pos, chunk])
+            if (attrName !== '/') {
+              attr[attrName] = '';
+            }
+            pos = spPos + 1;
+
+          } while (spPos > 0);
           //attr required will be required="", while is valid syntax
           //http://www.w3.org/TR/html-markup/syntax.html#syntax-attr-empty
           break;
