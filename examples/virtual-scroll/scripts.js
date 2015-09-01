@@ -120,24 +120,24 @@ angular.module('app', ['doTA'])
   //grid options
   $scope.gridOptions = [
     {id: 'id', name: 'ID', width: 90,
-      template: '<input type="text" ng-value="x.id" class="cell-value" disabled />'},
+      template: '<input type="text" ng-value="x.id" disabled />'},
     {id: 'label', name: 'Text', width: 130,
       template: 'Text {{x.id}}'},
     {id: 'percent', name: 'Progress', width: 110,
-      template: '<span class="percent cell-value" ng-style="width:{{x.percent}}px" ' +
+      template: '<span class="percent" ng-style="width:{{x.percent}}px" ' +
         'ng-class="{green:x.percent>50,red:x.percent<30}"></span>'},
     {id: 'field1', name: 'More ...', width: 125,
       template: 'More ... {{x.field1}}'},
     {id: 'field2', name: 'Num ...', width: 125,
       template: 'Num ... {{x.field2}}'},
     {id: 'field3', name: 'Date', width: 110,
-      template: '<input type="date" class="cell-value" ng-value="x.field3" disabled />'},
+      template: '<input type="date" ng-value="x.field3" disabled />'},
     {id: 'field4', name: 'Col 7', width: 125}
   ];
   // fill upto x columns
   var i = $scope.gridOptions.length + 1;
   do {
-    $scope.gridOptions.push({id: 'field' + (i % 5 + 1), name: 'Col ' + i, width: 125});
+    $scope.gridOptions.push({id: 'field' + (i % 2 + 4), name: 'Col ' + i, width: 125});
   } while (++i <= 1000);
 
   // merge cell templates to grid template
@@ -173,10 +173,9 @@ angular.module('app', ['doTA'])
 
   //get cell x, y from event.target
   function getCellIndex(elem) {
-    //cell must include cell or cell-value class
-    if ( !/\b(cell|cell-value)\b/i.test(elem.className) ) { return; }
     while (!elem.getAttribute('col')) {
       elem = elem.parentNode;
+      if (elem === scrollElem || elem === gridRoot) { return; }
     }
     var col = elem.getAttribute('col'), row = elem.parentNode.getAttribute('row');
     if (row && col) return [row, col];

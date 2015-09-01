@@ -17,27 +17,27 @@
   <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> (FlatDOM) - Million/Billion of Rows x 1000 Columns
 </h3>
 
-<div style="padding: 5px 0 5px 0">
-  <label><input type="radio" ng-model="useWhat" value=0 checked />
+<div class=vpad>
+  <label><input type=radio ng-model="useWhat" value=0 checked />
   <span> Synchronous</span></label>
-  <label><input type="radio" ng-model="useWhat" value=1 ng-disabled="!hasRAF" />
+  <label><input type=radio ng-model="useWhat" value=1 ng-disabled="!hasRAF" />
   <span> Use requestAnimationFrame</span></label>
-  <label><input type="radio" ng-model="useWhat" value=2 ng-disabled="!hasRIC" />
+  <label><input type=radio ng-model="useWhat" value=2 ng-disabled="!hasRIC" />
   <span> Use requestIdleCallback</span></label>
-  <label><input type="radio" ng-model="useWhat" value=3 />
+  <label><input type=radio ng-model="useWhat" value=3 />
   <span> Use setTimeout</span></label>
 </div>
 
-<div style="padding: 5px 0 5px 0">
-  <label><input type="radio" ng-model="dataType" value=0 checked />
+<div class=vpad>
+  <label><input type=radio ng-model="dataType" value=0 checked />
   <span> Fixed 1 Million Rows</span></label>
-  <label><input type="radio" ng-model="dataType" value=1 />
+  <label><input type=radio ng-model="dataType" value=1 />
   <span> Dynamic 1 Billion Rows</span></label>
 </div>
 
 <div id="grid">Generating Data...</div>
 
-<div class=pad>{{hoverStatus}} {{clickStatus}}</div>
+<div class=vpad ng-bind="hoverStatus + '; ' + clickStatus"></div>
 
 <script type="text/template" id="grid-template">
   <div class="grid" ng-style="width:{{width}}px">
@@ -54,7 +54,8 @@
       ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)" ng-mousemove="hoverHandler($event)">
       <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
         <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
-          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" key=1 ng-init="x=data[i + offsetTop]" row="{{i+realOffsetTop}}">
+          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" ng-init="x=data[i + offsetTop]"
+            key=1 row="{{i+realOffsetTop}}">
             {cell-outlet}
           </div>
         </div>
@@ -64,10 +65,8 @@
 </script>
 
 <!-- -scroll-left="scrollLeft"-->
-<!--top:{{scrollTop}}px-->
 <!--transform:translateY({{scrollTop}}px)-->
 <!--transform:translate(0,{{scrollTop}}px)-->
-<!--index="{{i+offsetTop}}"-->
 
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
 <script src="../../dist/ngDoTA.min.js"></script>
