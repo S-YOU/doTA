@@ -1,20 +1,20 @@
 angular.module('app', ['doTA'])
 .controller('ctrl', function($scope, $filter, doTA) {
   //scrollTop limit: firefox: 4M, IE: 1M, others 10M
-  var maxScrollTop = window.mozRequestAnimationFrame ? 4e6 :
-    document.documentMode || /Edge/.test(navigator.userAgent) ? 1e6 : 33e6;
+  var maxScrollTop = window.mozRequestAnimationFrame ? 6e6 :
+    document.documentMode || /Edge/.test(navigator.userAgent) ? 1e6 : 32e6;
 
   $scope.hasRIC = typeof requestIdleCallback !== 'undefined';
   $scope.hasRAF = typeof requestAnimationFrame !== 'undefined';
   $scope.useWhat = 0;
   $scope.dataType = 0;
   var scrollElem; //keep it for scroll to top later
+  var data = [], fixedData = [];
 
   window.virtualScroll = function(elem) {
     scrollElem = elem;
     var scrollTop = elem.scrollTop;
     var scrollLeft = elem.scrollLeft;
-    // var virtual = 0;
 
     // Find Row Index
     var offsetTop = (((scrollTop * $scope.scale) / $scope.cellHeight) | 0) || 0;
@@ -26,10 +26,8 @@ angular.module('app', ['doTA'])
     // if ($scope.offsetTop !== offsetTop) {
       if (+$scope.dataType === 1) {
         // console.log('create virtual data', offsetTop, scrollTop);
-        initData();
-        $scope.data = makeData($scope.rows, offsetTop);
+        makeData($scope.rows, offsetTop, data);
         offsetTop = 0;
-        // virtual = 1;
       } else {
         offsetTop = offsetTop;
       }
@@ -55,7 +53,7 @@ angular.module('app', ['doTA'])
     // console.log('offsetTop|offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
 
     // if offsetTop don't change, just return
-    // if ( ($scope.offsetTop === offsetTop && !virtual) && $scope.scrollLeft === scrollLeft) { return; }
+    // if ( $scope.offsetTop === offsetTop && $scope.scrollLeft === scrollLeft) { return; }
 
     $scope.offsetTop = offsetTop
     $scope.offsetLeft = offsetLeft;
@@ -108,7 +106,8 @@ angular.module('app', ['doTA'])
   }
 
   initData();
-  $scope.data = $scope.fixedData = makeData(1e6);
+  makeData(1e6, 0, fixedData);
+  $scope.data = fixedData;
   $scope.dataLength = $scope.data.length;
   $scope.updated = 0;
   calcScale();
@@ -118,17 +117,20 @@ angular.module('app', ['doTA'])
   $scope.gridOptions = [
     {id: 'id', name: 'ID', width: 90,
       template: '<input type="text" ng-value="x.id" disabled />'},
-    {id: 'label', name: 'Text', width: 130},
+    {id: 'label', name: 'Text', width: 130,
+      template: 'Text {{x.id}}'},
     {id: 'percent', name: 'Progress', width: 110,
       template: '<span class="percent" ng-style="width:{{x.percent}}px" ' +
         'ng-class="{green:x.percent>50,red:x.percent<30}"></span>'},
-    {id: 'field1', name: 'More ...', width: 125},
-    {id: 'field2', name: 'Num ...', width: 125},
+    {id: 'field1', name: 'More ...', width: 125,
+      template: 'More ... {{x.field1}}'},
+    {id: 'field2', name: 'Num ...', width: 125,
+      template: 'Num ... {{x.field2}}'},
     {id: 'field3', name: 'Date', width: 110,
       template: '<input type="date" ng-value="x.field3" />'},
     {id: 'field4', name: 'Col 7', width: 125}
   ];
-  var i = $scope.gridOptions.length;
+  var i = $scope.gridOptions.length + 1;
   do {
     $scope.gridOptions.push({id: 'field' + (i % 5 + 1), name: 'Col ' + i, width: 125});
   } while (++i <= 1000);
@@ -162,7 +164,12 @@ angular.module('app', ['doTA'])
     if (newVal !== oldVal) {
       console.log('new dataType', [+newVal, +oldVal]);
 
-      $scope.data = +newVal === 1 ? makeData($scope.rows) : $scope.fixedData;
+      if (+newVal === 1) {
+        makeData($scope.rows, 0, data);
+        $scope.data = data;
+      } else {
+        $scope.data = fixedData;
+      }
       $scope.dataLength = +newVal === 1 ? 1e9 : $scope.data.length;
       $scope.totalHeight = $scope.cellHeight * $scope.dataLength;
       $scope.offsetTop = $scope.scrollTop = 0;
@@ -179,23 +186,26 @@ angular.module('app', ['doTA'])
   });
 
   var random1, random2, random3, random4;
-  function makeData(count, start) {
+  var offset, idx;
+  function makeData(count, start, data) {
     start = start || 0;
+    data.length = 0;
     // console.time('makeData');
-    var data = [];
-    for (var i = 0; i < count; i++) {
+    for (idx = 0; idx < count; idx++) {
+      offset = idx + start;
       data.push({
-        id: i + start, label: 'Text ' + (i + start),
-        percent: random1[i % 100],
-        field1: 'More ' + random2[i % 100],
-        field2: 'Num ' + random3[i % 100],
-        field3: random4[i % 100],
-        field4: random2[i % 100],
-        field5: random3[i % 100]
+        id: offset,
+        percent: random1[offset % 100],
+        field1: random2[(offset + 10) % 100],
+        field2: random3[(offset + 20) % 100],
+        field3: random4[(offset + 30) % 100],
+
+        field4: random2[(offset + 40) % 100],
+        field5: random3[(offset + 50) % 100]
       });
     }
     // console.timeEnd('makeData');
-    return data;
+    // return data;
   }
 
   function initData() {

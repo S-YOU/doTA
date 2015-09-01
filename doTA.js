@@ -298,6 +298,9 @@ var doTA = (function() {'use strict';
     return ++POS;
   }
 
+  //less memory usage with this, javascript is single threaded anyway
+  var newNode = typeof document !== 'undefined' && document.createElement('div');
+
   // FlatDOM: diff html as text and patch dom nodes
   function diff2(prevKey, html2) {
     var html1 = doTA.H[prevKey];
@@ -305,7 +308,6 @@ var doTA = (function() {'use strict';
     var prevPos2 = 0, pos2 = html2.indexOf('<');
     var tagId1, tagId2, elem1, part1, part2;
     // var tagNo1 = 0, tagNo2 = 0;
-    var newNode = document.createElement('div');
     var tagStartPos1, tagStartPos2;
     var LVL; //this is needed for fnInline
     // console.log(html1);
@@ -437,13 +439,10 @@ var doTA = (function() {'use strict';
 
   }
 
-  var newNode = typeof document !== 'undefined' && document.createElement('div');
-  var html1, part1, part2, elem1;
-  var logger;
-
   // diff3: no place holder nodes
   function diff3(prevKey, html2) {
-    html1 = doTA.H[prevKey];
+    var html1 = doTA.H[prevKey];
+    var part1, part2, elem1;
     var prevPos1, lastPos1, pos1 = html1.indexOf('<');
     var prevPos2, lastPos2, pos2 = html2.indexOf('<');
     var tagId1, tagId2, prevTagId1, prevTagId2;
@@ -452,7 +451,7 @@ var doTA = (function() {'use strict';
     var LVL; //this is needed for fnInline
     // console.log(html1);
     // console.log(html2);
-    // logger = [];
+    // var logger = [];
 
     for (;;) {
       // console.log('before', [dirty1, dirty2], [tagId1, tagId2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
@@ -605,13 +604,8 @@ var doTA = (function() {'use strict';
                 elem1.appendChild(newNode.firstChild);
                 // logger.push(["this.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
               } else {
-                // if (elem1.nextSibling) {
-                //   elem1.parentNode.insertBefore(newNode.firstChild, elem1.nextSibling);
-                //   // logger.push(["parent.insertBefore[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-                // } else {
-                  elem1.parentNode.appendChild(newNode.firstChild);
-                  // logger.push(["parent.appendChild[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-                // }
+                elem1.parentNode.appendChild(newNode.firstChild);
+                // logger.push(["parent.appendChild[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
               }
               pos1 = lastPos1;
               tagId1 = prevTagId1;
@@ -668,13 +662,7 @@ var doTA = (function() {'use strict';
               newNode.innerHTML = html2.substring(tagStartPos2, pos2);
 
               elem1.parentNode.insertBefore(newNode.firstChild, elem1);
-              // if (elem1.firstChild) {
-              //   elem1.insertBefore(newNode.firstChild, elem1.firstChild);
-              //   // logger.push(["this.insertBefore[firstChild]", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
-              // } else {
-              //   elem1.appendChild(newNode.firstChild);
-              //   // logger.push(["this.appendChild[firstChild]", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
-              // }
+              // logger.push(["this.insertBefore[elem1]", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
 
               pos1 = lastPos1;
               tagId1 = prevTagId1;
@@ -688,7 +676,8 @@ var doTA = (function() {'use strict';
 
 
 
-        if (pos1 < 0) {
+        //end of previous html
+        else if (pos1 < 0) {
 
           // ["28.9.1", "28.10.1"] ["28.8.1", "28.9.1"] [-1, 16911]
           if ( tagNo1 === tagNo2 && subNo1 < subNo2 ) {
@@ -711,13 +700,15 @@ var doTA = (function() {'use strict';
             tagId2 = prevTagId2;
             continue;
           } else {
-            console.warn('not impl1', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+            console.warn('not impl1 pos1 < 0', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
           }
         }
 
 
-        if (pos2 < 0) {
+        //end of new html
+        else if (pos2 < 0) {
 
+          //same base id
           if (tagNo1 === tagNo2) {
 
             // [28, 28] [undefined, 13] ["28.1", "28.13.1"] ["28.1", "28.1"] [-1, 12127]
@@ -731,7 +722,6 @@ var doTA = (function() {'use strict';
               elem1.appendChild(newNode.firstChild);
               // logger.push(["appendChild[parent.last]2<0", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
 
-              // pos1 = prevPos1;
               tagId1 = prevTagId1;
               tagId2 = prevTagId2;
               continue;
@@ -748,19 +738,19 @@ var doTA = (function() {'use strict';
                   pos1 = getOuterHTMLEnd(html1, pos1);
                 }
                 // logger.push(["removeChild[backward.last]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-                // pos2 = lastPos2;
+
                 tagId1 = prevTagId1;
                 tagId2 = prevTagId2;
                 continue;
               }
 
             } else {
-              console.warn('not impl3', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+              console.warn('not impl3 pos2 < 0', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
             }
           }
         }
 
-
+        ////////////// THIS SHOULD NEVER REACH ///////////////
 
         // console.log('====')
         // logger.slice(-10).forEach(function(item){
