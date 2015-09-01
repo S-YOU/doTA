@@ -62,7 +62,7 @@
 
   var inline1 = [
     /(\w+)\s*=\s*getOuterHTMLEnd\((\w+)\s*,\s*(\w+)\);/g,
-    'LVL=1,$1=$3;for(;;){$1=$2.indexOf(">",$1);if("/"===$2.charAt($1-1)&&(LVL--,0>=LVL))break;$1=$2.indexOf("<",$1);if("/"===$2.charAt($1+1)){if(LVL--,0>=LVL){$1=$2.indexOf(">",$1+2);break}}else"!"!==$2.charAt($1+1)&&LVL++} //INLINE'
+    'LVL=1,$1=$3;for(;;){$1=$2.indexOf(">",$1);if("/"===$2.charAt($1-1)&&(LVL--,0>=LVL))break;$1=$2.indexOf("<",$1);if("/"===$2.charAt($1+1)){if(LVL--,0>=LVL){$1=$2.indexOf(">",$1+2);break}}else"!"!==$2.charAt($1+1)&&LVL++}$1++; //INLINE'
   ];
 
   var inline2 = [
