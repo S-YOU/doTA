@@ -1382,7 +1382,13 @@ var doTA = (function() {'use strict';
               //convert ng-events to dota-events, to be bind later with native events
               } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
                 //add class 'de' for one time querying
-                parsedAttr.class = parsedAttr.class ? 'de ' + parsedAttr.class : 'de';
+                if (parsedAttr.class) {
+                  if (parsedAttr.class.indexOf('de') < 0) {
+                    parsedAttr.class = 'de ' + parsedAttr.class;
+                  }
+                } else {
+                  parsedAttr.class = 'de';
+                }
                 // parsedAttr.de = 1;
                 x = 'de-' + attrName;
 

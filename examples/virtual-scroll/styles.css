@@ -5,6 +5,10 @@
   outline: 0;
 }
 
+.pad {
+  padding: 5px;
+}
+
 body {
   padding: 10px;
 }
@@ -60,6 +64,9 @@ body {
   height: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.body .cell:hover, .body .cell input:hover {
+  background-color: yellow;
 }
 .cell + .cell {
   border-left: 1px dotted silver;

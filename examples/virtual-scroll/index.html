@@ -37,6 +37,8 @@
 
 <div id="grid">Generating Data...</div>
 
+<div class=pad>{{hoverStatus}} {{clickStatus}}</div>
+
 <script type="text/template" id="grid-template">
   <div class="grid" ng-style="width:{{width}}px">
     <div class="header">
@@ -48,10 +50,11 @@
         </div>
       </div>
     </div>
-    <div class="body" ng-style="height:{{bodyHeight}}px" onscroll="virtualScroll(this)">
+    <div class="body" ng-style="height:{{bodyHeight}}px" onscroll="virtualScroll(this)"
+      ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)" ng-mousemove="hoverHandler($event)">
       <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
         <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
-          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" key=1 ng-init="x=data[i + offsetTop]" index="{{i+offsetTop}}">
+          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" key=1 ng-init="x=data[i + offsetTop]" row="{{i+realOffsetTop}}">
             {cell-outlet}
           </div>
         </div>
