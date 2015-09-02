@@ -1956,14 +1956,14 @@ if (typeof module !== "undefined" && module.exports) {
       //use checked property for checkbox and radio
       var bindProp = partial.getAttribute('bind-prop') ||
         ((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
-      var curValue = resolveObject(modelName, scope) || '';
+      var curValue = resolveObject(modelName, scope);
 
-      console.log('partial', [partial.tagName, partial.type, curValue]);
+      // console.log('partial', [partial.tagName, partial.type, curValue, partial.value]);
       if (bindProp) {
         //set true or false on dom properties
-        partial[bindProp] = partial.value === curValue;
+        partial[bindProp] = partial.value == curValue;
       } else {
-        partial.value = curValue;
+        partial.value = "" + curValue; // attributes are always string
       }
 
       //bind each events
