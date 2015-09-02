@@ -68,7 +68,7 @@ This project has two libraries, doTA, and ngDoTA.
     - may be used `"ctrl as vm"` or `controller-as="vm"` - untested
 
 - some ng-xx aliases
-  - `ng-value="value"` - set to `value` attribute without interpolation
+  - `ng-value="value"` - set to `value` attribute without interpolation. $filters can be used
   - `ng-src="{{base}}/image/{{size}}.jpg"` - expand interpolation and set `src` attribute
   - `ng-alt` - expand interpolation and set `alt` attribute
   - `ng-title` - expand interpolation and set `title` attribute

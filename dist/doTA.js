@@ -1357,7 +1357,7 @@ var doTA = (function() {'use strict';
           }
 
           if (attr['ng-value']) {
-            parsedAttr.value = "'+(" + attachScope(attr['ng-value']) + ")+'";
+            parsedAttr.value = "'+(" + attachFilter(attr['ng-value']) + ")+'";
             attr['ng-value'] = void 0;
           }
 

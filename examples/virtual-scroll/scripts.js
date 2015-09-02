@@ -1,4 +1,11 @@
 angular.module('app', ['doTA'])
+
+.filter('toFixed', function() {
+  return function(val, digit) {
+    return val.toFixed(digit || 5);
+  }
+})
+
 .controller('ctrl', function($scope, $filter, doTA) {
   //scrollTop limit: firefox: 6M, IE: 1M, others 32M
   var maxScrollTop = window.mozRequestAnimationFrame ? 6e6 :
@@ -82,7 +89,7 @@ angular.module('app', ['doTA'])
   //dom patching
   function patch(){
     // console.time('patch');
-    compileFn($scope, 0, 0, 1);
+    compileFn($scope, $filter, 0, 1);
     // console.timeEnd('patch');
   }
 
@@ -127,11 +134,11 @@ angular.module('app', ['doTA'])
       template: '<span class="percent" ng-style="width:{{x.percent}}px" ' +
         'ng-class="{green:x.percent>50,red:x.percent<30}"></span>'},
     {id: 'field1', name: 'More ...', width: 125,
-      template: 'More ... {{x.field1}}'},
+      template: 'More ... {{x.field1 | toFixed}}'},
     {id: 'field2', name: 'Num ...', width: 125,
-      template: 'Num ... {{x.field2}}'},
+      template: 'Num ... {{x.field2 | toFixed}}'},
     {id: 'field3', name: 'Date', width: 110,
-      template: '<input type="date" ng-value="x.field3" disabled />'},
+      template: '<input type="date" ng-value="x.field3|date:\'yyyy-MM-dd\'" disabled />'},
     {id: 'field4', name: 'Col 7', width: 125}
   ];
   // fill upto x columns
@@ -247,11 +254,11 @@ angular.module('app', ['doTA'])
   }
 
   function initData() {
-    random1 = makeRandom(100, function(){ return Math.random().toFixed(2) * 100 | 0;});
-    random2 = makeRandom(100, function(){ return Math.random().toFixed(5); });
-    random3 = makeRandom(100, function(){ return Math.random().toFixed(5); });
+    random1 = makeRandom(100, function(){ return Math.random() * 100 | 0;});
+    random2 = makeRandom(100, function(){ return Math.random(); });
+    random3 = makeRandom(100, function(){ return Math.random(); });
     random4 = makeRandom(100, function(){
-      return new Date((Math.random() + 0.3) * +new Date()).toISOString().slice(0,10);
+      return (Math.random() + 0.3) * +new Date();
     });
   }
 
