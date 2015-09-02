@@ -300,13 +300,13 @@ var N = 100;
   var BoxView = {};
 
   var init = function() {
-    BoxView.X =  _.map(_.range(N), function() { return 0; });
+    BoxView.boxes =  _.map(_.range(N), function() { return 0; });
     $('#grid').append(renderFn(BoxView));
   };
 
   var animate = function() {
-    for (var i = 0; i < BoxView.X.length; i++) {
-      BoxView.X[i]++;
+    for (var i = 0; i < BoxView.boxes.length; i++) {
+      BoxView.boxes[i]++;
     }
     renderFn(BoxView, 0, 0, 1);
   };

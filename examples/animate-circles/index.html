@@ -33,7 +33,7 @@
 </script>
 
 <script type="x-template" id="dota-template">
-  <div class=box-view ng-repeat="x in X">
+  <div class=box-view ng-repeat="x in boxes">
     <div class=box style="top:{{ Math.sin(x/10) * 10 }}px;left:{{ Math.cos(x/10) * 10}}px;background:rgb(0,0,{{x % 255}});">
       {{ x % 100}}
     </div>
