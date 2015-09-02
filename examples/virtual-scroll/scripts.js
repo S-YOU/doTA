@@ -33,23 +33,24 @@ angular.module('app', ['doTA'])
     var realOffsetTop = offsetTop;
 
     // if ($scope.offsetTop !== offsetTop) {
-      if (+$scope.dataType === 1) {
-        // console.log('create virtual data', offsetTop, scrollTop);
-        makeData($scope.rows, offsetTop, data);
-        offsetTop = 0;
-      }
+    if (+$scope.dataType === 1) {
+      // console.log('create virtual data', offsetTop, scrollTop);
+      makeData($scope.rows, offsetTop, data);
+      offsetTop = 0;
+    }
     // }
 
     // Find Column Index
     // console.time('column');
-    var offsetLeft = 0, offsetRight = widthMap.length - 1, scrollOffsetLeft = 0;
+    var offsetLeft = 0, offsetRight = widthMap.length, scrollOffsetLeft = 0;
     for (var i = 0; i < widthMap.length; i++) {
       if (scrollLeft < widthMap[i]) {
         offsetLeft = i;
-        scrollOffsetLeft = widthMap[i - 1] || 0;
+        scrollOffsetLeft = i ? widthMap[i - 1] : 0;
         for (var j = i; j < widthMap.length; j++) {
-          if (scrollLeft + $scope.width < widthMap[j]) {
-            offsetRight = j;
+          if (scrollLeft + $scope.width <= widthMap[j]) {
+            offsetRight = j + 1;
+            // console.log('offsetRight', offsetRight, widthMap.length);
             break;
           }
         }
@@ -57,7 +58,9 @@ angular.module('app', ['doTA'])
       }
     }
     // console.timeEnd('column');
-    // console.log('offsetTop|offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
+    if (offsetRight - offsetLeft  > 7) {
+      console.log('offsetTop|offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
+    }
 
     // if offsetTop don't change, just return
     // if ( $scope.offsetTop === offsetTop && $scope.scrollLeft === scrollLeft) { return; }
@@ -99,7 +102,7 @@ angular.module('app', ['doTA'])
   $scope.cellHeight = 25; //height of each cells
   $scope.realOffsetTop = $scope.offsetTop = 0; //data array offsetTop
   $scope.offsetLeft = 0;
-  $scope.offsetRight = 6;
+  $scope.offsetRight = 7;
   $scope.scrollTop = $scope.scrollLeft = $scope.scrollOffsetLeft = 0; //in pixel
   $scope.rows = ($scope.height / $scope.cellHeight) | 0; //dynamic row count
   $scope.bodyHeight = $scope.height + 16; //+ scroll bar height
@@ -124,53 +127,65 @@ angular.module('app', ['doTA'])
   $scope.updated = 0;
   calcScale();
 
+  //templates
+  var TEMPLATE_ID = 'T_';
+  var templates = {
+    id: '<input type="text" ng-value="id" disabled />',
+    text: 'Text {{id}}',
+    percent: '<span class="percent" ng-style="width:{{percent}}px" ng-class="{green:percent>50,red:percent<30}"></span>',
+    more: 'More ... {{field1 | toFixed}}',
+    num: 'Num ... {{field2 | toFixed}}',
+    date: '<input type="date" ng-value="field3|date:\'yyyy-MM-dd\'" disabled />'
+  };
+
+  for (var x in templates) {
+    // console.log('T_', x, [templates[x]]);
+    doTA.C[TEMPLATE_ID + x] = doTA.compile(templates[x],
+      {dotaRender: TEMPLATE_ID, watchDiff: 1, diffLevel: 0, encode: 1, key: 'K'});
+    // console.log(doTA.C['T_' + x])
+  }
+
   //grid options
   $scope.gridOptions = [
     {id: 'id', name: 'ID', width: 90,
-      template: '<input type="text" ng-value="x.id" disabled />'},
+      template_id : 'id'},
     {id: 'label', name: 'Text', width: 130,
-      template: 'Text {{x.id}}'},
+      template_id: 'text'},
     {id: 'percent', name: 'Progress', width: 110,
-      template: '<span class="percent" ng-style="width:{{x.percent}}px" ' +
-        'ng-class="{green:x.percent>50,red:x.percent<30}"></span>'},
+      template_id: 'percent'},
     {id: 'field1', name: 'More ...', width: 125,
-      template: 'More ... {{x.field1 | toFixed}}'},
+      template_id: 'more'},
     {id: 'field2', name: 'Num ...', width: 125,
-      template: 'Num ... {{x.field2 | toFixed}}'},
+      template_id: 'num'},
     {id: 'field3', name: 'Date', width: 110,
-      template: '<input type="date" ng-value="x.field3|date:\'yyyy-MM-dd\'" disabled />'},
+      template_id: 'date'},
     {id: 'field4', name: 'Col 7', width: 125}
   ];
   // fill upto x columns
   var i = $scope.gridOptions.length + 1;
   do {
     $scope.gridOptions.push({id: 'field' + (i % 2 + 4), name: 'Col ' + i, width: 125});
-  } while (++i <= 1000);
+  } while (++i <= 1e5);
 
   // merge cell templates to grid template
-  $scope.totalWidth = 0;
-  var cellOutlet = '', headerOutlet = '', widthMap = [];
+  var widthMap = [], totalWidth = 0;
   $scope.gridOptions.forEach(function(col, i) {
-    headerOutlet += '<div class="cell" style="width:' + col.width + 'px" ' +
-      'col="' + i + '" ng-if="offsetLeft<='+ i + '&&offsetRight>='+ i + '">' +
-      (col.headerTemplate || col.name) +
-      '</div>';
-    cellOutlet += '<div class="cell" style="width:' + col.width + 'px" ' +
-      'col="' + i + '" ng-if="offsetLeft<='+ i + '&&offsetRight>='+ i + '">' +
-      (col.template || '{{x.' + col.id + '}}') +
-      '</div>';
-    $scope.totalWidth += col.width || 100;
+    totalWidth += col.width || 100;
     //width map, which sum upto x columns, to prevent extra loop at scroll event
-    widthMap[i] = $scope.totalWidth;
+    widthMap[i] = totalWidth;
   });
+  // console.log('widthMap', widthMap.length, widthMap[0], widthMap[1e5-1], widthMap.slice(0, 10), widthMap.slice(-10), totalWidth);
+  $scope.totalWidth = totalWidth;
 
   //get grid template from script tag
   var template = document.getElementById('grid-template').innerHTML;
-  template = template.replace('{cell-outlet}', cellOutlet).replace('{header-outlet}', headerOutlet);
+  // template = template.replace('{header-outlet}', headerOutlet); //.replace('{cell-outlet}', cellOutlet);
+  // console.log('template', template);
+  // console.log('cellOutlet', cellOutlet);
 
   //compile template to fn
   var compileFn = doTA.compile(template, {strip: 1, encode: 1, loose: 0, event: 1,
-    watchDiff: "updated", diffLevel: 3, debug: 0});
+    watchDiff: "updated", diffLevel: 3, debug: 0, dotaRender: TEMPLATE_ID});
 
   //write to dom
   var gridRoot = document.getElementById('grid');

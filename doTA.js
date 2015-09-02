@@ -200,7 +200,11 @@ var doTA = (function() {'use strict';
           func.text(html.substring(prevPos, pos));
         }
       } else {
-        console.error('Parse ERR?', [prevPos, pos, html.substring(prevPos, pos), html.slice(pos)]);
+        if (prevPos === 0 && pos < 0 && html) {
+          func.text(html);
+        } else {
+          /** */console.error('Parse ERR?', [prevPos, pos, html, html.substring(prevPos, pos), html.slice(pos)]);
+        }
         break;
       }
 
@@ -923,7 +927,8 @@ var doTA = (function() {'use strict';
     var val_mod = options.loose ? "||''" : '';
     var watchDiff = options.watchDiff;
     var diffLevel = +options.diffLevel;
-    var VarMap = {$index: 1, undefined: 1, $attr: 1,
+    var VarMap = {$index: 1, undefined: 1, this: 1,
+      doTA: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
       Math: 1, Date: 1, String: 1, Object: 1, Array: 1, Infinity: 1, NaN: 1,
       // alert: 1, confirm: 1, prompt: 1,
       var: 1, in: 1,
@@ -937,10 +942,15 @@ var doTA = (function() {'use strict';
     var compiledFn;
     var uniqueId = this.getId(options.dotaRender);
     var idHash = {};
+    var FnText = '';
 
-    var FnText = indent(level) + "'use strict';var " +
+    if (options.key) {
+      FnText += indent(level) + "var R='';\n";
+    } else {
+      FnText += indent(level) + "'use strict';var " +
       (watchDiff ? 'M,N=1,' : '') +
       "R='';\n"; //ToDO: check performance on var declaration
+    }
 
     //clean up extra white spaces and line break
     template = template.replace(whiteSpaceRegex, ' ');
@@ -1184,10 +1194,8 @@ var doTA = (function() {'use strict';
             if (pipePos > 0) {
               repeatSrcNew = attachFilter(repeatSrc);
             } else {
-              colonPos = repeatSrc.indexOf(':');
-              // if (colonPos < 0) {
-                repeatSrcNew = attachScope(repeatSrc);
-              // }
+              repeatSrcNew = attachScope(repeatSrc);
+              colonPos = repeatSrcNew.indexOf(':');
             }
 
             // Range: "i in 1:10" ==> (for i = 1; i < 10; i++)
@@ -1201,7 +1209,7 @@ var doTA = (function() {'use strict';
                 end = repeatSrcNew.substr(colonPos);
                 step = 1;
               }
-              // console.log([start, end, step])
+              // console.log([start, end, step, repeatSrcNew, colonPos]);
 
               FnText += indent(level, 1) + 'for(var ' +
                 repeatVar + '=' + start + ';' +
@@ -1235,10 +1243,9 @@ var doTA = (function() {'use strict';
 
           if (diffLevel === 3 && attr.key) {
             keyLevel = level;
-            KeyMap[level] = 'O' + level;
-            // parsedAttr.key = "'+O" + level + "+'";
+            KeyMap[level] = attr.key;
+            FnText += indent(level, 1) + 'var ' + attr.key + '=N,M=1; \n';
             attr.key = void 0;
-            FnText += indent(level, 1) + 'var O'+ level + '=N,M=1; \n';
           }
 
           //re-render sub template
@@ -1427,8 +1434,8 @@ var doTA = (function() {'use strict';
         //make id attr come before anything
         if (customId || watchDiff) {
           tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ( (
-            diffLevel === 3 && keyLevel < level && KeyMap[keyLevel] ?
-            "'+" + KeyMap[keyLevel] + "+'.'+M+++'." :
+            keyLevel < level && KeyMap[keyLevel] || options.key ?
+            "'+" + (options.key || KeyMap[keyLevel]) + "+'.'+M+++'." :
             "'+N+++'."
           ) + uniqueId);
           FnText += ' id="' + tagId + '"';
@@ -1528,13 +1535,13 @@ var doTA = (function() {'use strict';
 
         if (diffLevel === 3) {
           if (level === ngIfLevel && ngIfLevelMap[ngIfLevel]) {
-            FnText += indent(level, 1) + "}else{M+=" + ngIfLevelMap[ngIfLevel] + '} \n';
-            if (LevelMap[level] > 0) {
-              LevelMap[level]--;
-            }
+            // FnText += indent(level, 1) + "}else{M+=" + ngIfLevelMap[ngIfLevel] + '} \n';
+            // if (LevelMap[level] > 0) {
+            //   LevelMap[level]--;
+            // }
           }
           if (level === keyLevel) {
-            FnText += indent(level, 1) + 'N=O' + level + '+1; \n';
+            // FnText += indent(level, 1) + 'N=' + level + '+1; \n';
           }
         }
 
@@ -1621,7 +1628,7 @@ var doTA = (function() {'use strict';
       }
     });
 
-    if (watchDiff) {
+    if (watchDiff && diffLevel !== 0) {
       //http://jsperf.com/hasownproperty-vs-in-vs-undefined/87
       FnText += indent(0) + 'if(X&&typeof doTA.H[' + uniqueId + ']!=="undefined"){doTA.diff' + (diffLevel || '') +
         '(' + uniqueId + ',R)}' +
@@ -1647,7 +1654,7 @@ var doTA = (function() {'use strict';
 
     try {
       //$scope, $filter
-      compiledFn = new Function('S', 'F', '$attr', 'X', FnText);
+      compiledFn = new Function('S', 'F', '$attr', 'X', 'N', 'K', 'M', FnText);
       if (Watched) {
         compiledFn = {W:[], F: compiledFn};
       }
