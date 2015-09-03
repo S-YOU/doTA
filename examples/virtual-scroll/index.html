@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge,chrome=1">
-  <title>Virtual Scroll with doTA (Million/Billion Rows) x 100k Columns </title>
+  <title>Virtual Scroll with doTA (Million/Billion Rows) x ~1 Million Columns </title>
   <link href="styles.css" rel="stylesheet">
 </head>
 <body>
@@ -14,7 +14,7 @@
 </div>
 
 <h3>Virtual Scroll with
-  <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> (FlatDOM) - Million/Billion of Rows x 100k Columns
+  <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> (FlatDOM) - Million/Billion of Rows x ~1 Million Columns
 </h3>
 
 <div ng-app="app">
@@ -31,10 +31,17 @@
     </div>
 
     <div class=vpad>
-      <label><input name=2 type=radio ng-model="dataType" value=0 checked />
+      <label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=0 checked />
       <span> Fixed 1 Million Rows</span></label>
-      <label><input name=2 type=radio ng-model="dataType" value=1 />
+      <label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=1 />
       <span> Dynamic 1 Billion Rows</span></label>
+    </div>
+
+    <div class=vpad>
+      <label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=0 checked />
+      <span> 100k Columns</span></label>
+      <label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=1 />
+      <span> 1 Million Columns</span></label>
 
       <em>-
         <span ng-bind="hoverStatus"></span>
