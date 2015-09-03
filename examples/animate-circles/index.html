@@ -1,14 +1,13 @@
 <!doctype html>
 <html>
 <head>
-<title>Animate Circles (Ember+HTMLBars/IncrementalDOM/React/Backbone/Raw/doTA)</title>
+<title>Animate Circles (Ember+HTMLBars/IncrementalDOM/React/AngularJS/Backbone/Raw/doTA)</title>
 <link rel="stylesheet" type="text/css" href="./styles.css"></link>
 </head>
 <body>
 
 <p>
-    This is a fork of <a href="http://jsfiddle.net/Ut2X6/10/" target="_blank">http://jsfiddle.net/Ut2X6/10/</a> to include <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> &
-    <a href="https://github.com/google/incremental-dom" target="_blank">Incremental DOM</a>, which in turn a fork of <a href="http://jsfiddle.net/jashkenas/CGSd5/" target="_blank">jashkenas's Ember/Backbone</a> benchmark to include React. Note that this is just a simple benchmark: you wouldn't be doing this in an actual app.
+    This is a fork of <a href="http://jsfiddle.net/Ut2X6/10/" target="_blank">http://jsfiddle.net/Ut2X6/10/</a> to include <a href="https://github.com/S-YOU/doTA" target=_blank>doTA</a>/<a href="https://github.com/google/incremental-dom" target=_blank>Incremental DOM</a>/<a href="http://angularjs.org" target=_blank>AngularJS</a>, which in turn a fork of <a href="http://jsfiddle.net/jashkenas/CGSd5/" target=_blank>jashkenas's Ember/Backbone</a> benchmark to include React. Note that this is just a simple benchmark: you wouldn't be doing this in an actual app.
 </p>
 <p>Back to <a href="../">Examples Index</a></p>
 
@@ -17,10 +16,20 @@
 <button onclick="runIDOM()">Animate with Incremental DOM</button>
 <button onclick="runEmber()">Animate with Ember+HTMLBars</button>
 <button onclick="runReact()">Animate with React</button>
+<button onclick="runAngularjs()">Animate with AngularJS</button>
 <button onclick="runBackbone()">Animate with Backbone</button>
 
 <p id="timing">&nbsp;</p>
+
 <div id="grid"></div>
+
+<script type="x-template" id="angular-template">
+  <div id="grid-angular" ng-app="animationApp" ng-controller="animationCtrl">
+    <div class="box-view" ng-repeat="box in boxes track by $index">
+      <div class="box" ng-style="{top: box.top+'px', left: box.left+'px', background: 'rgb(0,0,'+box.color+')'}">{{box.content}}</div>
+    </div>
+  </div>
+</script>
 
 <script type="x-template" id="underscore-template">
   <div class="box" id="box-<%= number %>" style="top: <%= top %>px; left: <%= left %>px; background: rgb(0,0,<%= color %>);">
@@ -47,6 +56,7 @@
 <script src="ember-htmlbars-dont-use-me-anywhere-else.prod.js"></script>
 <script src="https://fb.me/react-0.12.2.min.js"></script>
 <script src="http://google.github.io/incremental-dom/node_modules/incremental-dom/dist/incremental-dom.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
 <script src="../../dist/doTA.min.js"></script>
 <script src="scripts.js"></script>
 

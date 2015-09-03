@@ -1,3 +1,8 @@
+/* global angular */
+/* global $ */
+/* global doTA */
+/* global IncrementalDOM */
+/* global _ */
 // Change N to change the number of drawn circles.
 
 var N = 100;
@@ -246,11 +251,83 @@ var N = 100;
 
 })();
 
+(function(){
+  // The AngularJS implementation:
+
+var scope, rootScope;
+
+angular.module('animationApp', [])
+.config(function($compileProvider) {
+  $compileProvider.debugInfoEnabled(false);
+})
+.controller('animationCtrl', function ($scope, $window, $rootScope, $compile) {
+    scope = $scope;
+    rootScope = $rootScope;
+    var self = this;
+    var start, counter = 0;
+    $scope.count = 0;
+    $scope.boxes = new Array();
+
+
+    $scope.Box = function(n) {
+        this.number = n;
+        this.top = 0;
+        this.left = 0;
+        this.color = 0;
+        this.content = 0;
+        this.count = 0;
+
+        this.tick = function() {
+            var count = this.count += 1;
+            this.top = Math.sin(count / 10) * 10;
+            this.left = Math.cos(count / 10) * 10;
+            this.color = count % 255;
+            this.content = count % 100;
+        }
+    }
+
+    $scope.angularjsInit = function() {
+        for (var i = 0; i < N; i++) {
+            $scope.boxes[i] = new $scope.Box(i);
+        }
+
+    }
+
+    $scope.angularjsAnimate = function() {
+        // if (counter == 0) start = new Date().getTime();
+        // counter += 1;
+        // if (counter == 100) {
+        //     console.log(new Date().getTime() - start);
+        // }
+        for (var i = 0; i < N; i++) {
+            $scope.boxes[i].tick();
+        }
+        $scope.$apply();
+        // $window.timeout = _.defer($scope.angularjsAnimate);
+    }
+  });
+
+    function init() {
+      document.getElementById('grid').innerHTML = $('#angular-template').text().trim();
+      angular.bootstrap(document.getElementById('grid-angular'), ['animationApp'])
+    }
+
+    window.runAngularjs = function() {
+      if (rootScope) {
+        rootScope.$destroy();
+      }
+      reset();
+      init();
+      scope.angularjsInit();
+      benchmarkLoop(scope.angularjsAnimate);
+    }
+})();
+
 // Incremental DOM Implementation
 (function(){
   var patch = IncrementalDOM.patch,
     elementOpen = IncrementalDOM.elementOpen,
-    elementVoid = IncrementalDOM.elementVoid,
+    // elementVoid = IncrementalDOM.elementVoid,
     elementClose = IncrementalDOM.elementClose,
     text = IncrementalDOM.text;
   var grid = document.getElementById('grid');
