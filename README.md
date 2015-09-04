@@ -136,8 +136,14 @@ This project has two libraries, doTA, and ngDoTA.
   - known issue: `<`, `>` will display as `&lt;` and `&gt;` in text nodes
 
 - diff-level
-  - `diff-level=2` - will use experimental **FlatDOM**, which diff html as text and incrementally patch DOM while parsing
-  - known issue: `<`, `>` will display as `&lt;` and `&gt;` in text nodes
+  - will use experimental **FlatDOM**, which diff html as text and incrementally patch DOM while parsing
+  - `diff-level=2` - ng-if that evaluated to false render as hidden placeholders, replace/patch DOM elements when changed.
+  - `diff-level=3` - no placeholders, add/remove/patch DOM elements when changed.
+  - `diff-level=0` - generate function same as other diff-level, but patching DOM function excluded, for partial templates.
+  - known issues: `&lt;`, `&gt;` will display as is in text nodes
+
+- key
+  - `key=K` - any keyname to be used in diff-level loop inner variables, for partial template pre-compile.
 
 - event
   - set by default
