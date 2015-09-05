@@ -244,7 +244,9 @@
         //set true or false on dom properties
         partial[bindProp] = partial.value == curValue; // loose compare
       } else {
-        partial.value = "" + curValue; // attributes are always string
+        if (typeof curValue !== 'undefined') {
+          partial.value = curValue;
+        }
       }
 
       //bind each events
