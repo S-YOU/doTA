@@ -2084,7 +2084,11 @@ if (typeof module !== "undefined" && module.exports) {
               } else if (!z.indexOf('scope-')) {
                 attrs.params = 1;
                 if (attrs[x].indexOf('.') >= 0 || attrs[x].indexOf('[') >= 0) {
-                  params[z.slice(6)] = resolveObject(attrs[x], $scope);
+                  if (attrs[x].indexOf('$index') > 0) {
+                    params[z.slice(6)] = $scope.$eval(attrs[x]);
+                  } else {
+                    params[z.slice(6)] = resolveObject(attrs[x], $scope);
+                  }
                 } else {
                   params[z.slice(6)] = $scope[attrs[x]];
                 }
