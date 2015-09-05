@@ -27,7 +27,7 @@ for (var i = 0; i < count; i++) {
       console.log(repeat(">", 50), k);
       console.log(v);
       console.log(repeat("-", 50));
-      var fnStr = fn.toString();
+      var fnStr = fn.toString().replace(/\n\/\*\*\//g, '').replace(/\n\n/g, '\n');
       console.log(fnStr);
       console.log(repeat("<", 50));
     }

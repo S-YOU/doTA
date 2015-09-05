@@ -1603,7 +1603,7 @@ var doTA = (function() {'use strict';
             '" style="display:none"></' + tagName + '>\');\n';
           WatchMap[level] = 0;
           FnText += indent(level, 2) + 'return R;}; \n';
-          FnText += indent(level, 2) + 'R+=W.F(S,F,$attr,0,N); \n';
+          FnText += indent(level, 2) + 'R+=W.F(S,F,' + (options.params ? '$attr': '0') + ',0,N); \n';
         }
 
         //reset dota-pass when out of scope
@@ -1656,8 +1656,10 @@ var doTA = (function() {'use strict';
       //$scope, $filter
       if (watchDiff || diffLevel) {
         compiledFn = new Function('S', 'F', '$attr', 'X', 'N', 'K', 'M', FnText);
-      } else {
+      } else if (options.params) {
         compiledFn = new Function('S', 'F', '$attr', FnText);
+      } else {
+        compiledFn = new Function('S', 'F', FnText);
       }
       if (Watched) {
         compiledFn = {W:[], F: compiledFn};

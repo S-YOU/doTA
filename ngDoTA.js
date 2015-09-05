@@ -346,11 +346,13 @@
               var z = origAttrMap[x];
               //map data-* attributes into origAttrMap (inline text)
               if (!z.indexOf('data-')) {
-                params[x] = attrs[x];
+                params[z.slice(5)] = attrs[x];
+                attrs.params = 1;
               //map scope-* attributes into origAttrMap (first level var from scope)
               } else if (!z.indexOf('scope-')) {
+                attrs.params = 1;
                 if (attrs[x].indexOf('.') >= 0 || attrs[x].indexOf('[') >= 0) {
-                  params[z.slice(6)] = $scope.$eval(attrs[x]);
+                  params[z.slice(6)] = resolveObject(attrs[x], $scope);
                 } else {
                   params[z.slice(6)] = $scope[attrs[x]];
                 }

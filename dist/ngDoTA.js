@@ -1603,7 +1603,7 @@ var doTA = (function() {'use strict';
             '" style="display:none"></' + tagName + '>\');\n';
           WatchMap[level] = 0;
           FnText += indent(level, 2) + 'return R;}; \n';
-          FnText += indent(level, 2) + 'R+=W.F(S,F,$attr,0,N); \n';
+          FnText += indent(level, 2) + 'R+=W.F(S,F,' + (options.params ? '$attr': '0') + ',0,N); \n';
         }
 
         //reset dota-pass when out of scope
@@ -1656,8 +1656,10 @@ var doTA = (function() {'use strict';
       //$scope, $filter
       if (watchDiff || diffLevel) {
         compiledFn = new Function('S', 'F', '$attr', 'X', 'N', 'K', 'M', FnText);
-      } else {
+      } else if (options.params) {
         compiledFn = new Function('S', 'F', '$attr', FnText);
+      } else {
+        compiledFn = new Function('S', 'F', FnText);
       }
       if (Watched) {
         compiledFn = {W:[], F: compiledFn};
@@ -2076,11 +2078,13 @@ if (typeof module !== "undefined" && module.exports) {
               var z = origAttrMap[x];
               //map data-* attributes into origAttrMap (inline text)
               if (!z.indexOf('data-')) {
-                params[x] = attrs[x];
+                params[z.slice(5)] = attrs[x];
+                attrs.params = 1;
               //map scope-* attributes into origAttrMap (first level var from scope)
               } else if (!z.indexOf('scope-')) {
+                attrs.params = 1;
                 if (attrs[x].indexOf('.') >= 0 || attrs[x].indexOf('[') >= 0) {
-                  params[z.slice(6)] = $scope.$eval(attrs[x]);
+                  params[z.slice(6)] = resolveObject(attrs[x], $scope);
                 } else {
                   params[z.slice(6)] = $scope[attrs[x]];
                 }
