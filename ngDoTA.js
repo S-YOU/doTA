@@ -655,7 +655,7 @@
                       if (!oldTag) { return console.log('tag not found'); }
 
                       //we don't need new scope here
-                      var content = w.F(NewScope, $filter, params, null, w.N);
+                      var content = w.F(NewScope, $filter, params, 0, w.N);
                       if (!content) { return console.log('no contents'); }
                       console.log('watch new content', content);
                       var newTag = angular.element(content);

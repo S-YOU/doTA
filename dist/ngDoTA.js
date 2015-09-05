@@ -1474,7 +1474,7 @@ var doTA = (function() {'use strict';
           FnText += indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attr['dota-render'] + '";\n';
           //only expand if renderFn is ready in cache, but not in cache-dom (which unneeded)
           FnText += indent(level) + 'if(typeof doTA.C[U]!=="undefined"&&typeof doTA.D[U]==="undefined"){' +
-            'R+=doTA.C[U](S,F,P,X)}; \n';
+            'R+=doTA.C[U](S,F,P)}; \n';
         }
 
         level++;
@@ -1603,7 +1603,7 @@ var doTA = (function() {'use strict';
             '" style="display:none"></' + tagName + '>\');\n';
           WatchMap[level] = 0;
           FnText += indent(level, 2) + 'return R;}; \n';
-          FnText += indent(level, 2) + 'R+=W.F(S,F,$attr,X,N); \n';
+          FnText += indent(level, 2) + 'R+=W.F(S,F,$attr,0,N); \n';
         }
 
         //reset dota-pass when out of scope
@@ -1654,7 +1654,11 @@ var doTA = (function() {'use strict';
 
     try {
       //$scope, $filter
-      compiledFn = new Function('S', 'F', '$attr', 'X', 'N', 'K', 'M', FnText);
+      if (watchDiff || diffLevel) {
+        compiledFn = new Function('S', 'F', '$attr', 'X', 'N', 'K', 'M', FnText);
+      } else {
+        compiledFn = new Function('S', 'F', '$attr', FnText);
+      }
       if (Watched) {
         compiledFn = {W:[], F: compiledFn};
       }
@@ -2381,7 +2385,7 @@ if (typeof module !== "undefined" && module.exports) {
                       if (!oldTag) { return console.log('tag not found'); }
 
                       //we don't need new scope here
-                      var content = w.F(NewScope, $filter, params, null, w.N);
+                      var content = w.F(NewScope, $filter, params, 0, w.N);
                       if (!content) { return console.log('no contents'); }
                       console.log('watch new content', content);
                       var newTag = angular.element(content);
