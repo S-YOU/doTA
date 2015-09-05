@@ -1390,7 +1390,7 @@ var doTA = (function() {'use strict';
               } else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
                 //add class 'de' for one time querying
                 if (parsedAttr.class) {
-                  if (parsedAttr.class.indexOf('de') < 0) {
+                  if (parsedAttr.class.substr(0, 2) !== 'de') {
                     parsedAttr.class = 'de ' + parsedAttr.class;
                   }
                 } else {
