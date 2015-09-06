@@ -44,18 +44,21 @@ label [disabled] + span {
 .grid-left, .grid-center, .grid-right {
   float: left;
 }
+.grid-left, .grid-left .header {
+  border-right: 0;
+}
 .body, .header {
   display:block;
   background-color: #eee;
-  overflow: auto;
+  overflow: scroll;
   border: 1px solid #808080;
+}
+.header {
+  border-bottom: 0;
 }
 .canvas {
   display: block;
   position:relative;
-}
-.scroller {
-  overflow: auto;
 }
 .viewport {
   display: block;
@@ -99,7 +102,9 @@ label [disabled] + span {
 
 /*pinned column specific */
 .pinned.body {
-  overflow-x: hidden;
+  /*overflow-x: hidden;*/
+  margin-right: -17px;
+  overflow-x: scroll;
 }
 .pinned::-webkit-scrollbar { width: 0; }
 
@@ -126,10 +131,6 @@ label [disabled] + span {
 }
 
 /* for demostration purpose */
-.header, .body {
-  margin: 5px 5px 5px 0;
-}
-
 .body .cell:hover, .body .cell input:hover {
   background-color: yellow;
 }

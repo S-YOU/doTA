@@ -22,6 +22,7 @@ angular.module('app', ['doTA'])
 
   //colDefs
   var defaultWidth = 125;
+  var scrollBarSize = 17;
   var colDef = [
     {id: 'id', name: 'ID', width: 90, template_id : 'id', group: 'ID:Text (Pinned)', hClass: 'red'},
     {id: 'label', name: 'Text', width: 130, template_id: 'text', group: 'ID:Text (Pinned)'},
@@ -50,7 +51,7 @@ angular.module('app', ['doTA'])
   $scope.scrollTop = $scope.scrollOffsetTop = 0; //pixel
   $scope.scrollLeft = $scope.scrollOffsetLeft = 0; //pixel
   $scope.rows = ($scope.height / $scope.cellHeight) | 0; //dynamic row count
-  $scope.bodyHeight = $scope.height + 16; //+ scroll bar height
+  $scope.bodyHeight = $scope.height + scrollBarSize; //+ scroll bar size
   $scope.headerHeight = $scope.cellHeight;
   //generate dummy row/col when requested
   $scope.getColDef = getCol;

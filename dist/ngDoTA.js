@@ -819,7 +819,10 @@ var doTA = (function() {'use strict';
 
         // prefix with - as property, like -scrollLeft
         } else if (attrName.charAt(0) === '-') {
-          elem[attrName.substr(1)] = attrVal2;
+          //only if old value is same is element property to prevent loop (firefox)
+          if (elem[attrName.substr(1)] == attrVal1) {
+            elem[attrName.substr(1)] = attrVal2;
+          }
           // console.log('prop-', attrName.substr(1), attrVal2, elem[attrName.substr(1)]);
 
         } else {
