@@ -21,22 +21,26 @@ angular.module('app', ['doTA'])
   $scope.colType = 0;
 
   //colDefs
+  var defaultWidth = 125;
   var colDef = [
-    {id: 'id', name: 'ID', width: 90, template_id : 'id'},
-    {id: 'label', name: 'Text', width: 130, template_id: 'text'},
-    {id: 'percent', name: 'Progress', width: 110, template_id: 'percent'},
-    {id: 'field1', name: 'More ...', width: 125, template_id: 'more'},
-    {id: 'field2', name: 'Num ...', width: 125, template_id: 'num'},
-    {id: 'field3', name: 'Date', width: 110, template_id: 'date'},
-    {id: 'field4', name: 'Col 7', width: 125}
+    {id: 'id', name: 'ID', width: 90, template_id : 'id', group: 'ID:Text (Pinned)', hClass: 'red'},
+    {id: 'label', name: 'Text', width: 130, template_id: 'text', group: 'ID:Text (Pinned)'},
+    {id: 'percent', name: 'Progress', width: 110, template_id: 'percent', hClass: 'yellow'},
+    {id: 'field1', name: 'More ...', width: defaultWidth, template_id: 'more', group: 'More Numbers'},
+    {id: 'field2', name: 'Num ...', width: defaultWidth, template_id: 'num', group: 'More Numbers'},
+    {id: 'field3', name: 'Date', width: 110, template_id: 'date', hClass: 'blue'},
+    {id: 'field4', name: 'Col 7', width: defaultWidth}
   ];
+  colDef.length = 1e5;
   //gridOptions
   var g = $scope.g = {
     colDef: colDef,
-    pinLeft: 2
+    pinLeft: 2,
+    rowClass: rowClassFn
   };
 
   //initialize scope variables
+  $scope.defaultWidth = defaultWidth;
   $scope.height = 500; //grid (viewport) height
   $scope.width = 750;
   $scope.cellHeight = 25; //height of each cells
@@ -68,6 +72,7 @@ angular.module('app', ['doTA'])
   var vScale = 1, hScale = 1;
   var random1, random2, random3, random4;
   var offset, idx;
+  var widthMap = [], groupWidthMap = [], realTotalWidth = 0;
 
   //templates
   var TEMPLATE_ID = 'T_';
@@ -86,10 +91,6 @@ angular.module('app', ['doTA'])
       {dotaRender: TEMPLATE_ID, watchDiff: 1, diffLevel: 0, encode: 1, key: 'K'});
   }
 
-  g.colDef.length = 1e5;
-  // merge cell templates to grid template
-  var widthMap = [], realTotalWidth = 0;
-
   //initialize data
   initData();
   $scope.data = makeData(100, 0);
@@ -102,7 +103,7 @@ angular.module('app', ['doTA'])
   var template = document.getElementById('grid-template').innerHTML;
   //compile template to fn
   var compileFn = doTA.compile(template, {strip: 1, encode: 1, loose: 0, event: 1,
-    watchDiff: "updated", diffLevel: 3, debug: 0, dotaRender: TEMPLATE_ID});
+    watchDiff: "updated", diffLevel: 3, debug: 0, dotaRender: TEMPLATE_ID, comment: 0});
 
   //write to dom
   var gridRoot = document.getElementById('grid');
@@ -125,6 +126,10 @@ angular.module('app', ['doTA'])
     if (cellAt) {
       $scope.clickStatus = (dbl ? 'Double ' : '') + 'Clicked on cell (' + cellAt[0] + ', ' + cellAt[1] + ')';
     }
+  }
+
+  function rowClassFn(row, i) {
+    return i % 5 === 0 ? 'blue' : i % 7 === 0 ? 'green' : '';
   }
 
   function rowChange() {
@@ -184,7 +189,7 @@ angular.module('app', ['doTA'])
   }
 
   function getCol(i) {
-    return {id: 'field' + (i % 2 + 4), name: 'Col ' + (i + 1), width: 125};
+    return {id: 'field' + (i % 2 + 4), name: 'Col ' + (i + 1), width: defaultWidth};
   }
 
   function virtualScroll(elem) {
@@ -271,14 +276,34 @@ angular.module('app', ['doTA'])
       $scope.totalHeight = vMaxScroll + $scope.height + ($scope.cellHeight / vScale) - ($scope.height / vScale);
     }
 
+    //calc header widths
     realTotalWidth = 0;
     widthMap.length = 0;
-    for (var i = 0; i < g.colDef.length; i++){
+    groupWidthMap.length = 0;
+    var lastGroupIndex;
+    for (var i = 0; i < g.colDef.length; i++) {
       var col = g.colDef[i];
-      realTotalWidth += col && col.width ? col.width  : 125;
+      realTotalWidth += col && col.width || defaultWidth;
       //width map, which sum upto x columns, to prevent extra loop at scroll event
       widthMap[i] = realTotalWidth;
+
+      if (!col) { continue; }
+      //calc header groups width
+      if (col.group) {
+        if (lastGroupIndex >= 0 && g.colDef[lastGroupIndex].group === col.group) {
+          g.colDef[lastGroupIndex].groupWidth += col.width || defaultWidth;
+          col.groupWidth = 0;
+        } else {
+          lastGroupIndex = i;
+          g.colDef[lastGroupIndex].groupWidth = col.width || defaultWidth;
+        }
+      }
     }
+    if (lastGroupIndex >= 0) {
+      $scope.headerHeight = $scope.cellHeight * 2;
+    }
+    // console.log(g.colDef.slice(0, 10));
+
     $scope.totalWidth = realTotalWidth + 1; //firefox? or border-box thing?
     if (g.pinLeft) {
       g.widthLeft = widthMap[g.pinLeft - 1] + 1;

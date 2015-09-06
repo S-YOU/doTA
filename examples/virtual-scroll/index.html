@@ -9,12 +9,14 @@
 
 <div style="float:right;text-align:right;padding:5px;">
 <div>Inspired from
-  <a href="http://mleibman.github.io/SlickGrid/examples/example-optimizing-dataview.html" target="_blank">SlickGrid</a></div>
+  <a href="http://mleibman.github.io/SlickGrid/examples/example-optimizing-dataview.html" target=_blank>SlickGrid</a> &
+  <a href="http://www.angulargrid.com" target=_blank>Angular Grid</a>
+</div>
 <div>Back to <a href="../">Examples Index</a></div>
 </div>
 
 <h3>Virtual Scroll with
-  <a href="https://github.com/S-YOU/doTA" target="_blank">doTA</a> (FlatDOM) - Million/Billion of Rows x ~1 Million Columns
+  <a href="https://github.com/S-YOU/doTA" target=_blank>doTA</a> (FlatDOM) - Million/Billion of Rows x ~1 Million Columns
 </h3>
 
 <div ng-app="app">
@@ -59,17 +61,28 @@
 
 <script type="text/template" id="grid-template">
 
-  <div class="grid"
-    ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)" ng-mousemove="hoverHandler($event)">
+  <div class="root" ng-mousemove="hoverHandler($event)"
+    ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)">
 
     <!-- pinned grid left -->
-    <div class="grid-left pad" ng-style="width:{{g.widthLeft}}px" ng-if="g.pinLeft">
+    <div class="grid-left" ng-style="width:{{g.widthLeft}}px" ng-if="g.pinLeft">
+
       <div class="header">
-        <div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
+        <div class="canvas" ng-style="height:{{headerHeight}}px;width:{{g.widthLeft}}px;">
           <div class="viewport">
-            <div class="row" key="K">
-              <div class="cell" ng-repeat="j in 0:g.pinLeft"
+            <div class="row group" key="K"><!--header group-->
+              <div ng-repeat="j in 0:g.pinLeft"
+                ng-init="col=g.colDef[j]||getColDef(j)" ng-show="col.groupWidth!==0"
+                class="cell"
+                ng-class="{group:col.groupWidth}"
+                ng-style="width:{{col.group ? col.groupWidth : col.width}}px;">
+                {{ col.groupWidth ? col.group : '' }}
+              </div>
+            </div>
+            <div class="row" key="K"><!--header-->
+              <div ng-repeat="j in 0:g.pinLeft"
                 ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+                class="cell {{col.hClass || ''}}"
                 ng-style="width:{{col.width}}px" col="{{j}}">
                 {{ col.name }}
               </div>
@@ -78,14 +91,15 @@
         </div>
       </div>
 
-      <!-- extra whitespace between header and body -->
-      <div class=vpad></div>
-
-      <div class="body pinned" ng-style="height:{{bodyHeight}}px;">
-        <div class="canvas" ng-style="width:{{g.widthLeft}}px">
-          <div class="viewport">
+      <!--left grid body-->
+      <div class="body pinned" ng-style="height:{{bodyHeight}}px;" -scroll-top="scrollTop" onscroll="virtualScroll(this)">
+        <div class="canvas" ng-style="width:{{g.widthLeft}}px;height:{{totalHeight}}px">
+          <div class="viewport" ng-style="width:{{g.widthLeft}}px;top:{{scrollTop}}px">
+            <!--row-->
             <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)"
-              key="K" row="{{i+realOffsetTop}}" class="row {{i%2?'odd':'even'}}">
+              key="K" row="{{i+realOffsetTop}}"
+              class="row {{i%2?'odd':'even'}} {{g.rowClass ? g.rowClass(row, i+offsetTop) : ''}}">
+              <!--cell-->
               <div class="cell" ng-repeat="j in 0:g.pinLeft"
                 ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
                 ng-style="width:{{col.width}}px" col="{{j}}">
@@ -95,16 +109,28 @@
           </div>
         </div>
       </div>
-    </div>
+
+    </div><!--grid-left-->
 
     <!-- main grid -->
-    <div class="grid-center pad" ng-style="width:{{width}}px">
+    <div class="grid-center" ng-style="width:{{width}}px">
+
       <div class="header">
         <div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
           <div class="viewport" ng-style="left:{{scrollOffsetLeft-scrollLeft}}px">
-            <div class="row" key="K">
-              <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
+            <div class="row group" key="K"><!--header group-->
+              <div ng-repeat="j in offsetLeft:offsetRight"
+                ng-init="col=g.colDef[j]||getColDef(j)" ng-show="col.groupWidth!==0"
+                class="cell"
+                ng-class="{group:col.groupWidth}"
+                ng-style="width:{{col.group ? col.groupWidth : col.width}}px;">
+                {{ col.groupWidth ? col.group : '' }}
+              </div>
+            </div>
+            <div class="row" key="K"><!--header-->
+              <div ng-repeat="j in offsetLeft:offsetRight"
                 ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+                class="cell {{col.hClass || ''}}"
                 ng-style="width:{{col.width}}px" col="{{j}}">
                 {{ col.name }}
               </div>
@@ -113,14 +139,15 @@
         </div>
       </div>
 
-      <!-- extra whitespace between header and body -->
-      <div class=vpad></div>
-
-      <div class="body" ng-style="height:{{bodyHeight}}px" onscroll="virtualScroll(this)">
+      <!--main grid body-->
+      <div class="body" ng-style="height:{{bodyHeight}}px" -scroll-top="scrollTop" onscroll="virtualScroll(this)">
         <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
           <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
+            <!--row-->
             <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)"
-              key="K" row="{{i+realOffsetTop}}" class="row {{i%2?'odd':'even'}}">
+              key="K" row="{{i+realOffsetTop}}"
+              class="row {{i%2?'odd':'even'}} {{g.rowClass ? g.rowClass(row, i+offsetTop) : ''}}">
+              <!--cell-->
               <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
                 ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
                 ng-style="width:{{col.width}}px" col="{{j}}">
@@ -130,7 +157,9 @@
           </div>
         </div>
       </div>
-    </div>
+
+    </div><!--grid-center-->
+
 
   </div>
 

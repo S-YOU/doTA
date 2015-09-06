@@ -1,3 +1,4 @@
+/* Demo Site Related */
 *, :before, :after {
   box-sizing: border-box;
   padding: 0;
@@ -8,84 +9,10 @@
 .pad { padding: 5px; }
 .vpad { padding: 5px 0 5px 0; }
 .hpad { padding: 0 5px 0 5px; }
+.box { float: left; }
 
 body {
   padding: 10px;
-}
-
-.grid {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-}
-.grid-left, .grid-center, .grid-right {
-  float: left;
-}
-
-.body.pinned {
-  overflow: hidden;
-}
-
-.body, .header {
-  display:block;
-  box-sizing: border-box;
-  background-color: #eee;
-  overflow: auto;
-  border: 1px solid gray;
-}
-
-.canvas {
-  display: block;
-  position:relative;
-}
-
-.viewport {
-  display: block;
-  position: absolute;
-}
-
-.row {
-  display: block;
-  height: 25px;
-  line-height: 25px;
-  float: left;
-  clear: both;
-}
-.row + .row {
-  border-top: 1px solid silver;
-}
-.row.odd {
-  background: #f9f9f9;
-}
-
-.header {
-  overflow: hidden;
-}
-.header .cell {
-  padding: 3px;
-  text-align: center;
-}
-
-.cell {
-  display: block;
-  cursor: default;
-  float: left;
-  height: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.body .cell:hover, .body .cell input:hover {
-  background-color: yellow;
-}
-.cell + .cell {
-  border-left: 1px dotted silver;
-}
-
-.cell input {
-  display: block;
-  border: 0;
-  height: 100%;
-  width: 100%;
-  padding: 0 2px 0 2px;
 }
 
 input::-webkit-inner-spin-button { display: none; }
@@ -107,4 +34,118 @@ input::-webkit-clear-button { display: none; }
 label [disabled] + span {
   color: gray;
   text-decoration: line-through;
+}
+
+/* Grid Related */
+.root {
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 14px;
+}
+.grid-left, .grid-center, .grid-right {
+  float: left;
+}
+.body, .header {
+  display:block;
+  background-color: #eee;
+  overflow: auto;
+  border: 1px solid #808080;
+}
+.canvas {
+  display: block;
+  position:relative;
+}
+.scroller {
+  overflow: auto;
+}
+.viewport {
+  display: block;
+  position: absolute;
+}
+.row {
+  display: block;
+  height: 25px;
+  line-height: 25px;
+  float: left;
+  clear: both;
+}
+.cell {
+  display: block;
+  cursor: default;
+  float: left;
+  height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* header specific */
+.header {
+  background: linear-gradient(#fff, #d3d3d3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
+}
+.header .row {
+  border-top: 0;
+}
+.header .row.group {
+  font-weight: bold;
+}
+.header .cell.group {
+  border-bottom: 1px solid silver;
+}
+.header .cell + .cell {
+  border-left: 1px solid #808080;
+}
+
+/*pinned column specific */
+.pinned.body {
+  overflow-x: hidden;
+}
+.pinned::-webkit-scrollbar { width: 0; }
+
+/* body specific */
+.body .cell + .cell {
+  border-left: 1px dotted silver;
+}
+.body .row + .row {
+  border-top: 1px solid silver;
+}
+
+/* row specific */
+.row.odd {
+  background: #f9f9f9;
+}
+
+/* cell specific */
+.cell input {
+  display: block;
+  border: 0;
+  height: 100%;
+  width: 100%;
+  padding: 0 2px 0 2px;
+}
+
+/* for demostration purpose */
+.header, .body {
+  margin: 5px 5px 5px 0;
+}
+
+.body .cell:hover, .body .cell input:hover {
+  background-color: yellow;
+}
+
+.row.blue, .row.blue input {
+  background-color: lightskyblue;
+}
+.row.green, .row.green input {
+  background-color: lightgreen;
+}
+.cell.blue {
+  background-color: dodgerblue;
+}
+.cell.red {
+  background-color: orangered;
+}
+.cell.yellow {
+  background-color: lightyellow;
 }
