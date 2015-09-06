@@ -58,43 +58,89 @@
 <div id="grid">Generating Data...</div>
 
 <script type="text/template" id="grid-template">
-  <div class="grid" ng-style="width:{{width}}px">
-    <div class="header">
-      <div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
-        <div class="viewport" ng-style="left:{{scrollOffsetLeft-scrollLeft}}px">
-          <div class="row" key="K">
-            <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
-              ng-init="col=gridOptions[j]||getColDef(j),M=j*5+1"
-              ng-style="width:{{col.width}}px" col="{{j}}">
-              {{ col.name }}
+
+  <div class="grid"
+    ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)" ng-mousemove="hoverHandler($event)">
+
+    <!-- pinned grid left -->
+    <div class="grid-left pad" ng-style="width:{{g.widthLeft}}px" ng-if="g.pinLeft">
+      <div class="header">
+        <div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
+          <div class="viewport">
+            <div class="row" key="K">
+              <div class="cell" ng-repeat="j in 0:g.pinLeft"
+                ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+                ng-style="width:{{col.width}}px" col="{{j}}">
+                {{ col.name }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- extra whitespace between header and body -->
+      <div class=vpad></div>
+
+      <div class="body pinned" ng-style="height:{{bodyHeight}}px;">
+        <div class="canvas" ng-style="width:{{g.widthLeft}}px">
+          <div class="viewport">
+            <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)"
+              key="K" row="{{i+realOffsetTop}}" class="row {{i%2?'odd':'even'}}">
+              <div class="cell" ng-repeat="j in 0:g.pinLeft"
+                ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+                ng-style="width:{{col.width}}px" col="{{j}}">
+                {{ col.template_id ? doTA.C["T_" + col.template_id](row,F,0,0,0,K,M) : row[col.id] }}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="body" ng-style="height:{{bodyHeight}}px" onscroll="virtualScroll(this)"
-      ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)" ng-mousemove="hoverHandler($event)">
-      <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
-        <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
-          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)"
-            key="K" row="{{i+realOffsetTop}}">
-            <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
-              ng-init="col=gridOptions[j]||getColDef(j),M=j*5+1"
-              ng-style="width:{{col.width}}px" col="{{j}}">
-              {{ col.template_id ? doTA.C["T_" + col.template_id](row,F,0,0,0,K,M) : row[col.id] }}
+
+    <!-- main grid -->
+    <div class="grid-center pad" ng-style="width:{{width}}px">
+      <div class="header">
+        <div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
+          <div class="viewport" ng-style="left:{{scrollOffsetLeft-scrollLeft}}px">
+            <div class="row" key="K">
+              <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
+                ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+                ng-style="width:{{col.width}}px" col="{{j}}">
+                {{ col.name }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- extra whitespace between header and body -->
+      <div class=vpad></div>
+
+      <div class="body" ng-style="height:{{bodyHeight}}px" onscroll="virtualScroll(this)">
+        <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
+          <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
+            <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)"
+              key="K" row="{{i+realOffsetTop}}" class="row {{i%2?'odd':'even'}}">
+              <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
+                ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+                ng-style="width:{{col.width}}px" col="{{j}}">
+                {{ col.template_id ? doTA.C["T_" + col.template_id](row,F,0,0,0,K,M) : row[col.id] }}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
   </div>
+
 </script>
 
 <!-- -scroll-left="scrollLeft"-->
 <!--transform:translateY({{scrollTop}}px)-->
 <!--transform:translate(0,{{scrollTop}}px)-->
 
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
 <script src="../../dist/ngDoTA.min.js"></script>
 <script src="scripts.js"></script>
 

@@ -5,9 +5,9 @@
   outline: 0;
 }
 
-.vpad {
-  padding: 5px 0 5px 0;
-}
+.pad { padding: 5px; }
+.vpad { padding: 5px 0 5px 0; }
+.hpad { padding: 0 5px 0 5px; }
 
 body {
   padding: 10px;
@@ -17,12 +17,20 @@ body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
 }
+.grid-left, .grid-center, .grid-right {
+  float: left;
+}
+
+.body.pinned {
+  overflow: hidden;
+}
 
 .body, .header {
   display:block;
+  box-sizing: border-box;
   background-color: #eee;
-  border: 1px solid gray;
   overflow: auto;
+  border: 1px solid gray;
 }
 
 .canvas {
