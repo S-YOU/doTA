@@ -21,16 +21,6 @@ var doTA = (function() {'use strict';
     return x ? ret.slice(0, -2 * x) : ret;
   }
 
-  // function forEachArray(src, iter, ctx) {
-  //   if (!src) { return; }
-  //   if (src.forEach) {
-  //     return src.forEach(iter);
-  //   }
-  //   for (var key = 0, length = src.length; key < length; key++) {
-  //     iter.call(ctx, src[key], key);
-  //   }
-  // }
-
   // decode html entities
   function decodeEntities(text) {
     return text.indexOf('&') < 0 ? text : text
@@ -395,7 +385,8 @@ var doTA = (function() {'use strict';
 
         //if blank text node, skip early
         if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
-          pos1++, pos2++;
+          pos1++;
+          pos2++;
           continue;
         }
 
@@ -487,7 +478,7 @@ var doTA = (function() {'use strict';
       // console.log('after', [dirty1, dirty2], [tagId1, tagId2],
       //   [pos1, pos2], [html1.substr(pos1, 20), html2.substr(pos2, 20)]);
 
-      //exist inifite loop
+      //exist infinite loop
       if (pos1 < 0 && pos2 < 0) break;
 
       //same node
@@ -537,7 +528,8 @@ var doTA = (function() {'use strict';
 
         //if blank text node, skip early
         if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
-          pos1++, pos2++;
+          pos1++;
+          pos2++;
           continue;
         }
 
@@ -803,7 +795,7 @@ var doTA = (function() {'use strict';
       }
     } else {
       //first char is always space
-      posA2 = posB2 = 1;
+      posA2 = 1;
     }
 
     for(;;) {
@@ -821,47 +813,20 @@ var doTA = (function() {'use strict';
       attrVal2 =  chunkB.slice(posB1 + 2, posB2);
 
       if (attrVal1 !== attrVal2) {
-        // console.log('setAttribute', [attrName, attrVal1, attrVal2], [chunk1, chunk2])
+        // value as property
         if (attrName === 'value') {
           elem[attrName] = attrVal2;
+
+        // prefix with - as property, like -scrollLeft
         } else if (attrName.charAt(0) === '-') {
           elem[attrName.substr(1)] = attrVal2;
           // console.log('prop-', attrName.substr(1), attrVal2, elem[attrName.substr(1)]);
+
         } else {
-          /*if (attrName === 'class') {
-            elem.className = attrVal2;
-          } else */
-          //IE or Edge can't set dynamic styles
-          // if (msie && attrName === 'style') {
-          //   var prevSCPpos = 0, SCPos = attrVal2.indexOf(';'), aStyle, colonPos;
-          //   while (SCPos > 0) {
-          //     aStyle = attrVal2.slice(prevSCPpos, SCPos);
-          //     colonPos = aStyle.indexOf(':');
-          //     if (colonPos > 0) {
-          //       elem.style[aStyle.substr(0, colonPos).trim()] = aStyle.slice(colonPos+1);
-          //     }
-          //     prevSCPpos = SCPos + 1;
-          //     SCPos = attrVal2.indexOf(';', prevSCPpos);
-          //   }
-          //   if (prevSCPpos < attrVal2.length) {
-          //     aStyle = attrVal2.slice(prevSCPpos);
-          //     colonPos = aStyle.indexOf(':');
-          //     if (colonPos > 0) {
-          //       elem.style[aStyle.substr(0, colonPos).trim()] = aStyle.slice(colonPos+1);
-          //     }
-          //   }
-          //   // forEachArray(attrVal2.match(/[^;]+/g), function(item){
-          //   //   var colonPos = item.indexOf(':');
-          //   //   if (colonPos > 0) {
-          //   //     // console.log('style', [item.substr(0, colonPos).trim(), item.slice(colonPos+1).trim()])
-          //   //     elem.style[item.substr(0, colonPos).trim()] = item.slice(colonPos+1);
-          //   //   }
-          //   // })
-          // } else {
             elem.setAttribute(attrName, attrVal2);
-          // }
         }
         posDiff = posB2 - posA2;
+
       }
 
       posA2 += 2;
@@ -872,7 +837,7 @@ var doTA = (function() {'use strict';
 
   // extract value of id from part of html open tag
   // only id="xxx" supported, this is internal use, so it's always double-quotes
-  // this function is inlined during building
+  // inline this function during building
   function getTagId(partial, start) {
     var pos = partial.indexOf(' id="', start), endPos;
     if (pos >= 0) {
@@ -916,23 +881,25 @@ var doTA = (function() {'use strict';
   var whiteSpaceRegex = /\s{2,}|\n/g;
   var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
   var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
-  // https://github.com/kangax/html-minifier/issues/63
-  var noValAttrRegex = /^(?:checked|selected|disabled|readonly|multiple|required|hidden|nowrap)/;
   var $indexRegex = /\$index/g;
   var $parent$indexRegex = /(?:\$parent\.)+\$index/g;
 
-  // exported as doTA.compile
+  // no-val attributes, for more exhaustive list - https://github.com/kangax/html-minifier/issues/63
+  var noValAttrRegex = /^(?:checked|selected|disabled|readonly|multiple|required|hidden|nowrap)/;
+
+  // export as doTA.compile
   function compileHTML(template, options) {
     options = options || {};
     var val_mod = options.loose ? "||''" : '';
     var watchDiff = options.watchDiff;
     var diffLevel = +options.diffLevel;
-    var VarMap = {$index: 1, undefined: 1, this: 1,
-      doTA: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
+    var VarMap = {
+      true: 1, false: 1, null: 1, void: 1, undefined: 1, this: 1,
+      doTA: 1, $index: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
       Math: 1, Date: 1, String: 1, Object: 1, Array: 1, Infinity: 1, NaN: 1,
       // alert: 1, confirm: 1, prompt: 1,
-      var: 1, in: 1,
-      true: 1, false: 1, null: 1, void: 1};
+      var: 1, in: 1
+    };
     var level = 0, ngRepeatLevel;
     var ngIfLevel, skipLevel, ngIfCounterTmp, ngIfLevels = [], ngIfLevelMap = {};
     var LevelMap = {}, LevelVarMap = {};
@@ -1052,37 +1019,6 @@ var doTA = (function() {'use strict';
       }
     }
 
-    // // interpolation
-    // function interpolateInner(str) {
-    //   var pos = str.indexOf('{{');
-    //   if (pos >= 0) {
-    //     var prevPos = 0;
-    //     var ret = '';
-    //     var outsideStr, insideStr;
-    //     do {
-    //       outsideStr = str.substring(prevPos, pos);
-    //       ret += outsideStr;
-
-    //       //skip {{
-    //       prevPos = pos + 2;
-    //       pos = str.indexOf('}}', prevPos);
-
-    //       insideStr = str.substring(prevPos, pos);
-    //       ret += "(" + attachFilter(insideStr) + val_mod + ")";
-
-    //       //skip }} for next
-    //       prevPos = pos + 2;
-    //       pos = str.indexOf('{{', prevPos);
-    //     } while (pos > 0);
-
-    //     //remaining text outside interpolation
-    //     ret += str.substr(prevPos);
-    //     return ret;
-    //   } else {
-    //     return str;
-    //   }
-    // }
-
     // attach $filters
     function attachFilter($1) {
       //console.log(333,$1);
@@ -1098,7 +1034,8 @@ var doTA = (function() {'use strict';
 
         //parse each filters
         for(var i = 1; i < v.length; i++) {
-          filter = v[i], prevColonPos = 0;
+          filter = v[i];
+          prevColonPos = 0;
 
           colonPos = filter.indexOf(':');
           //filter with params
@@ -1424,7 +1361,7 @@ var doTA = (function() {'use strict';
           }
           //still expand interpolation even if dota-pass is set
           for (x in attr) {
-            parsedAttr[x] = apply$index(interpolate(attr[x]));;
+            parsedAttr[x] = apply$index(interpolate(attr[x]));
           }
         }
 
@@ -1532,18 +1469,6 @@ var doTA = (function() {'use strict';
 
         //just write closing tag back
         FnText += indent(level) + "R+='</" + tagName + ">';\n";
-
-        if (diffLevel === 3) {
-          if (level === ngIfLevel && ngIfLevelMap[ngIfLevel]) {
-            // FnText += indent(level, 1) + "}else{M+=" + ngIfLevelMap[ngIfLevel] + '} \n';
-            // if (LevelMap[level] > 0) {
-            //   LevelMap[level]--;
-            // }
-          }
-          if (level === keyLevel) {
-            // FnText += indent(level, 1) + 'N=' + level + '+1; \n';
-          }
-        }
 
         //ngIfCounter for most possible uniqueId generation; don't work with loop inside!
         if (diffLevel === 2 && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
@@ -1715,7 +1640,7 @@ var doTA = (function() {'use strict';
     H: {} //HashMap for TextDiff
   };
 
-  //warmup most used functions
+  //warm-up most used functions
   doTAObj.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x">x{{x}}</div><!--x-->', {
     watchDiff: 1, diffLevel: 2});
 

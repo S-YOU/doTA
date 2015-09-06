@@ -31,19 +31,23 @@
     </div>
 
     <div class=vpad>
+      Rows:
       <label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=0 checked />
-      <span> Fixed 1 Million Rows</span></label>
+      <span> 1 Million Rows</span></label>
       <label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=1 />
-      <span> Dynamic 1 Billion Rows</span></label>
+      <span> 1 Billion Rows</span></label>
     </div>
 
     <div class=vpad>
+      Columns:
       <label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=0 checked />
       <span> 100k Columns</span></label>
       <label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=1 />
       <span> 1 Million Columns</span></label>
+    </div>
 
-      <em>-
+    <div class=vpad>
+      Event: <em>
         <span ng-bind="hoverStatus"></span>
         <span ng-bind="clickStatus"></span>
       </em>
@@ -60,7 +64,7 @@
         <div class="viewport" ng-style="left:{{scrollOffsetLeft-scrollLeft}}px">
           <div class="row" key="K">
             <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
-              ng-init="col=gridOptions[j],M=j*5+1"
+              ng-init="col=gridOptions[j]||getColDef(j),M=j*5+1"
               ng-style="width:{{col.width}}px" col="{{j}}">
               {{ col.name }}
             </div>
@@ -72,10 +76,10 @@
       ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)" ng-mousemove="hoverHandler($event)">
       <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
         <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
-          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" ng-init="row=data[i + offsetTop]"
+          <div class="row {{i%2?'odd':'even'}}" ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)"
             key="K" row="{{i+realOffsetTop}}">
             <div class="cell" ng-repeat="j in offsetLeft:offsetRight"
-              ng-init="col=gridOptions[j],M=j*5+1"
+              ng-init="col=gridOptions[j]||getColDef(j),M=j*5+1"
               ng-style="width:{{col.width}}px" col="{{j}}">
               {{ col.template_id ? doTA.C["T_" + col.template_id](row,F,0,0,0,K,M) : row[col.id] }}
             </div>

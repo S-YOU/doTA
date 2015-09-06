@@ -58,11 +58,11 @@ angular.module('app', ['doTA'])
     var realOffsetTop = offsetTop;
 
     // if ($scope.offsetTop !== offsetTop) {
-    if (+$scope.rowType === 1) {
-      // console.log('create virtual data', offsetTop, scrollTop);
-      makeData($scope.rows, offsetTop, data);
-      offsetTop = 0;
-    }
+    // if (+$scope.rowType === 1) {
+    //   // console.log('create virtual data', offsetTop, scrollTop);
+    //   // makeData($scope.rows, offsetTop, data);
+    //   // offsetTop = 0;
+    // }
     // }
 
     // Find Column Index
@@ -150,13 +150,14 @@ angular.module('app', ['doTA'])
       template_id: 'date'},
     {id: 'field4', name: 'Col 7', width: 125}
   ];
-  // fill upto x columns
-  var i = fixedColumn.length + 1;
-  do {
-    fixedColumn.push({id: 'field' + (i % 2 + 4), name: 'Col ' + i, width: 125});
-  } while (++i <= 1e6);
 
-  $scope.gridOptions = fixedColumn.slice(0, 1e5);
+  //generate dummy colDef when requested
+  $scope.getColDef = function(i) {
+    return {id: 'field' + (i % 2 + 4), name: 'Col ' + (i + 1), width: 125};
+  };
+
+  $scope.gridOptions = fixedColumn;
+  $scope.gridOptions.length = 1e5;
   // merge cell templates to grid template
   var widthMap = [], realTotalWidth = 0;
 
@@ -164,11 +165,25 @@ angular.module('app', ['doTA'])
 
   //initialize data
   initData();
-  makeData(1e6, 0, fixedData);
+  makeData(100, 0, fixedData);
   $scope.data = fixedData;
+  $scope.data.length = 1e6;
   $scope.dataLength = $scope.data.length;
   $scope.updated = 0;
   calcScale();
+
+  $scope.getRow = function(i) {
+   return {
+      id: i,
+      percent: random1[i % 100],
+      field1: random2[(i + 10) % 100],
+      field2: random3[(i + 20) % 100],
+      field3: random4[(i + 30) % 100],
+
+      field4: random2[(i + 40) % 100],
+      field5: random3[(i + 50) % 100]
+    }
+  }
 
 
   //get grid template from script tag
@@ -186,8 +201,6 @@ angular.module('app', ['doTA'])
   gridRoot.innerHTML = compileFn($scope, $filter);
   //add some events
   doTA.addEvents(gridRoot, $scope, {event: 'click dblclick mousemove'});
-
-
 
   //click handler
   $scope.clickHandler = function($event, dbl) {
@@ -207,10 +220,12 @@ angular.module('app', ['doTA'])
   $scope.rowChange = function() {
     console.log('rowChange', $scope.rowType);
     if (+$scope.rowType === 1) {
-      makeData($scope.rows, 0, data);
-      $scope.data = data;
+      //makeData($scope.rows, 0, data);
+      //$scope.data = data;
+      $scope.data.length = 1e9;
     } else {
-      $scope.data = fixedData;
+      //$scope.data = fixedData;
+      $scope.data.length = 1e6;
     }
     $scope.dataLength = +$scope.rowType === 1 ? 1e9 : $scope.data.length;
     $scope.totalHeight = $scope.cellHeight * $scope.dataLength;
@@ -230,7 +245,7 @@ angular.module('app', ['doTA'])
     console.log('colChange', $scope.colType);
 
     if (+$scope.colType === 1) {
-      $scope.gridOptions = fixedColumn.slice(0, 1e6);
+      $scope.gridOptions.length = 1e6;
     } else {
       $scope.gridOptions.length = 1e5;
     }
@@ -270,11 +285,12 @@ angular.module('app', ['doTA'])
 
     realTotalWidth = 0;
     widthMap.length = 0;
-    $scope.gridOptions.forEach(function(col, i) {
-      realTotalWidth += col.width || 100;
+    for (var i = 0; i < $scope.gridOptions.length; i++){
+      var col = $scope.gridOptions[i];
+      realTotalWidth += col && col.width ? col.width  : 125;
       //width map, which sum upto x columns, to prevent extra loop at scroll event
       widthMap[i] = realTotalWidth;
-    });
+    }
     $scope.totalWidth = realTotalWidth + 1; //firefox? or border-box thing?
 
     $scope.totalWidth = realTotalWidth;

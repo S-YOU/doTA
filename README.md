@@ -176,17 +176,17 @@ This project has two libraries, doTA, and ngDoTA.
 
 - optimize
   - additional optimization on output
-    - currently only size optimization, which strip unnessary quotes on attributes
-      - may be only useful for precompiled templates on server side
+    - currently only size optimization, which strip unnecessary quotes on attributes
+      - may be only useful for pre-compiled templates on server side
 
 - data-XX
   - all `data-XX` attributes on directive will be available as `$attr.XX` on templates
 
 - scope-XX
-  - all `scope-XX` attibutes on directive will be avaialble as `$attr.XX` on templates
+  - all `scope-XX` attributes on directive will be available as `$attr.XX` on templates
   - attr without `.` or `[` will be `$scope[attr]` or it will `$scope.$eval`
 
-- attrbutes startsith '-' will treat as property
+- attributes startswith '-' will treat as property
   - `-scroll-left=expr` - primitive or scope property can be used, no interpolations.
 
 - debug
