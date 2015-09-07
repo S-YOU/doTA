@@ -95,7 +95,7 @@ angular.module('app', ['doTA'])
 
   //initialize data
   initData();
-  $scope.data = makeData(100, 0);
+  $scope.data = makeData(1e2, 0);
   $scope.data.length = 1e6;
   $scope.dataLength = $scope.data.length;
   $scope.updated = 0;
@@ -222,12 +222,15 @@ angular.module('app', ['doTA'])
       // Find Column Index
       // console.time('column');
       var offsetLeft = 0, offsetRight = widthMap.length, scrollOffsetLeft = scrollLeft;
-      for (var i = 0; i < widthMap.length; i++) {
-        if ( scrollLeft * hScale < widthMap[i] ) {
+      var scaleLeft = scrollLeft * hScale;
+      //find nearest index
+      var i = scaleLeft / widthMap[widthMap.length - 1] * g.colDef.length | 0;
+      for (; i < widthMap.length; i++) {
+        if ( scaleLeft < widthMap[i] ) {
           offsetLeft = i;
           scrollOffsetLeft = i ? widthMap[i - 1] / hScale : 0;
           for (var j = i; j < widthMap.length; j++) {
-            if ( scrollLeft * hScale + $scope.width <= widthMap[j] ) {
+            if ( scaleLeft + $scope.width <= widthMap[j] ) {
               offsetRight = j + 1;
               if (g.pinLeft) {
                 offsetRight += g.pinLeft;
@@ -240,13 +243,14 @@ angular.module('app', ['doTA'])
           break;
         }
       }
+      // console.timeEnd('column');
 
       $scope.offsetLeft = offsetLeft;
       $scope.offsetRight = offsetRight;
       $scope.scrollLeft = scrollLeft;
       $scope.scrollOffsetLeft = scrollOffsetLeft;
     }
-    // console.timeEnd('column');
+
     // if (offsetRight - offsetLeft  > 7) {
     //   console.log('offsetTop|offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
     // }
@@ -366,10 +370,10 @@ angular.module('app', ['doTA'])
   }
 
   function initData() {
-    random1 = makeRandom(100, function(){ return Math.random() * 100 | 0;});
-    random2 = makeRandom(100, function(){ return Math.random(); });
-    random3 = makeRandom(100, function(){ return Math.random(); });
-    random4 = makeRandom(100, function(){
+    random1 = makeRandom(1e2, function(){ return Math.random() * 100 | 0;});
+    random2 = makeRandom(1e2, function(){ return Math.random(); });
+    random3 = makeRandom(1e2, function(){ return Math.random(); });
+    random4 = makeRandom(1e2, function(){
       return (Math.random() + 0.3) * +new Date();
     });
   }
