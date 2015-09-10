@@ -7,20 +7,20 @@
 </head>
 <body>
 
-<div style="float:right;text-align:right;padding:5px;">
-<div>Inspired from
-  <a href="http://mleibman.github.io/SlickGrid/examples/example-optimizing-dataview.html" target=_blank>SlickGrid</a> &
-  <a href="http://www.angulargrid.com" target=_blank>Angular Grid</a>
-</div>
-<div>Back to <a href="../">Examples Index</a></div>
-</div>
+<div>
+  <div style="float:right;text-align:right;padding:5px;">
+    <div>Inspired from
+      <a href="http://mleibman.github.io/SlickGrid/examples/example-optimizing-dataview.html" target=_blank>SlickGrid</a> &
+      <a href="http://www.angulargrid.com" target=_blank>Angular Grid</a>
+    </div>
+    <div>Back to <a href="../">Examples Index</a></div>
+  </div>
 
-<h3>Virtual Scroll with
-  <a href="https://github.com/S-YOU/doTA" target=_blank>doTA</a> (FlatDOM) - Million/Billion of Rows x ~1 Million Columns
-</h3>
+  <h3>Virtual Scroll with
+    <a href="https://github.com/S-YOU/doTA" target=_blank>doTA</a> (FlatDOM) - Million/Billion of Rows x ~1 Million Columns
+  </h3>
 
-<div ng-app="app">
-  <div ng-controller="ctrl" dota-render="main" inline=1 event=1 model=1 bind=1>
+  <div ng-app="app" ng-controller="ctrl" dota-render="main" inline=1 event=1 model=1 bind=1>
     <div class=vpad>
       <label><input name=1 type=radio ng-model="useWhat" value=0 checked />
       <span> Synchronous</span></label>
@@ -57,7 +57,7 @@
   </div>
 </div>
 
-<div id="grid">Generating Data...</div>
+<div id="grid" class="grid-container">Generating Data...</div>
 
 <script type="text/template" id="grid-template">
 
@@ -89,11 +89,11 @@
       </div>
 
       <!--left grid body-->
-      <div class="body pinned" ng-style="height:{{bodyHeight}}px;" -scroll-top="scrollTop" onscroll="virtualScroll1(this,1)">
+      <div class="body body-left pinned" ng-style="height:{{bodyHeight}}px;" -scroll-top="scrollTop" onscroll="virtualScroll1(this,1)">
         <div class="canvas" ng-style="width:{{g.widthLeft}}px;height:{{totalHeight}}px">
           <div class="viewport" ng-style="width:{{g.widthLeft}}px;top:{{scrollTop}}px">
             <!--row-->
-            <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)" key="K" row="{{i+realOffsetTop}}"
+            <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)" key="K" skip="100" row="{{i+realOffsetTop}}"
               class="row {{i%2?'odd':'even'}} {{g.rowClass ? g.rowClass(row, i+offsetTop) : ''}}">
               <!--cell-->
               <div class="cell" ng-repeat="j in 0:g.pinLeft" ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
@@ -132,11 +132,11 @@
       </div>
 
       <!--grid-center body-->
-      <div class="body" ng-style="height:{{bodyHeight}}px" -scroll-top="scrollTop" onscroll="virtualScroll2(this)">
+      <div class="body body-center" ng-style="height:{{bodyHeight}}px" -scroll-top="scrollTop" onscroll="virtualScroll2(this)">
         <div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
           <div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
             <!--row-->
-            <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)" key="K" row="{{i+realOffsetTop}}"
+            <div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)" key="K" skip="100" row="{{i+realOffsetTop}}"
               class="row {{i%2?'odd':'even'}} {{g.rowClass ? g.rowClass(row, i+offsetTop) : ''}}">
               <!--cell-->
               <div class="cell" ng-repeat="j in offsetLeft:offsetRight" ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"

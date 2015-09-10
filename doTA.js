@@ -586,51 +586,80 @@ var doTA = (function() {'use strict';
         if (prevTagId1 === prevTagId2 && pos1 > 0 && pos2 > 0) {
 
           //["6.1", "5.7.1"] ["5.6.1", "5.6.1"]
+          //horizontal scroll left to right, appending nodes
           if (tagNo1 > tagNo2) {
-            elem1 = document.getElementById(prevTagId2);
-            if (!elem1) {
-              console.warn(["no existing node 5", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
-            } else {
+
+            //removeChild bottom down 111.1 ["111.1", "16.1"] ["15.6.1", "15.6.1"] [10070, 2106]
+            if (subNo2) {
+              //["146.1", "145.12681.1"] ["145.1", "145.1"] ["<div id="145.12681.1" class="cell" style="width:125px" col="2536">0.7734284962061793</div>"]
+              //["116.1", "115.12.1"] ["115.11.1", "115.11.1"] ["<div id="115.12.1" class="cell" style="width:125px;"></div>"]
+              elem1 = document.getElementById(tagNo2 + '.' + prevKey);
+              if (!elem1) {
+                //resize bottom down - bigger
+                //[111, 15] [false, false] ["111.1", "15.1"] ["14.6.1", "14.6.1"] [1896, 1871]
+                console.error("no existing node 5", [tagId1, tagId2], [prevTagId1, prevTagId2], [subNo1, subNo2], [pos1, pos2]);
+              } else {
+                tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+                pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+                newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
+                elem1.appendChild(newNode.firstChild);
+                // console.info("prevTagId2.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]);
+
+                pos1 = lastPos1;
+                tagId1 = prevTagId1;
+                tagId2 = prevTagId2;
+                continue;
+              }
+
+            //not impl ["111.1", "15.1"] ["14.6.1", "14.6.1"] [1896, 1871]
+            // ["36.1", "111.1"] ["35.6.1", "35.6.1"] [6872, 6897]
+            } else if (!subNo1) { //&& !subNo2
               tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
               pos2 = getOuterHTMLEnd(html2, tagStartPos2);
               newNode.innerHTML = html2.substring(tagStartPos2, pos2);
 
-              //huge scroll - hack
-              if (tagId2.length - prevTagId2.length >= 2) {
-                elem1.appendChild(newNode.firstChild);
-                // logger.push(["this.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-              } else {
-                elem1.parentNode.appendChild(newNode.firstChild);
-                // logger.push(["parent.appendChild[first]", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-              }
+              elem1 = document.getElementById(prevTagId2.slice(0, prevTagId2.indexOf('.') + 1) + prevKey);
+              elem1.parentNode.appendChild(newNode.firstChild);
+              // console.info("prevTagId2.parentNode.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [subNo1, subNo2], [html2.substring(tagStartPos2, pos2)]);
+
               pos1 = lastPos1;
               tagId1 = prevTagId1;
               tagId2 = prevTagId2;
               continue;
+
+            } else {
+              console.warn("not impl", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
             }
 
           // [5, 6] [24, false] ["5.24.1", "6.1"] ["5.23.1", "5.23.1"] [673, 770]
           } else if (tagNo1 < tagNo2) {
-            elem1 = document.getElementById(tagId1);
-            if (!elem1) {
-              console.warn(["no existing node 4", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]]);
-            } else {
-              elem1.parentNode.removeChild(elem1);
-              if (pos1 > 0) {
-                pos1 = getOuterHTMLEnd(html1, pos1);
+
+            // [5, 6] [24, false] ["5.24.1", "6.1"] ["5.23.1", "5.23.1"] [673, 770]
+            //  ["35.1", "111.1"] ["34.6.1", "34.6.1"] [6961, 6986]
+            if (!subNo2) {
+              elem1 = document.getElementById(tagId1);
+              if (!elem1) {
+                console.warn("no existing node 4", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
+              } else {
+                elem1.parentNode.removeChild(elem1);
+                if (pos1 > 0) {
+                  pos1 = getOuterHTMLEnd(html1, pos1);
+                }
+                // console.warn("removeChild bottom down", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
+                // logger.push(["removeChild[first]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                pos2 = lastPos2;
+                tagId1 = prevTagId1;
+                tagId2 = prevTagId2;
+                continue;
               }
-              // logger.push(["removeChild[first]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
-              pos2 = lastPos2;
-              tagId1 = prevTagId1;
-              tagId2 = prevTagId2;
-              continue;
+
+            } else {
+              console.warn("not impl", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
             }
-          }
-
-
 
           //same level
-          if (tagNo1 === tagNo2) {
+          } else if (tagNo1 === tagNo2) {
 
             // [5, 5] [1, 2] ["5.1.1", "5.2.1"] ["5.1", "5.1"] [229, 227]
             if ( subNo1 < subNo2 ) {
@@ -642,6 +671,7 @@ var doTA = (function() {'use strict';
                 if (pos1 > 0) {
                   pos1 = getOuterHTMLEnd(html1, pos1);
                 }
+                // console.warn("removeChild bottom down", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
                 // logger.push(["removeChild[backward.last]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
                 pos2 = lastPos2;
                 tagId1 = prevTagId1;
@@ -664,9 +694,15 @@ var doTA = (function() {'use strict';
               tagId1 = prevTagId1;
               tagId2 = prevTagId2; //check later
               continue;
+            } else {
+              console.warn('not impl', [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
             }
 
+
           } //same parent
+          else {
+            console.warn('not impl', [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
+          }
 
         } //prevTagId1 === prevTagId2
 
@@ -675,28 +711,87 @@ var doTA = (function() {'use strict';
         //end of previous html
         else if (pos1 < 0) {
 
-          // ["28.9.1", "28.10.1"] ["28.8.1", "28.9.1"] [-1, 16911]
-          if ( tagNo1 === tagNo2 && subNo1 < subNo2 ) {
-            elem1 = document.getElementById(prevTagId2);
+          // ######## ["28.9.1", "28.10.1"] ["28.8.1", "28.9.1"] [-1, 16911]
+          if ( tagNo1 === tagNo2) {
 
-            tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
-            pos2 = getOuterHTMLEnd(html2, tagStartPos2);
-            newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+            // ["28.9.1", "28.10.1"] ["28.8.1", "28.9.1"] [-1, 16911]
+            if (subNo1 < subNo2 ) {
+              elem1 = document.getElementById(tagNo2 + '.' + prevKey);
 
-            //huge scroll - hack
-            if (tagId2.length - prevTagId2.length >= 2) {
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+
               elem1.appendChild(newNode.firstChild);
-              // logger.push(["this.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+              // console.info("this.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]);
+
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2;
+              continue;
             } else {
-              elem1.parentNode.appendChild(newNode.firstChild);
-              // logger.push(["appendChild[parent.last]1<0", [tagId1, tagId2], [subNo1, subNo2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]]);
+              console.warn('not impl', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
             }
 
-            tagId1 = prevTagId1;
-            tagId2 = prevTagId2;
-            continue;
+          } else if (tagNo1 < tagNo2) {
+
+            //prevTagId2 is a children
+            // [126, 127] [66, false] ["126.66.1", "127.1"] ["126.61.1", "126.66.1"] [-1, 13065]
+            if (prevTagId2.indexOf('.') !== prevTagId2.lastIndexOf('.')) {
+              //not impl1 pos1 < 0 [14, 15] [6, false] ["14.6.1", "15.1"] ["14.6.1", "14.6.1"] [-1, 1950]
+              elem1 = document.getElementById(prevTagId2.slice(0, prevTagId2.indexOf('.') + 1) + prevKey);
+
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+              // console.info("prevTagId2.parent.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+
+              elem1.parentNode.appendChild(newNode.firstChild);
+
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2;
+              continue;
+
+            //this is children but prevTagId2 is parent
+            //not impl [143, 144] [false, 499946] ["143.1", "144.499946.1"] ["143.1", "144.1"] [-1, 37542]
+            } else if (subNo2) {
+              elem1 = document.getElementById(prevTagId2);
+
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+              // console.info("prevTagId2.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+
+              elem1.appendChild(newNode.firstChild);
+
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2;
+              continue;
+
+            //this and prevTagId2 is not children
+            //not impl [125, 126] [false, false] ["125.1", "126.1"] ["125.1", "125.1"] [-1, 3444] [" class="row odd blue" row="5"></div><div id="126.1"]
+            } else {
+
+              //////////// EXCEPTIONAL CASE : this is ambiguous, can't figure out new element a child or sibling of previousNode with current design :(
+              //120 ["119.1", "120.1"] ["118.1", "119.1"] [119, 120] [-1, 3695]
+
+              elem1 = document.getElementById(prevTagId2);
+
+              tagStartPos2 = html2.lastIndexOf('<', pos2 - 6);
+              pos2 = getOuterHTMLEnd(html2, tagStartPos2);
+              newNode.innerHTML = html2.substring(tagStartPos2, pos2);
+              // console.info("prevTagId2.parent.appendChild", [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+
+              elem1.parentNode.appendChild(newNode.firstChild);
+
+              tagId1 = prevTagId1;
+              tagId2 = prevTagId2;
+              continue;
+
+              // console.warn('not impl', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+            }
+
           } else {
-            console.warn('not impl1 pos1 < 0', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
+            console.warn('not impl', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
           }
         }
 
@@ -733,7 +828,7 @@ var doTA = (function() {'use strict';
                 if (pos1 > 0) {
                   pos1 = getOuterHTMLEnd(html1, pos1);
                 }
-                // logger.push(["removeChild[backward.last]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+                // console.warn("removeChild bottom down", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
 
                 tagId1 = prevTagId1;
                 tagId2 = prevTagId2;
@@ -743,6 +838,26 @@ var doTA = (function() {'use strict';
             } else {
               console.warn('not impl3 pos2 < 0', [tagNo1, tagNo2], [subNo1, subNo2], [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2], [html2.substring(tagStartPos2, pos2)]);
             }
+
+          //not impl ["146.1", "145.66.1"] ["145.66.1", "145.61.1"] [39591, -1]
+          //not impl ["145.1", "144.66.1"] ["144.66.1", "144.61.1"] [38200, -1]
+          //not impl ["144.1", "143.66.1"] ["143.66.1", "143.61.1"] [36747, -1]
+          //resize bottom up - make smaller
+          } else if (tagNo1 > tagNo2) {
+            elem1 = document.getElementById(tagId1);
+            elem1.parentNode.removeChild(elem1);
+            if (pos1 > 0) {
+              pos1 = getOuterHTMLEnd(html1, pos1);
+            }
+            // console.warn("removeChild bottom down", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
+            // logger.push(["removeChild[backward.last]", tagId1, [tagId1, tagId2], [prevTagId1, prevTagId2], [html2.substring(tagStartPos2, pos2)]]);
+
+            tagId1 = prevTagId1;
+            tagId2 = prevTagId2;
+            continue;
+
+          } else {
+            console.warn('not impl', [tagId1, tagId2], [prevTagId1, prevTagId2], [pos1, pos2]);
           }
         }
 
@@ -1089,7 +1204,7 @@ var doTA = (function() {'use strict';
       openTag: function(tagName, attr, selfClosing) {
         // debug && console.log('openTag', [tagName, attr]);
         var parsedAttr = {}, customId, tagId, noValAttr = '';
-        var attrName, attrVal, attrSkip, oneTimeBinding, doTAPassThis;
+        var attrName, attrVal, attrSkip, oneTimeBinding, doTAPassThis, x;
 
         //skip parsing if dota-pass is specified (interpolation will still be expanded)
         // https://jsperf.com/hasownproperty-vs-in-vs-undefined/12
@@ -1107,7 +1222,7 @@ var doTA = (function() {'use strict';
         //unless dota-pass or with dota-continue
         if (doTAPass === void 0 || doTAContinue) {
 
-          if (diffLevel === 2 && attr.skip) {
+          if (diffLevel && attr.skip) {
             skipLevel = level;
             attrSkip = attr.skip;
             attr.skip = void 0;
@@ -1124,7 +1239,7 @@ var doTA = (function() {'use strict';
             var repeatVar = NG_REPEAT.substr(0, inPos), repeatSrc = NG_REPEAT.substr(inPos + 4);
             var commaPos = repeatVar.indexOf(',');
             var pipePos = repeatSrc.indexOf('|'), repeatSrcNew;
-            var colonPos, x;
+            var colonPos;
 
             //store variable name to use for $index later
             //this is ng-repeat specific, LevelMap[level] is same for ng-if too
@@ -1170,8 +1285,8 @@ var doTA = (function() {'use strict';
             // Array: "k in []" ==> while loop
             } else {
               FnText += indent(level, 1) + 'var ' +
-                repeatVar + ',D' + level + '=' + repeatSrcNew + ','
-                + idx + '=-1,' + l + '=D' + level + '.length;\n';
+                repeatVar + ',D' + level + '=' + repeatSrcNew + ',' +
+                idx + '=-1,' + l + '=D' + level + '.length;\n';
               FnText += indent(level, 1) + 'while(++' + idx + '<' + l + '){\n';
               //                        space is needed for manual uglify  ->  vvv
               FnText += indent(level) + repeatVar + '=D' + level + '[' + idx + ']; \n';
@@ -1233,10 +1348,10 @@ var doTA = (function() {'use strict';
             attr['ng-if'] = void 0;
           }
 
-          if (attr['elif']) {
-            FnText += indent(level, 1) + 'else if('+ attachScope(attr['elif']) +'){\n';
+          if (attr.elif) {
+            FnText += indent(level, 1) + 'else if('+ attachScope(attr.elif) +'){\n';
             LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-            attr['elif'] = void 0;
+            attr.elif = void 0;
           }
 
           if (typeof attr['else'] !== 'undefined' && !watchDiff) {
@@ -1480,8 +1595,7 @@ var doTA = (function() {'use strict';
             FnText += indent(level, 1) + "}else{" +
               "R+='<" + tagName + " id=\"'+N+'." + uniqueId + '" hidden="" ' +
               (tagName === 'img' || tagName === 'input' || tagName === 'br' || tagName === 'hr' ?
-                '/>' : '></' + tagName + '>')
-              + '\';' +
+              '/>' : '></' + tagName + '>') + '\';' +
               "N+=" + ngIfLevelMap[ngIfLevel] + "} \n";
           }
           //save counter
@@ -1508,7 +1622,7 @@ var doTA = (function() {'use strict';
         }
         // console.log('LevelMap2', LevelMap);
 
-        if (diffLevel === 2) {
+        if (diffLevel) {
           if (level === skipLevel) {
             // console.log('ngIfLevel', [level, skipLevel, ngRepeatLevel])
             FnText += indent(level, 1) + 'N=O' + level + '; \n';

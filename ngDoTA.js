@@ -66,28 +66,29 @@
   // parsed.assign('haha');
   // console.log(obj);
 
-  //debounce for events
-  // function debounce(fn, timeout) {
-  //   if (timeout === undefined) {
-  //     timeout = 200;
-  //   }
-  //   var timeoutId;
-  //   var args, thisArgs;
-  //   function debounced() {
-  //     fn.apply(thisArgs, args);
-  //   }
-  //   return function() {
-  //     args = arguments;
-  //     thisArgs = this;
-  //     if (timeoutId) {
-  //       clearTimeout(timeoutId);
-  //     }
-  //     // console.log('debounce: new timer', [timer]);
-  //     timeoutId = setTimeout(debounced, timeout);
-  //   };
-  // }
+  //debounce for events like resize
+  function debounce(fn, timeout) {
+    if (timeout === undefined) {
+      timeout = 500;
+    }
+    var timeoutId;
+    var args, thisArgs;
+    function debounced() {
+      fn.apply(thisArgs, args);
+    }
+    return function() {
+      args = arguments;
+      thisArgs = this;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      // console.log('debounce: new timer', [timer]);
+      timeoutId = setTimeout(debounced, timeout);
+    };
+  }
+  doTA.debounce = debounce;
 
-  //throttle for events
+  //throttle for events like input
   function throttle(fn, timeout) {
     if (timeout === undefined) {
       timeout = 200;
@@ -124,7 +125,7 @@
     if (child) {
       child.hidden = 1;
       hiddenTags.push(child);
-      while (child = child.nextSibling) {
+      while ((child = child.nextSibling)) {
         child.hidden = 1;
         hiddenTags.push(child);
       }
@@ -139,7 +140,7 @@
         }
       });
       console.timeEnd('removeChild');
-    })
+    });
   }
 
   function eventHandlerFn(scope, expr) {
@@ -194,7 +195,7 @@
     var events = attrs.events;
     // console.log('attributes', attributes);
     for(var i = 0, l = events.length; i < l; i++) {
-      attrName = 'de-' + events[i]
+      attrName = 'de-' + events[i];
       attrVal = partial.getAttribute(attrName);
       // console.log(i, [attrVal, events[i]])
       if (!attrVal) { continue; }
@@ -208,14 +209,15 @@
     //http://jsperf.com/queryselectorall-vs-getelementsbytagname/20
     // console.time('find-nodes:');
     var elements = ie8 ? elem.querySelectorAll('.de') : elem.getElementsByClassName('de');
+    var i;
     // console.timeEnd('find-nodes:');
     if (typeof attrs.event === 'number') {
-      for (var i = 0, l = elements.length; i < l; i++) {
+      for (i = 0, l = elements.length; i < l; i++) {
         addEventUnknown(elements[i], scope, attrs);
       }
     } else {
       attrs.events = attrs.event.split(' ');
-      for (var i = 0, l = elements.length; i < l; i++) {
+      for (i = 0, l = elements.length; i < l; i++) {
         addEventKnown(elements[i], scope, attrs);
       }
     }
@@ -267,7 +269,7 @@
             } else {
               parsed.assign(evt.target.value);
             }
-          }))
+          }));
         }, throttleVal));
       });
     });
@@ -451,10 +453,11 @@
               }
 
               console.log(attrDoTARender,'before compile');
+              var compileFn;
               //compile the template html text to function like doT does
               try {
                 console.time('compile:' + attrDoTARender);
-                var compiledFn = doTA.compile(template, attrs);
+                compiledFn = doTA.compile(template, attrs);
                 console.timeEnd('compile:'  + attrDoTARender);
                 console.log(attrDoTARender,'after compile(no-cache)');
               } catch (x) {
@@ -559,9 +562,10 @@
 
                 console.log(attrDoTARender, 'before render', patch);
                 //execute render function against scope, $filter, etc.
+                var renderedHTML;
                 try {
                   console.time('render:' + attrDoTARender);
-                  var v = func.F ? func.F(NewScope, $filter, params, patch) : func(NewScope, $filter, params, patch);
+                  renderedHTML = func.F ? func.F(NewScope, $filter, params, patch) : func(NewScope, $filter, params, patch);
                   console.timeEnd('render:' + attrDoTARender);
                   console.log(attrDoTARender,'after render', patch);
                 } catch (x) {
@@ -570,7 +574,7 @@
                 }
 
                 if(attrDebug) {
-                  /* */console.log(attrDoTARender, v);
+                  /* */console.log(attrDoTARender, renderedHTML);
                   // console.log(attrDoTARender, (func.F || func).toString());
                 }
 
@@ -584,13 +588,13 @@
                 if (elem[0].firstChild) {
                   console.time('appendChild:' + attrDoTARender);
                   var newNode = document.createElement('div'), firstChild;
-                  newNode.innerHTML = v;
+                  newNode.innerHTML = renderedHTML;
 
                   //if needed, attach events and $compile
                   attachEventsAndCompile(newNode, NewScope);
 
                   //move child from temp nodes
-                  while (firstChild = newNode.firstChild) {
+                  while ((firstChild = newNode.firstChild)) {
                     elem[0].appendChild(firstChild);
                   }
                   console.timeEnd('appendChild:' + attrDoTARender);
@@ -599,7 +603,7 @@
                 //if node is blank, use innerHTML
                 } else {
                   console.time('innerHTML:' + attrDoTARender);
-                  elem[0].innerHTML = v;
+                  elem[0].innerHTML = renderedHTML;
                   console.timeEnd('innerHTML:' + attrDoTARender);
                   console.log(attrDoTARender, 'after innerHTML');
 
@@ -757,7 +761,7 @@
         terminal: true,
         compile: function() {
           return function(scope, elem, attrs) {
-            console.log('dotaTemplate - compile', [attrs.dotaTemplate])
+            console.log('dotaTemplate - compile', [attrs.dotaTemplate]);
             var attrCompile = makeBool(attrs.compile, 1);
 
             scope.$watch(attrs.dotaTemplate, function(newVal, oldVal) {
