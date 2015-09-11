@@ -2,8 +2,10 @@
   "name": "doTA",
   "version": "0.0.1",
   "description": "doT for Angular",
-  "main": "doTA.js",
-  "dependencies": {},
+  "main": "dist/ngDoTA.min.js",
+  "dependencies": {
+    "angular": "*"
+  },
   "devDependencies": {
     "del": "*",
     "gulp": "*",
@@ -18,6 +20,5 @@
     "type": "git",
     "url": "git+https://github.com/S-YOU/doTA.git"
   },
-  "scripts": {},
   "license": "MIT"
 }

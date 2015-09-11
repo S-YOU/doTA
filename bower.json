@@ -1,13 +1,21 @@
 {
   "name": "doTA",
-  "main": [
-    "dist/ngDoTA.js"
-  ],
   "version": "0.0.1",
   "description": "doT for Angular",
-  "license": "MIT",
+  "homepage": "https://github.com/S-YOU/doTA",
+  "main": [
+    "dist/ngDoTA.min.js"
+  ],
   "ignore": [
     "*",
     "!dist/*"
-  ]
+  ],
+  "dependencies": {
+    "angular": "*"
+  },
+  "keywords": [
+    "angular",
+    "render"
+  ],
+  "license": "MIT"
 }
