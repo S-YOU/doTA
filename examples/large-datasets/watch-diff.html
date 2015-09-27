@@ -11,9 +11,9 @@
 </head>
 <body ng-controller="AppController as vm">
 
-  <div style="float:right">Scripts are based from Ben Nadel's
-    <a href="http://www.bennadel.com/blog/2864-rendering-large-datasets-with-angularjs-and-reactjs.htm" target="_blank">Blog</a>
-  </div>
+	<div style="float:right">Scripts are based from Ben Nadel's
+		<a href="http://www.bennadel.com/blog/2864-rendering-large-datasets-with-angularjs-and-reactjs.htm" target="_blank">Blog</a>
+	</div>
 
 	<h1>
 		Rendering Large Datasets With AngularJS
@@ -42,7 +42,7 @@
 </div>
 
 <div dota-render=2 inline=1 strip=1 watch="vm.grid.length"
-  watch-diff="vm.form.filter" loose=0 event=0 debug=0>
+	watch-diff="vm.form.filter" loose=0 event=0 debug=0>
 	<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
 		<tr ng-repeat="row in vm.grid">
 			<td class="test">
@@ -60,10 +60,10 @@
 
 
 	<!-- Load scripts. -->
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
-  <!--<script src="https://rawgit.com/S-YOU/angular-defer/master/dist/angular-defer.min.js"></script>-->
-  <!--<script src="../../../angular-defer/dist/angular-defer.js"></script>-->
-  <script type="text/javascript" src="../../dist/ngDoTA.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+	<!--<script src="https://rawgit.com/S-YOU/angular-defer/master/dist/angular-defer.min.js"></script>-->
+	<!--<script src="../../../angular-defer/dist/angular-defer.js"></script>-->
+	<script type="text/javascript" src="../../dist/ngDoTA.min.js"></script>
 	<script type="text/javascript">
 
 		// Create an application module for our demo.
@@ -230,7 +230,7 @@
 			}
 		);
 
-    // angular.bootstrap(document, ["Demo"]);
+		// angular.bootstrap(document, ["Demo"]);
 
 	</script>
 

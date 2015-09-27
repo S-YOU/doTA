@@ -1,89 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Faster Rendering With AngularJS + doTA</title>
+	<title>Faster Rendering With AngularJS + doTA</title>
 </head>
 <body ng-app="fasterAngular">
 
-  <div style="float:right">Scripts are based from this
-    <a href="http://www.williambrownstreet.net/blog/2014/04/faster-angularjs-rendering-angularjs-and-reactjs/" target="_blank">Blog</a>
-  </div>
+	<div style="float:right">Scripts are based from this
+		<a href="http://www.williambrownstreet.net/blog/2014/04/faster-angularjs-rendering-angularjs-and-reactjs/" target="_blank">Blog</a>
+	</div>
 
-  <h1>Faster Rendering With doTA</h1>
-  <div ng-controller="mycontroller">
+	<h1>Faster Rendering With doTA</h1>
+	<div ng-controller="mycontroller">
 
-    <div dota-render=1 inline=1 watch-diff=data model=1 bind=1 event=1>
-      <button ng-click="refresh()">Refresh Data</button>
-      <div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]}}</span></div>
-      <div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]"></span></div>
-      <input ng-model="name" throttle="15">
-      <input ng-model="name2" ng-value="name3">
-      <input ng-model="params.x.y.z">
-      <select ng-model="select">
-        <option value="">default</option>
-        <option value="1st">FIRST</option>
-        <option value="2nd">SECOND</option>
-      </select>
-      <label>
-        <input type="checkbox" ng-model="checkbox1" value="c1">
-        CHK VALUE 1
-      </label>
-      <label>
-        <input type="checkbox" ng-model="checkbox2" value="c2">
-        CHK VALUE 2
-      </label>
-      <label>
-        <input name="radio" type="radio" ng-model="radio" value="r1">
-        VALUE 1
-      </label>
-      <label>
-        <input name="radio" type="radio" ng-model="radio" value="r2">
-        VALUE 2
-      </label>
-    </div>
+		<div dota-render=1 inline=1 watch-diff=data model=1 bind=1 event=1>
+			<button ng-click="refresh()">Refresh Data</button>
+			<div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]}}</span></div>
+			<div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]"></span></div>
+			<input ng-model="name" throttle="15">
+			<input ng-model="name2" ng-value="name3">
+			<input ng-model="params.x.y.z">
+			<select ng-model="select">
+				<option value="">default</option>
+				<option value="1st">FIRST</option>
+				<option value="2nd">SECOND</option>
+			</select>
+			<label>
+				<input type="checkbox" ng-model="checkbox1" value="c1">
+				CHK VALUE 1
+			</label>
+			<label>
+				<input type="checkbox" ng-model="checkbox2" value="c2">
+				CHK VALUE 2
+			</label>
+			<label>
+				<input name="radio" type="radio" ng-model="radio" value="r1">
+				VALUE 1
+			</label>
+			<label>
+				<input name="radio" type="radio" ng-model="radio" value="r2">
+				VALUE 2
+			</label>
+		</div>
 
-    <div dota-render=2 inline=1 watch=data>
-      <table>
-        <tr ng-repeat="line in data">
-          <td>{{line[0]}}</td>
-          <td>{{line[1]}}</td>
-          <td>{{line[2]}}</td>
-          <td>{{line[3]}}</td>
-          <td>{{line[4]}}</td>
-        </tr>
-      </table>
-    </div>
+		<div dota-render=2 inline=1 watch=data>
+			<table>
+				<tr ng-repeat="line in data">
+					<td>{{line[0]}}</td>
+					<td>{{line[1]}}</td>
+					<td>{{line[2]}}</td>
+					<td>{{line[3]}}</td>
+					<td>{{line[4]}}</td>
+				</tr>
+			</table>
+		</div>
 
-  </div>
+	</div>
 
-  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
-  <!--<script src="../../../angular-defer/dist/angular-defer.js"></script>-->
-  <script src="../../dist/ngDoTA.min.js"></script>
-  <script>
-  angular.module('fasterAngular', ['doTA']).
-    controller('mycontroller', ['$scope', function($scope){
-      // Fill the data map with random data
-      $scope.refresh = function(){
-        // console.time('data refresh')
-        var data = [];
-        for (var i = 0; i < 1500; ++i) {
-          data[i] = {};
-          for (var j = 0; j < 5; ++j) {
-            data[i][j] = Math.random();
-          }
-        }
-        $scope.data = data;
-        // console.timeEnd('data refresh');
-      }
-      $scope.refresh();
-      $scope.params = {x: {y: {z: 1}}};
-      $scope.name = "test123";
-      $scope.checkbox2 = "c2";
-      // $scope.radio = "r1"
-      $scope.name3 = "name3Val";
-  }])
-  // angular.bootstrap(document.body, ['fasterAngular'])
-  </script>
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+	<!--<script src="../../../angular-defer/dist/angular-defer.js"></script>-->
+	<script src="../../dist/ngDoTA.min.js"></script>
+	<script>
+	angular.module('fasterAngular', ['doTA']).
+		controller('mycontroller', ['$scope', function($scope){
+			// Fill the data map with random data
+			$scope.refresh = function(){
+				// console.time('data refresh')
+				var data = [];
+				for (var i = 0; i < 1500; ++i) {
+					data[i] = {};
+					for (var j = 0; j < 5; ++j) {
+						data[i][j] = Math.random();
+					}
+				}
+				$scope.data = data;
+				// console.timeEnd('data refresh');
+			}
+			$scope.refresh();
+			$scope.params = {x: {y: {z: 1}}};
+			$scope.name = "test123";
+			$scope.checkbox2 = "c2";
+			// $scope.radio = "r1"
+			$scope.name3 = "name3Val";
+	}])
+	// angular.bootstrap(document.body, ['fasterAngular'])
+	</script>
 
 </body>
 </html>

@@ -1,9 +1,9 @@
 /* Demo Site Related */
 *, :before, :after {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-  outline: 0;
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+	outline: 0;
 }
 
 .pad { padding: 5px; }
@@ -12,151 +12,151 @@
 .box { float: left; }
 
 body {
-  padding: 10px;
+	padding: 10px;
 }
 
 html, body {
-  height: 100%;
+	height: 100%;
 }
 
 .grid-container {
-  width: 100%;
-  /*height: 100%;*/
-  height: calc(100% - 150px);
+	width: 100%;
+	/*height: 100%;*/
+	height: calc(100% - 150px);
 }
 
 input::-webkit-inner-spin-button { display: none; }
 input::-webkit-clear-button { display: none; }
 
 .percent {
-  display: inline-block;
-  background-color: gray;
-  height: 6px;
+	display: inline-block;
+	background-color: gray;
+	height: 6px;
 }
 
 .percent.green {
-  background-color: green;
+	background-color: green;
 }
 .percent.red {
-  background-color: red;
+	background-color: red;
 }
 
 label [disabled] + span {
-  color: gray;
-  text-decoration: line-through;
+	color: gray;
+	text-decoration: line-through;
 }
 
 /* Grid Related */
 .root {
-  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-  font-size: 14px;
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size: 14px;
 }
 .grid-left, .grid-center, .grid-right {
-  float: left;
+	float: left;
 }
 .grid-left, .grid-left .header {
-  border-right: 0;
+	border-right: 0;
 }
 .body, .header {
-  display:block;
-  background-color: #eee;
-  overflow: scroll;
-  border: 1px solid #808080;
+	display:block;
+	background-color: #eee;
+	overflow: scroll;
+	border: 1px solid #808080;
 }
 .header {
-  border-bottom: 0;
+	border-bottom: 0;
 }
 .canvas {
-  display: block;
-  position:relative;
+	display: block;
+	position:relative;
 }
 .viewport {
-  display: block;
-  position: absolute;
+	display: block;
+	position: absolute;
 }
 .row {
-  display: block;
-  height: 25px;
-  line-height: 25px;
-  float: left;
-  clear: both;
+	display: block;
+	height: 25px;
+	line-height: 25px;
+	float: left;
+	clear: both;
 }
 .cell {
-  display: block;
-  cursor: default;
-  float: left;
-  height: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	display: block;
+	cursor: default;
+	float: left;
+	height: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 /* header specific */
 .header {
-  background: linear-gradient(#fff, #d3d3d3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-align: center;
+	background: linear-gradient(#fff, #d3d3d3);
+	white-space: nowrap;
+	overflow: hidden;
+	text-align: center;
 }
 .header .row {
-  border-top: 0;
+	border-top: 0;
 }
 .header .row.group {
-  font-weight: bold;
+	font-weight: bold;
 }
 .header .cell.group {
-  border-bottom: 1px solid silver;
+	border-bottom: 1px solid silver;
 }
 .header .cell + .cell {
-  border-left: 1px solid #808080;
+	border-left: 1px solid #808080;
 }
 
 /*pinned column specific */
 .pinned.body {
-  /*overflow-x: hidden;*/
-  margin-right: -17px;
-  overflow-x: scroll;
+	/*overflow-x: hidden;*/
+	margin-right: -17px;
+	overflow-x: scroll;
 }
 .pinned::-webkit-scrollbar { width: 0; }
 
 /* body specific */
 .body .cell + .cell {
-  border-left: 1px dotted silver;
+	border-left: 1px dotted silver;
 }
 .body .row + .row {
-  border-top: 1px solid silver;
+	border-top: 1px solid silver;
 }
 
 /* row specific */
 .row.odd {
-  background: #f9f9f9;
+	background: #f9f9f9;
 }
 
 /* cell specific */
 .cell input {
-  display: block;
-  border: 0;
-  height: 100%;
-  width: 100%;
-  padding: 0 2px 0 2px;
+	display: block;
+	border: 0;
+	height: 100%;
+	width: 100%;
+	padding: 0 2px 0 2px;
 }
 
 /* for demostration purpose */
 .body .cell:hover, .body .cell input:hover {
-  background-color: yellow;
+	background-color: yellow;
 }
 
 .row.blue, .row.blue input {
-  background-color: lightskyblue;
+	background-color: lightskyblue;
 }
 .row.green, .row.green input {
-  background-color: lightgreen;
+	background-color: lightgreen;
 }
 .cell.blue {
-  background-color: dodgerblue;
+	background-color: dodgerblue;
 }
 .cell.red {
-  background-color: orangered;
+	background-color: orangered;
 }
 .cell.yellow {
-  background-color: lightyellow;
+	background-color: lightyellow;
 }

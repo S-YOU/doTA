@@ -1,24 +1,24 @@
 {
-  "name": "doTA",
-  "version": "0.0.1",
-  "description": "doT for Angular",
-  "main": "dist/ngDoTA.min.js",
-  "dependencies": {
-    "angular": "*"
-  },
-  "devDependencies": {
-    "del": "*",
-    "gulp": "*",
-    "gulp-closure-compiler-service": "*",
-    "gulp-concat": "*",
-    "gulp-rename": "*",
-    "gulp-replace": "*",
-    "gulp-sourcemaps": "*",
-    "gulp-uglify": "*"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/S-YOU/doTA.git"
-  },
-  "license": "MIT"
+	"name": "doTA",
+	"version": "0.0.1",
+	"description": "doT for Angular",
+	"main": "dist/ngDoTA.min.js",
+	"dependencies": {
+		"angular": "*"
+	},
+	"devDependencies": {
+		"del": "*",
+		"gulp": "*",
+		"gulp-closure-compiler-service": "*",
+		"gulp-concat": "*",
+		"gulp-rename": "*",
+		"gulp-replace": "*",
+		"gulp-sourcemaps": "*",
+		"gulp-uglify": "*"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/S-YOU/doTA.git"
+	},
+	"license": "MIT"
 }

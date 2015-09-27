@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <title>JavaScript template language shootoff · jsPerf</title>
-<meta name="description" content="A limited comparison of some popular JavaScript templating engines on a short template: 6 header tags, and 10 list items. Compared templating engines:   Mustache…">
+<meta name="description" content="A limited comparison of some popular JavaScript templating engines on a short template: 6 header tags, and 10 list items. Compared templating engines:	 Mustache…">
 <link rel="stylesheet" href="https://jsperf.com/_css/20150702.css">
 <link href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating.atom" rel="alternate" type="application/atom+xml" title="Atom feed for revisions of this test case">
 <script>document.documentElement.className='js'</script>
@@ -41,19 +41,6 @@
 <section>
 <h2>Preparation code output</h2>
 <div class="user-output">
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -148,51 +135,51 @@
 <p>You can <a href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating/1059/edit" rel="nofollow">edit these tests or add even more tests to this page</a> by appending <code>/edit</code> to the URL. Here’s a list of current revisions for this page:</p>
 <ul>
 	<li><a href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating">Revision 1</a>: published by Jeremy Ashkenas <time datetime="2010-08-25T20:21:45+02:00" pubdate>on 25th August 2010</time></li>
-  <li>...</li>
+	<li>...</li>
 	<li class="current"><a href="http://jsperf.com/dom-vs-innerhtml-based-templating/1059/dom-vs-innerhtml-based-templating/1059">Revision 1059</a>: published by Jarno <time datetime="2015-08-19T11:56:47+02:00" pubdate>2 days ago</time></li>
 </ul>
 </article>
 <footer><a href="http://jsperf.com/">Add test</a> · <a href="http://jsperf.com/faq">FAQ</a> · <a href="http://jsperf.com/faq#donate">Donate</a> · <a href="https://twitter.com/jsperf" rel="nofollow">twitter: @jsperf</a> · <a href="https://github.com/jsperf/jsperf.com">source on GitHub</a> · <a href="http://benchmarkjs.com/">Benchmark.js</a> · by <a href="https://mathiasbynens.be/">@mathias</a> and <a href="http://jsperf.com/contributors">contributors</a></footer>
 <script src="benchmark-47.js"></script><script>
-  ui.browserscope.key = 'ahBzfnVhLXByb2ZpbGVyLWhychELEgRUZXN0GICAgPPJmNoLDA';
+	ui.browserscope.key = 'ahBzfnVhLXByb2ZpbGVyLWhychELEgRUZXN0GICAgPPJmNoLDA';
 
-  ui.add('doT.js', '\
-    doTtemplate(sharedVariables);'
-  )
-  .add('Kendo UI Templates (Default)', '\
-    kendouiTemplate(sharedVariables);'
-  )
-  .add('Kendo UI Templates (No \"with\" block)', '\
-    kendouiTemplate2(sharedVariables);'
-  )
-  .add('Handlebars.js', '\
-    handlebarsTemplate(sharedVariables);'
-  )
-  .add('Underscore.js Template', '\
-    underscoreTemplate(sharedVariables);'
-  )
-  .add('Resig Micro Templates (modified)', '\
-    resig(sharedVariables);'
-  )
-  .add('Resig Micro Templates (No \"with\" block)', '\
-    resig2(sharedVariables);'
-  )
-  .add('Underscore.js Template (No \"with\")', '\
-    underscoreTemplateNoWith(sharedVariables);'
-  )
-  .add('Hogan.js', '\
-    hoganTemplate.render(sharedVariables);'
-  )
-  .add('JsRender', '\
-    jsRenderTemplate.render(sharedVariables);'
-  )
-  .add('Mustache.js Template', '\
-    Mustache.to_html(mustacheTemplate, sharedVariables);\n\
-    '
-  )
-  .add('doTA', '\
-    doTAtemplate(sharedVariables);'
-  );
+	ui.add('doT.js', '\
+	doTtemplate(sharedVariables);'
+	)
+	.add('Kendo UI Templates (Default)', '\
+	kendouiTemplate(sharedVariables);'
+	)
+	.add('Kendo UI Templates (No \"with\" block)', '\
+	kendouiTemplate2(sharedVariables);'
+	)
+	.add('Handlebars.js', '\
+	handlebarsTemplate(sharedVariables);'
+	)
+	.add('Underscore.js Template', '\
+	underscoreTemplate(sharedVariables);'
+	)
+	.add('Resig Micro Templates (modified)', '\
+	resig(sharedVariables);'
+	)
+	.add('Resig Micro Templates (No \"with\" block)', '\
+	resig2(sharedVariables);'
+	)
+	.add('Underscore.js Template (No \"with\")', '\
+	underscoreTemplateNoWith(sharedVariables);'
+	)
+	.add('Hogan.js', '\
+	hoganTemplate.render(sharedVariables);'
+	)
+	.add('JsRender', '\
+	jsRenderTemplate.render(sharedVariables);'
+	)
+	.add('Mustache.js Template', '\
+	Mustache.to_html(mustacheTemplate, sharedVariables);\n\
+	'
+	)
+	.add('doTA', '\
+	doTAtemplate(sharedVariables);'
+	);
 </script>
 
 <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
@@ -214,91 +201,91 @@
 <h5 class='header5'>#= data.header5 #</h5>
 <h6 class='header6'>#= data.header6 #</h6>
 <ul class='list'>
-   # for (var i = 0, l = data.list.length; i < l; i++) { #
-   <li class='item'>#= data.list[i] #</li>
-   # } #
+	 # for (var i = 0, l = data.list.length; i < l; i++) { #
+	 <li class='item'>#= data.list[i] #</li>
+	 # } #
 </ul>
 </div>
 </script>
 <script>
-  window.sharedVariables = {
-   header: "Header",
-   header2: "Header2",
-   header3: "Header3",
-   header4: "Header4",
-   header5: "Header5",
-   header6: "Header6",
-   list: ['1000000000', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-  };
+	window.sharedVariables = {
+		header: "Header",
+		header2: "Header2",
+		header3: "Header3",
+		header4: "Header4",
+		header5: "Header5",
+		header6: "Header6",
+		list: ['1000000000', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+	};
 
 
-  //JsRender compiled template (no encoding)
-  window.jsRenderTemplate = $.templates("<div><h1 class='header'>{{:header}}</h1><h2 class='header2'>{{:header2}}</h2><h3 class='header3'>{{:header3}}</h3><h4 class='header4'>{{:header4}}</h4><h5 class='header5'>{{:header5}}</h5><h6 class='header6'>{{:header6}}</h6><ul class='list'>{{for list}}<li class='item'>{{:#data}}</li>{{/for}}</ul></div>");
+	//JsRender compiled template (no encoding)
+	window.jsRenderTemplate = $.templates("<div><h1 class='header'>{{:header}}</h1><h2 class='header2'>{{:header2}}</h2><h3 class='header3'>{{:header3}}</h3><h4 class='header4'>{{:header4}}</h4><h5 class='header5'>{{:header5}}</h5><h6 class='header6'>{{:header6}}</h6><ul class='list'>{{for list}}<li class='item'>{{:#data}}</li>{{/for}}</ul></div>");
 
-  window.mustacheTemplate = "<div><h1 class='header'>{{{header}}}</h1><h2 class='header2'>{{{header2}}}</h2><h3 class='header3'>{{{header3}}}</h3><h4 class='header4'>{{{header4}}}</h4><h5 class='header5'>{{{header5}}}</h5><h6 class='header6'>{{{header6}}}</h6><ul class='list'>{{#list}}<li class='item'>{{{.}}}</li>{{/list}}</ul></div>";
+	window.mustacheTemplate = "<div><h1 class='header'>{{{header}}}</h1><h2 class='header2'>{{{header2}}}</h2><h3 class='header3'>{{{header3}}}</h3><h4 class='header4'>{{{header4}}}</h4><h5 class='header5'>{{{header5}}}</h5><h6 class='header6'>{{{header6}}}</h6><ul class='list'>{{#list}}<li class='item'>{{{.}}}</li>{{/list}}</ul></div>";
 
-  window.handlebarsTemplate = Handlebars.compile("<div><h1 class='header'>{{header}}</h1><h2 class='header2'>{{header2}}</h2><h3 class='header3'>{{header3}}</h3><h4 class='header4'>{{header4}}</h4><h5 class='header5'>{{header5}}</h5><h6 class='header6'>{{header6}}</h6><ul class='list'>{{#each list}}<li class='item'>{{this}}</li>{{/each}}</ul></div>");
+	window.handlebarsTemplate = Handlebars.compile("<div><h1 class='header'>{{header}}</h1><h2 class='header2'>{{header2}}</h2><h3 class='header3'>{{header3}}</h3><h4 class='header4'>{{header4}}</h4><h5 class='header5'>{{header5}}</h5><h6 class='header6'>{{header6}}</h6><ul class='list'>{{#each list}}<li class='item'>{{this}}</li>{{/each}}</ul></div>");
 
-  window.kendouiTemplate = kendo.template("<div><h1 class='header'>#= data.header #</h1><h2 class='header2'>#= data.header2 #</h2><h3 class='header3'>#= data.header3 #</h3><h4 class='header4'>#= data.header4 #</h4><h5 class='header5'>#= data.header5 #</h5><h6 class='header6'>#= data.header6 #</h6><ul class='list'># for (var i = 0, l = data.list.length; i < l; i++) { #<li class='item'>#= data.list[i] #</li># } #</ul></div>", {useWithBlock:true});
+	window.kendouiTemplate = kendo.template("<div><h1 class='header'>#= data.header #</h1><h2 class='header2'>#= data.header2 #</h2><h3 class='header3'>#= data.header3 #</h3><h4 class='header4'>#= data.header4 #</h4><h5 class='header5'>#= data.header5 #</h5><h6 class='header6'>#= data.header6 #</h6><ul class='list'># for (var i = 0, l = data.list.length; i < l; i++) { #<li class='item'>#= data.list[i] #</li># } #</ul></div>", {useWithBlock:true});
 
-  window.kendouiTemplate2 = kendo.template("<div><h1 class='header'>#= data.header #</h1><h2 class='header2'>#= data.header2 #</h2><h3 class='header3'>#= data.header3 #</h3><h4 class='header4'>#= data.header4 #</h4><h5 class='header5'>#= data.header5 #</h5><h6 class='header6'>#= data.header6 #</h6><ul class='list'># for (var i = 0, l = data.list.length; i < l; i++) { #<li class='item'>#= data.list[i] #</li># } #</ul></div>", {useWithBlock:false});
+	window.kendouiTemplate2 = kendo.template("<div><h1 class='header'>#= data.header #</h1><h2 class='header2'>#= data.header2 #</h2><h3 class='header3'>#= data.header3 #</h3><h4 class='header4'>#= data.header4 #</h4><h5 class='header5'>#= data.header5 #</h5><h6 class='header6'>#= data.header6 #</h6><ul class='list'># for (var i = 0, l = data.list.length; i < l; i++) { #<li class='item'>#= data.list[i] #</li># } #</ul></div>", {useWithBlock:false});
 
-  //Use external template definition
-  window.kendoUIAlt = kendo.template($("#kendoUIextTemplate").html());
-  window.kendoUIAlt2 = kendo.template($("#kendoUIextTemplate").html(), {useWithBlock:false});
+	//Use external template definition
+	window.kendoUIAlt = kendo.template($("#kendoUIextTemplate").html());
+	window.kendoUIAlt2 = kendo.template($("#kendoUIextTemplate").html(), {useWithBlock:false});
 
-  window.underscoreTemplate = _.template("<div><h1 class='header'><%= header %></h1><h2 class='header2'><%= header2 %></h2><h3 class='header3'><%= header3 %></h3><h4 class='header4'><%= header4 %></h4><h5 class='header5'><%= header5 %></h5><h6 class='header6'><%= header6 %></h6><ul class='list'><% for (var i = 0, l = list.length; i < l; i++) { %><li class='item'><%= list[i] %></li><% } %></ul></div>");
+	window.underscoreTemplate = _.template("<div><h1 class='header'><%= header %></h1><h2 class='header2'><%= header2 %></h2><h3 class='header3'><%= header3 %></h3><h4 class='header4'><%= header4 %></h4><h5 class='header5'><%= header5 %></h5><h6 class='header6'><%= header6 %></h6><ul class='list'><% for (var i = 0, l = list.length; i < l; i++) { %><li class='item'><%= list[i] %></li><% } %></ul></div>");
 
-  window.underscoreTemplateNoWith = _.template("<div><h1 class='header'><%= data.header %></h1><h2 class='header2'><%= data.header2 %></h2><h3 class='header3'><%= data.header3 %></h3><h4 class='header4'><%= data.header4 %></h4><h5 class='header5'><%= data.header5 %></h5><h6 class='header6'><%= data.header6 %></h6><ul class='list'><% for (var i = 0, l = data.list.length; i < l; i++) { %><li class='item'><%= data.list[i] %></li><% } %></ul></div>", null, {variable: 'data'});
+	window.underscoreTemplateNoWith = _.template("<div><h1 class='header'><%= data.header %></h1><h2 class='header2'><%= data.header2 %></h2><h3 class='header3'><%= data.header3 %></h3><h4 class='header4'><%= data.header4 %></h4><h5 class='header5'><%= data.header5 %></h5><h6 class='header6'><%= data.header6 %></h6><ul class='list'><% for (var i = 0, l = data.list.length; i < l; i++) { %><li class='item'><%= data.list[i] %></li><% } %></ul></div>", null, {variable: 'data'});
 
-  window.baseHtml = "<div><h1 class='header'></h1><h2 class='header2'></h2><h3 class='header3'></h3><h4 class='header4'></h4><h5 class='header5'></h5><h6 class='header6'></h6><ul class='list'><li class='item'></li></ul></div>";
+	window.baseHtml = "<div><h1 class='header'></h1><h2 class='header2'></h2><h3 class='header3'></h3><h4 class='header4'></h4><h5 class='header5'></h5><h6 class='header6'></h6><ul class='list'><li class='item'></li></ul></div>";
 
 window.doTtemplate = doT.template("<div><h1 class='header'>{{=it.header}}</h1><h2 class='header2'>{{=it.header2}}</h2><h3 class='header3'>{{=it.header3}}</h3><h4 class='header4'>{{=it.header4}}</h4><h5 class='header5'>{{=it.header5}}</h5><h6 class='header6'>{{=it.header6}}</h6><ul class='list'>{{for(var i = 0,l=it.list.length;i<l;i++) { }}<li class='item'>{{=it.list[i]}}</li>{{ } }}</ul></div>");
 
 
-  //Resig Template Function (modified to support ')
-  function tmpl(str) {
-              var strFunc =
-              "var p=[];" +
-                          "with(obj){p.push('" +
+	//Resig Template Function (modified to support ')
+	function tmpl(str) {
+				var strFunc =
+				"var p=[];" +
+							"with(obj){p.push('" +
 
-              str.replace(/[\r\t\n]/g, " ")
-                 .replace(/'(?=[^#]*#>)/g, "\t")
-                 .split("'").join("\\'")
-                 .split("\t").join("'")
-                 .replace(/<#=(.+?)#>/g, "',$1,'")
-                 .split("<#").join("');")
-                 .split("#>").join("p.push('")
-                 + "');}return p.join('');";
+				str.replace(/[\r\t\n]/g, " ")
+				.replace(/'(?=[^#]*#>)/g, "\t")
+				.split("'").join("\\'")
+				.split("\t").join("'")
+				.replace(/<#=(.+?)#>/g, "',$1,'")
+				.split("<#").join("');")
+				.split("#>").join("p.push('")
+				+ "');}return p.join('');";
 
-              return new Function("obj", strFunc);
-          }
+				return new Function("obj", strFunc);
+			}
 
-  window.resig = tmpl("<div><h1 class='header'><#= header #></h1><h2 class='header2'><#= header2 #></h2><h3 class='header3'><#= header3 #></h3><h4 class='header4'><#= header4 #></h4><h5 class='header5'><#= header5 #></h5><h6 class='header6'><#= header6 #></h6><ul class='list'><# for (var i = 0, l = list.length; i < l; i++) { #><li class='item'><#= list[i] #></li><# } #></ul></div>");
+	window.resig = tmpl("<div><h1 class='header'><#= header #></h1><h2 class='header2'><#= header2 #></h2><h3 class='header3'><#= header3 #></h3><h4 class='header4'><#= header4 #></h4><h5 class='header5'><#= header5 #></h5><h6 class='header6'><#= header6 #></h6><ul class='list'><# for (var i = 0, l = list.length; i < l; i++) { #><li class='item'><#= list[i] #></li><# } #></ul></div>");
 
-  //Resig modified template function (no "with" block)
-  function tmpl2(str) {
-              var strFunc =
-              "var p=[];" +
-                          "p.push('" +
+	//Resig modified template function (no "with" block)
+	function tmpl2(str) {
+				var strFunc =
+				"var p=[];" +
+							"p.push('" +
 
-              str.replace(/[\r\t\n]/g, " ")
-                 .replace(/'(?=[^#]*#>)/g, "\t")
-                 .split("'").join("\\'")
-                 .split("\t").join("'")
-                 .replace(/<#=(.+?)#>/g, "',$1,'")
-                 .split("<#").join("');")
-                 .split("#>").join("p.push('")
-                 + "');return p.join('');";
+				str.replace(/[\r\t\n]/g, " ")
+				 .replace(/'(?=[^#]*#>)/g, "\t")
+				 .split("'").join("\\'")
+				 .split("\t").join("'")
+				 .replace(/<#=(.+?)#>/g, "',$1,'")
+				 .split("<#").join("');")
+				 .split("#>").join("p.push('")
+				 + "');return p.join('');";
 
-              return new Function("data", strFunc);
-          }
+				return new Function("data", strFunc);
+			}
 
-  window.resig2 = tmpl2("<div><h1 class='header'><#= data.header #></h1><h2 class='header2'><#= data.header2 #></h2><h3 class='header3'><#= data.header3 #></h3><h4 class='header4'><#= data.header4 #></h4><h5 class='header5'><#= data.header5 #></h5><h6 class='header6'><#= data.header6 #></h6><ul class='list'><# for (var i = 0, l = data.list.length; i < l; i++) { #><li class='item'><#= data.list[i] #></li><# } #></ul></div>");
+	window.resig2 = tmpl2("<div><h1 class='header'><#= data.header #></h1><h2 class='header2'><#= data.header2 #></h2><h3 class='header3'><#= data.header3 #></h3><h4 class='header4'><#= data.header4 #></h4><h5 class='header5'><#= data.header5 #></h5><h6 class='header6'><#= data.header6 #></h6><ul class='list'><# for (var i = 0, l = data.list.length; i < l; i++) { #><li class='item'><#= data.list[i] #></li><# } #></ul></div>");
 
-  window.hoganTemplate = Hogan.compile("<div><h1 class='header'>{{{header}}}</h1><h2 class='header2'>{{{header2}}}</h2><h3 class='header3'>{{{header3}}}</h3><h4 class='header4'>{{{header4}}}</h4><h5 class='header5'>{{{header5}}}</h5><h6 class='header6'>{{{header6}}}</h6><ul class='list'>{{#list}}<li class='item'>{{{.}}}</li>{{/list}}</ul></div>");
+	window.hoganTemplate = Hogan.compile("<div><h1 class='header'>{{{header}}}</h1><h2 class='header2'>{{{header2}}}</h2><h3 class='header3'>{{{header3}}}</h3><h4 class='header4'>{{{header4}}}</h4><h5 class='header5'>{{{header5}}}</h5><h6 class='header6'>{{{header6}}}</h6><ul class='list'>{{#list}}<li class='item'>{{{.}}}</li>{{/list}}</ul></div>");
 
-  window.doTAtemplate = doTA.compile("<div><h1 class='header'>{{header}}</h1><h2 class='header2'>{{header2}}</h2><h3 class='header3'>{{header3}}</h3><h4 class='header4'>{{header4}}</h4><h5 class='header5'>{{header5}}</h5><h6 class='header6'>{{header6}}</h6><ul class='list'><li ng-repeat='x in list' class='item'>{{x}}</li></ul></div>");
+	window.doTAtemplate = doTA.compile("<div><h1 class='header'>{{header}}</h1><h2 class='header2'>{{header2}}</h2><h3 class='header3'>{{header3}}</h3><h4 class='header4'>{{header4}}</h4><h5 class='header5'>{{header5}}</h5><h6 class='header6'>{{header6}}</h6><ul class='list'><li ng-repeat='x in list' class='item'>{{x}}</li></ul></div>");
 
 </script>
 </body>
