@@ -47,15 +47,27 @@ label [disabled] + span {
 }
 
 /* Grid Related */
-.root {
+.grid-root {
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	font-size: 14px;
+	overflow: hidden;
 }
-.grid-left, .grid-center, .grid-right {
+.grid {
 	float: left;
+	overflow: hidden;
 }
-.grid-left, .grid-left .header {
+.grid + .grid {
+	border-left: 0;
+	border-top: 0;
+}
+.grid-left > div {
 	border-right: 0;
+}
+.grid-scroll > div {
+	border-left: 0;
+}
+.grid-bottom > div {
+	border-top: 0;
 }
 .body, .header {
 	display:block;
@@ -112,11 +124,10 @@ label [disabled] + span {
 
 /*pinned column specific */
 .pinned.body {
-	/*overflow-x: hidden;*/
 	margin-right: -17px;
-	overflow-x: scroll;
+	overflow: scroll;
 }
-.pinned::-webkit-scrollbar { width: 0; }
+.pinned::-webkit-scrollbar { width: 0; height: 0;}
 
 /* body specific */
 .body .cell + .cell {

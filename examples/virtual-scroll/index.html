@@ -61,11 +61,11 @@
 
 <script type="text/template" id="grid-template">
 
-	<div class="root" ng-mousemove="hoverHandler($event)"
+	<div class="grid-root" ng-mousemove="hoverHandler($event)"
 		ng-click="clickHandler($event)" ng-dblclick="clickHandler($event, 1)">
 
 		<!--grid-left (pinned)-->
-		<div class="grid-left" ng-style="width:{{g.widthLeft}}px" ng-if="g.pinLeft">
+		<div class="grid grid-left" ng-style="width:{{g.widthLeft}}px" ng-if="g.pinLeft">
 
 			<div class="header">
 				<div class="canvas" ng-style="height:{{headerHeight}}px;width:{{g.widthLeft}}px;">
@@ -89,7 +89,7 @@
 			</div>
 
 			<!--left grid body-->
-			<div class="body body-left pinned" ng-style="height:{{bodyHeight}}px;" -scroll-top="scrollTop" onscroll="virtualScroll1(this,1)">
+			<div class="body body-left pinned" ng-style="height:{{bodyHeight}}px;" onscroll="virtualScroll(this,0,1)">
 				<div class="canvas" ng-style="width:{{g.widthLeft}}px;height:{{totalHeight}}px">
 					<div class="viewport" ng-style="width:{{g.widthLeft}}px;top:{{scrollTop}}px">
 						<!--row-->
@@ -108,7 +108,7 @@
 		</div><!--grid-left-->
 
 		<!--grid-center-->
-		<div class="grid-center" ng-style="width:{{width}}px">
+		<div class="grid grid-center" ng-style="width:{{bodyWidth}}px">
 
 			<div class="header">
 				<div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
@@ -132,7 +132,7 @@
 			</div>
 
 			<!--grid-center body-->
-			<div class="body body-center" ng-style="height:{{bodyHeight}}px" -scroll-top="scrollTop" onscroll="virtualScroll2(this)">
+			<div class="body body-center pinned" ng-style="height:{{bodyHeight}}px;width:{{bodyWidth}}px" onscroll="virtualScroll(this)">
 				<div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
 					<div class="viewport" ng-style="left:{{scrollOffsetLeft}}px;top:{{scrollTop}}px">
 						<!--row-->
@@ -150,6 +150,35 @@
 
 		</div><!--grid-center-->
 
+		<!--vertical scrollbar-->
+		<div class="grid grid-scroll" ng-style="width:17px">
+			<div class="header">
+				<div class="canvas" ng-style="height:{{headerHeight}}px;"></div>
+			</div>
+			<div class="body" ng-style="height:{{bodyHeight}}px" onscroll="virtualScroll(this,0,1)">
+				<div class="canvas" ng-style="height:{{totalHeight}}px;">
+				</div>
+			</div>
+		</div>
+
+		<div class="grid grid-left grid-bottom" ng-style="width:{{g.widthLeft}}px;height:17px" ng-if="g.pinLeft">
+			<div class="body body-left">
+				<div class="canvas" ng-style="width:{{g.widthLeft}}px">
+				</div>
+			</div>
+		</div>
+
+		<!--horizontal scrollbar-->
+		<div class="grid grid-scroll grid-bottom" ng-style="height:17px">
+			<div class="body body-center" ng-style="width:{{bodyWidth}}px;height:16px" onscroll="virtualScroll(this,1)">
+				<div class="canvas" ng-style="width:{{totalWidth}}px;height:16px">
+				</div>
+			</div>
+		</div>
+
+		<div class="grid grid-scroll grid-bottom" ng-style="width:17px;height:17px">
+			<div class="body"></div>
+		</div>
 
 	</div>
 

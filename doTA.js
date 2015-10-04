@@ -139,7 +139,7 @@ var doTA = (function() {'use strict';
 		} else {
 
 			// self closing, explicit
-			if (chunk.charAt(chunk.length - 1) === '/') {
+			if (chunk[chunk.length - 1] === '/') {
 				tagName = chunk.slice(0, -1).toLowerCase();
 
 				if (tagName === 'br' || tagName === 'hr') {
@@ -164,34 +164,39 @@ var doTA = (function() {'use strict';
 
 	}
 
-	var events = ' scroll change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste ';
-	var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	//http://jsperf.com/object-key-vs-array-indexof-lookup/6
+	//var events = ' scroll change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste '
+	var EVENTS = {"scroll":1,"change":1,"click":1,"dblclick":1,"mousedown":1,"mouseup":1,"mouseover":1,"mouseout":1,"mousemove":1,"mouseenter":1,"mouseleave":1,"keydown":1,"keyup":1,"keypress":1,"submit":1,"focus":1,"blur":1,"copy":1,"cut":1,"paste":1};
+	//no unicode supportedgit
+	// var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	var VALID_CHARS = {"_":1,"$":1,"a":1,"b":1,"c":1,"d":1,"e":1,"f":1,"g":1,"h":1,"i":1,"j":1,"k":1,"l":1,"m":1,"n":1,"o":1,"p":1,"q":1,"r":1,"s":1,"t":1,"u":1,"v":1,"w":1,"x":1,"y":1,"z":1,"A":1,"B":1,"C":1,"D":1,"E":1,"F":1,"G":1,"H":1,"I":1,"J":1,"K":1,"L":1,"M":1,"N":1,"O":1,"P":1,"Q":1,"R":1,"S":1,"T":1,"U":1,"V":1,"W":1,"X":1,"Y":1,"Z":1};
 
 	// minimal stripped down html parser
 	function parseHTML(html, func) {
 		if (!html) { return; }
 		var prevPos = 0, pos = html.indexOf('<');
 		do {
-			if (html.charAt(pos) === '<') {
+			if (html[pos] === '<') {
 				pos++;
-				if (html.charAt(pos) === '/') {
+				if (html[pos] === '/') {
 					prevPos = ++pos;
 					pos = html.indexOf('>', prevPos);
 					//close tag must be like </div>, but not <div />
 					// console.log(['closetag', prevPos, pos, html.substring(prevPos, pos)])
 					func.closeTag(html.substring(prevPos, pos));
-				} else if (html.charAt(pos) === '!') {
+				} else if (html[pos] === '!') {
 					prevPos = pos;
-					pos = html.indexOf('>', prevPos);
-					// console.log(['comment', prevPos, pos, html.substring(prevPos, pos)])
-					func.comment(html.substring(prevPos, pos));
+					pos = html.indexOf('-->', prevPos);
+					//console.log(['comment', prevPos, pos, html.substring(prevPos, pos + 2)]);
+					func.comment(html.substring(prevPos, pos + 2));
+					pos += 2;
 				} else {
 					prevPos = pos;
 					pos = html.indexOf('>', prevPos);
 					// console.log(['opentag', prevPos, pos, html.substring(prevPos, pos), parseAttr(html.substring(prevPos, pos))])
 					parseAttr(html.substring(prevPos, pos), func);
 				}
-			} else if (html.charAt(pos) === '>') { //&& html.charAt(pos + 1) !== '<'
+			} else if (html[pos] === '>') { //&& html[pos + 1] !== '<'
 				prevPos = ++pos;
 				pos = html.indexOf('<', prevPos);
 				if (pos > prevPos) {
@@ -219,10 +224,10 @@ var doTA = (function() {'use strict';
 		var posx, endPosx;
 
 		do {
-			if (html1.charAt(pos1) === "<") {
+			if (html1[pos1] === "<") {
 				pos1++;
 				pos2++;
-				if (html1.charAt(pos1) === "/" || html1.charAt(pos1) === "!") {
+				if (html1[pos1] === "/" || html1[pos1] === "!") {
 					//don't patch comment node and close tag.
 					pos1 = html1.indexOf('>', pos1);
 					pos2 = html2.indexOf('>', pos2);
@@ -246,7 +251,7 @@ var doTA = (function() {'use strict';
 				}
 
 			//text node
-			} else if (html1.charAt(pos1) === '>') {
+			} else if (html1[pos1] === '>') {
 				prevPos1 = ++pos1;
 				prevPos2 = ++pos2;
 
@@ -280,18 +285,18 @@ var doTA = (function() {'use strict';
 		var LVL = 1, POS = START_POS;
 		for(;;) {
 			POS = HTML.indexOf('>', POS);
-			if (HTML.charAt(POS - 1) === '/') { //self closing
+			if (HTML[POS - 1] === '/') { //self closing
 				LVL--;
 				if (LVL <= 0) break;
 			}
 			POS = HTML.indexOf('<', POS);
-			if (HTML.charAt(POS + 1) === '/') {
+			if (HTML[POS + 1] === '/') {
 				LVL--;
 				if (LVL <= 0) {
 					POS = HTML.indexOf('>', POS + 2);
 					break;
 				}
-			} else if (HTML.charAt(POS + 1) !== '!') {
+			} else if (HTML[POS + 1] !== '!') {
 				LVL++;
 			}
 			// console.log('LVL', LVL);
@@ -393,7 +398,7 @@ var doTA = (function() {'use strict';
 				}
 
 				//if blank text node, skip early
-				if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
+				if (html1[pos1 + 1] === '<' && html2[pos2 + 1] === '<') {
 					pos1++;
 					pos2++;
 					continue;
@@ -536,7 +541,7 @@ var doTA = (function() {'use strict';
 				}
 
 				//if blank text node, skip early
-				if (html1.charAt(pos1 + 1) === '<' && html2.charAt(pos2 + 1) === '<') {
+				if (html1[pos1 + 1] === '<' && html2[pos2 + 1] === '<') {
 					pos1++;
 					pos2++;
 					continue;
@@ -942,12 +947,12 @@ var doTA = (function() {'use strict';
 					elem[attrName] = attrVal2;
 
 				// prefix with - as property, like -scrollLeft
-				} else if (attrName.charAt(0) === '-') {
+				} else if (attrName[0] === '-') {
 					//only if old value is same is element property to prevent loop (firefox)
 					if (elem[attrName.substr(1)] == attrVal1) {
 						elem[attrName.substr(1)] = attrVal2;
 					}
-					// console.log('prop-', attrName.substr(1), attrVal2, elem[attrName.substr(1)]);
+					//console.log('prop-', attrName.substr(1), attrVal1, attrVal2, elem[attrName.substr(1)]);
 
 				} else {
 						elem.setAttribute(attrName, attrVal2);
@@ -979,7 +984,7 @@ var doTA = (function() {'use strict';
 		var prevPos = 0;
 		var ret = [];
 		while (pos !== -1) {
-			if (input.charAt(pos + 1) === '|') {
+			if (input[pos + 1] === '|') {
 				pos += 2;
 			} else {
 				ret.push(input.substring(prevPos, pos));
@@ -1018,8 +1023,6 @@ var doTA = (function() {'use strict';
 	function compileHTML(template, options) {
 		options = options || {};
 		var val_mod = options.loose ? "||''" : '';
-		var watchDiff = options.watchDiff;
-		var diffLevel = +options.diffLevel;
 		var VarMap = {
 			true: 1, false: 1, null: 1, void: 1, undefined: 1, this: 1,
 			doTA: 1, $index: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
@@ -1037,20 +1040,34 @@ var doTA = (function() {'use strict';
 		var uniqueId = doTA.getId(options.dotaRender);
 		var idHash = {};
 		var FnText = '';
+		//options that need to repeatedly calling
+		var optWatchDiff = options.watchDiff;
+		var optDiffLevel = +options.diffLevel;
+		var optModel = options.model;
+		var optBind = options.bind;
+		var optEvent = options.event;
+		var optKey = options.key;
+		var optParams = options.params;
+		var optComment = +options.comment;
+		var optStrip = +options.strip;
 
-		if (options.key) {
+		if (optKey) {
 			FnText += indent(level) + "var R='';\n";
 		} else {
 			FnText += indent(level) + "'use strict';var " +
-			(watchDiff ? 'M,N=1,' : '') +
+			(optWatchDiff ? 'M,N=1,' : '') +
 			"R='';\n"; //ToDO: check performance on var declaration
 		}
 
 		//clean up extra white spaces and line break
 		template = template.replace(whiteSpaceRegex, ' ');
 
-		if (options.strip) {
-			template = template.replace(/>\s+/g, '>').replace(/\s+</g, '<');
+		if (optStrip) {
+			if (optStrip === 2) {
+				template = template.replace(/>\s+/g, '>').replace(/\s+</g, '<');
+			} else {
+				template = template.replace(/>\s+</g, '><');
+			}
 		}
 
 		// when encode is set, find strings and encode < and >, or parser will throw error.
@@ -1075,7 +1092,7 @@ var doTA = (function() {'use strict';
 				//DEBUG && console.log(12, matches);
 				for(var i = 0; i < matches.length; i++) {
 
-					if (valid_chr.indexOf(matches[i].charAt(0)) >= 0 && !VarMap[matches[i]] &&
+					if (VALID_CHARS[matches[i][0]] && !VarMap[matches[i]] &&
 						(!i || matches[i-1][matches[i-1].length-1] !== '.')) {
 						vv += 'S.' + matches[i];
 					} else {
@@ -1102,7 +1119,7 @@ var doTA = (function() {'use strict';
 				do {
 					ret += str.substring(prevQuotePos, quotePos);
 					//escaped quote
-					if (str.charAt(quotePos - 1) !== '\\') {
+					if (str[quotePos - 1] !== '\\') {
 						ret += "\\";
 					}
 					prevQuotePos = quotePos;
@@ -1212,7 +1229,7 @@ var doTA = (function() {'use strict';
 			//open tag with attributes
 			openTag: function(tagName, attr, selfClosing) {
 				// debug && console.log('openTag', [tagName, attr]);
-				var parsedAttr = {}, customId, noValAttr = '';
+				var parsedAttr = {}, customId, noValAttr = '', attrClass = '';
 				var doTAPassThis, x;
 
 				//skip parsing if dota-pass is specified (interpolation will still be expanded)
@@ -1231,7 +1248,7 @@ var doTA = (function() {'use strict';
 				//unless dota-pass or with dota-continue
 				if (doTAPass === void 0 || doTAContinue) {
 
-					if (diffLevel && attr.skip) {
+					if (optDiffLevel && attr.skip) {
 						skipLevel = level;
 						var attrSkip = attr.skip;
 						attr.skip = void 0;
@@ -1305,7 +1322,7 @@ var doTA = (function() {'use strict';
 						attr['ng-repeat'] = void 0;
 					}
 
-					if (diffLevel === 3 && attr.key) {
+					if (optDiffLevel === 3 && attr.key) {
 						keyLevel = level;
 						KeyMap[level] = attr.key;
 						FnText += indent(level, 1) + 'var ' + attr.key + '=N,M=1; \n';
@@ -1317,7 +1334,7 @@ var doTA = (function() {'use strict';
 						customId = 1;
 						var oneTimeBinding = attr.refresh.indexOf('::');
 						FnText += indent(level, 2) +
-							(!Watched ? 'var ' + (watchDiff ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
+							(!Watched ? 'var ' + (optWatchDiff ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
 							'var W={N:N,I:N+"' + '.' + uniqueId + '",W:"' +
 							(oneTimeBinding >=0 ? attr.refresh.substr(oneTimeBinding + 2) + '",O:1': attr.refresh + '"') +
 							(attr.compile ? ',C:1' : '') +
@@ -1346,7 +1363,7 @@ var doTA = (function() {'use strict';
 
 					//ng-if to javascript if
 					if (attr['ng-if']) {
-						if (diffLevel) {
+						if (optDiffLevel) {
 							ngIfLevel = level;
 							ngIfLevels.push(level);
 							ngIfLevelMap[level] = 0;
@@ -1357,41 +1374,42 @@ var doTA = (function() {'use strict';
 						attr['ng-if'] = void 0;
 					}
 
-					if (attr.elif) {
-						FnText += indent(level, 1) + 'else if('+ attachScope(attr.elif) +'){\n';
-						LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-						attr.elif = void 0;
-					}
+					//only if there nothing between tags
+					if (attr.strip) {
+						if (attr.elif) {
+							FnText += indent(level, 1) + 'else if('+ attachScope(attr.elif) +'){\n';
+							LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
+							attr.elif = void 0;
+						}
 
-					if (typeof attr['else'] !== 'undefined' && !watchDiff) {
-						FnText += indent(level, 1) + 'else{\n';
-						LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-						attr['else'] = void 0;
+						if (typeof attr['else'] !== 'undefined' && !optWatchDiff) {
+							FnText += indent(level, 1) + 'else{\n';
+							LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
+							attr['else'] = void 0;
+						}
 					}
 
 					//remove +''+ from class, for unnecessary string concat
 					if (attr.class) {
-						parsedAttr.class = interpolate(attr.class);
+						attrClass = interpolate(attr.class);
 						attr.class = void 0;
 					}
 
 					if (attr['ng-class']) {
 						var match;
 						var ngScopedClass = attachScope(attr['ng-class']);
-						parsedAttr.class = parsedAttr.class || '';
 						while((match = ngClassRegex.exec(ngScopedClass)) !== null) {
-							parsedAttr.class +=
+							attrClass +=
 								("'+(" + match[2] + '?' +
-									"'" + (parsedAttr.class ? ' ' : '') + match[1].replace(/['"]/g, '') +
+									"'" + (attrClass ? ' ' : '') + match[1].replace(/['"]/g, '') +
 									"':'')+'");
 						}
 						attr['ng-class'] = void 0;
 					}
 
 					if (attr['ng-show']) {
-						parsedAttr.class = parsedAttr.class || '';
-						parsedAttr.class += "'+(" + attachScope(attr['ng-show']) +
-							"?'':'" + (parsedAttr.class ? ' ' : '') + "ng-hide')+'";
+						attrClass += "'+(" + attachScope(attr['ng-show']) +
+							"?'':'" + (attrClass ? ' ' : '') + "ng-hide')+'";
 						attr['ng-show'] = void 0;
 					}
 
@@ -1402,13 +1420,12 @@ var doTA = (function() {'use strict';
 					}
 
 					if (attr['ng-hide']) {
-						parsedAttr.class = parsedAttr.class || '';
-						parsedAttr.class += "'+(" + attachScope(attr['ng-hide']) +
-							"?'" + (parsedAttr.class ? ' ' : '') + "ng-hide':'')+'";
+						attrClass += "'+(" + attachScope(attr['ng-hide']) +
+							"?'" + (attrClass ? ' ' : '') + "ng-hide':'')+'";
 						attr['ng-hide'] = void 0;
 					}
 
-					if (options.model && attr['ng-model']) {
+					if (optModel && attr['ng-model']) {
 						if (attr['ng-model'].indexOf('$index') >= 0) {
 							parsedAttr['dota-model'] = apply$index(attr['ng-model']);
 						} else {
@@ -1417,7 +1434,7 @@ var doTA = (function() {'use strict';
 						attr['ng-model'] = void 0;
 					}
 
-					if (options.bind && attr['ng-bind']) {
+					if (optBind && attr['ng-bind']) {
 						if (attr['ng-bind'].indexOf('$index') >= 0) {
 							parsedAttr['dota-bind'] = apply$index(attr['ng-bind']);
 						} else {
@@ -1432,8 +1449,8 @@ var doTA = (function() {'use strict';
 					}
 
 					//some cleanup
-					if (parsedAttr.class) {
-						parsedAttr.class = parsedAttr.class.replace(/\+''\+/g, '+');
+					if (attrClass) {
+						parsedAttr.class = attrClass = attrClass.replace(/\+''\+/g, '+');
 					}
 
 					// expand interpolations on attributes, and some more
@@ -1442,7 +1459,7 @@ var doTA = (function() {'use strict';
 						if (attrVal === void 0) { continue; }
 
 						// some ng- attributes
-						if (x.substr(0, 3) === 'ng-') {
+						if (x[0] === 'n' && x[1] === 'g' && x[2] === '-') {
 							//some ng-attr are just don't need it here.
 							var attrName = x.substr(3);
 							//something like ng-src, ng-href, etc.
@@ -1450,11 +1467,11 @@ var doTA = (function() {'use strict';
 								x = attrName;
 
 							//convert ng-events to dota-events, to be bind later with native events
-							} else if (options.event && events.indexOf(' ' + attrName + ' ') >= 0) {
+							} else if (optEvent && EVENTS[attrName]) {
 								//add class 'de' for one time querying
-								if (parsedAttr.class) {
-									if (parsedAttr.class.substr(0, 2) !== 'de') {
-										parsedAttr.class = 'de ' + parsedAttr.class;
+								if (attrClass) {
+									if (attrClass[0] !== 'd' && attrClass[1] !== 'e') {
+										parsedAttr.class = 'de ' + attrClass;
 									}
 								} else {
 									parsedAttr.class = 'de';
@@ -1468,7 +1485,7 @@ var doTA = (function() {'use strict';
 								continue;
 
 							}
-						} else if (x.charAt(0) === '-') {
+						} else if (x[0] === '-') {
 							x = '-' + camelCase(x.substr(1));
 							parsedAttr[x] = "'+(" + attachScope(attrVal) + ")+'";
 							continue;
@@ -1495,10 +1512,10 @@ var doTA = (function() {'use strict';
 				FnText += indent(level) + "R+='<" + tagName;
 
 				//make id attr come before anything
-				if (customId || watchDiff) {
+				if (customId || optWatchDiff) {
 					var tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ( (
-						keyLevel < level && KeyMap[keyLevel] || options.key ?
-						"'+" + (options.key || KeyMap[keyLevel]) + "+'.'+M+++'." :
+						keyLevel < level && KeyMap[keyLevel] || optKey ?
+						"'+" + (optKey || KeyMap[keyLevel]) + "+'.'+M+++'." :
 						"'+N+++'."
 					) + uniqueId);
 					FnText += ' id="' + tagId + '"';
@@ -1515,7 +1532,7 @@ var doTA = (function() {'use strict';
 				//attach boolean attributes at last
 				FnText += noValAttr +	(selfClosing ? ' /' : '') + ">';\n";
 
-				if (watchDiff) {
+				if (optWatchDiff) {
 					// FnText += indent(level) + "N++; \n";
 					if (ngIfLevelMap[ngIfLevel] >= 0) {
 						ngIfLevelMap[ngIfLevel]++;
@@ -1547,7 +1564,7 @@ var doTA = (function() {'use strict';
 			voidTag: function() {
 				level--;
 
-				if (diffLevel === 2 && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
+				if (optDiffLevel === 2 && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
 					// console.log('ngIfLevelMap1', ngIfLevel, ngIfLevels, ngIfLevelMap);
 					if (ngIfLevelMap[ngIfLevel]) {
 						FnText += indent(level, 1) + "}else{" +
@@ -1597,7 +1614,7 @@ var doTA = (function() {'use strict';
 				FnText += indent(level) + "R+='</" + tagName + ">';\n";
 
 				//ngIfCounter for most possible uniqueId generation; don't work with loop inside!
-				if (diffLevel === 2 && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
+				if (optDiffLevel === 2 && level === ngIfLevel && ngIfLevelMap[ngIfLevel] >= 0) {
 					// console.log('ngIfLevelMap1', ngIfLevel, ngIfLevels, ngIfLevelMap);
 					if (ngIfLevelMap[ngIfLevel]) {
 						FnText += indent(level, 1) + "}else{" +
@@ -1630,7 +1647,7 @@ var doTA = (function() {'use strict';
 				}
 				// console.log('LevelMap2', LevelMap);
 
-				if (diffLevel) {
+				if (optDiffLevel) {
 					if (level === skipLevel) {
 						// console.log('ngIfLevel', [level, skipLevel, ngRepeatLevel])
 						FnText += indent(level, 1) + 'N=O' + level + '; \n';
@@ -1653,7 +1670,7 @@ var doTA = (function() {'use strict';
 						'" style="display:none"></' + tagName + '>\');\n';
 					WatchMap[level] = 0;
 					FnText += indent(level, 2) + 'return R;}; \n';
-					FnText += indent(level, 2) + 'R+=W.F(S,F,' + (options.params ? '$attr': '0') + ',0,N); \n';
+					FnText += indent(level, 2) + 'R+=W.F(S,F,' + (optParams ? '$attr': '0') + ',0,N); \n';
 				}
 
 				//reset dota-pass when out of scope
@@ -1671,16 +1688,16 @@ var doTA = (function() {'use strict';
 
 			//comment node
 			comment: function(data) {
-				if (options.comment !== 0) {
+				if (optComment !== 0) {
 					//console.log(111,[data]);
 					FnText += indent(level) + "R+='<" + escapeSingleQuote(data) + ">';\n";
 				}
 			}
 		});
 
-		if (watchDiff && diffLevel !== 0) {
+		if (optWatchDiff && optDiffLevel !== 0) {
 			//http://jsperf.com/hasownproperty-vs-in-vs-undefined/87
-			FnText += indent(0) + 'if(X&&typeof doTA.H[' + uniqueId + ']!=="undefined"){doTA.diff' + (diffLevel || '') +
+			FnText += indent(0) + 'if(X&&typeof doTA.H[' + uniqueId + ']!=="undefined"){doTA.diff' + (optDiffLevel || '') +
 				'(' + uniqueId + ',R)}' +
 				'doTA.H[' + uniqueId + ']=R;\n';
 		}
@@ -1692,7 +1709,7 @@ var doTA = (function() {'use strict';
 		FnText = FnText.replace(/;R\+=/g,'+').replace(/'\+'/g,'');
 
 		//extra optimization, which might take some more CPU
-		if (options.optimize && !watchDiff) {
+		if (options.optimize && !optWatchDiff) {
 			FnText = FnText.replace(removeUnneededQuotesRegex,'$1$2');
 		}
 
@@ -1704,10 +1721,10 @@ var doTA = (function() {'use strict';
 
 		try {
 			/*jshint evil: true */
-			if (watchDiff || diffLevel) {
+			if (optWatchDiff || optDiffLevel) {
 				//$scope, $filter, $attr, isPatch, IdCounter, isKey, LoopIdCounter
 				compiledFn = new Function('S', 'F', '$attr', 'X', 'N', 'K', 'M', FnText);
-			} else if (options.params) {
+			} else if (optParams) {
 				compiledFn = new Function('S', 'F', '$attr', FnText);
 			} else {
 				compiledFn = new Function('S', 'F', FnText);

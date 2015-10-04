@@ -3,12 +3,12 @@
 /* global doTA */
 /* global IncrementalDOM */
 /* global _ */
-// Change N to change the number of drawn circles.
 
+// Change N to change the number of drawn circles.
 var N = 100;
 
 // The Backbone implementation:
-(function(){
+(function(){'use strict';
 
 	var Box = Backbone.Model.extend({
 
@@ -79,7 +79,7 @@ var N = 100;
 })();
 
 // The Ember implementation:
-(function(){
+(function(){'use strict';
 
 	var Box = Ember.Object.extend({
 
@@ -144,7 +144,7 @@ var N = 100;
 })();
 
 // The React implementation:
-(function(){
+(function(){'use strict';
 
 	var BoxView = React.createClass({
 
@@ -203,7 +203,7 @@ var N = 100;
 })();
 
 // rawdog
-(function(){
+(function(){'use strict';
 
 	var BoxView = function(number){
 		this.el = document.createElement('div');
@@ -251,7 +251,7 @@ var N = 100;
 
 })();
 
-(function(){
+(function(){'use strict';
 	// The AngularJS implementation
 	var scope, rootScope;
 
@@ -323,7 +323,7 @@ var N = 100;
 })();
 
 // Incremental DOM Implementation
-(function(){
+(function(){'use strict';
 	var patch = IncrementalDOM.patch,
 	elementOpen = IncrementalDOM.elementOpen,
 	// elementVoid = IncrementalDOM.elementVoid,
@@ -351,51 +351,51 @@ var N = 100;
 	var BoxView;
 
 	var init = function() {
-	BoxView =	_.map(_.range(N), function() { return 0; });
-	update(BoxView);
+		BoxView =	_.map(_.range(N), function() { return 0; });
+		update(BoxView);
 	};
 
 	var animate = function() {
-	for (var i = 0; i < BoxView.length; i++) {
-		BoxView[i]++;
-	}
-	update(BoxView);
+		for (var i = 0; i < BoxView.length; i++) {
+			BoxView[i]++;
+		}
+		update(BoxView);
 	};
 
 	window.runIDOM = function() {
-	reset();
-	init();
-	benchmarkLoop(animate);
+		reset();
+		init();
+		benchmarkLoop(animate);
 	};
 })();
 
 // doTA Implementation
-(function(){
-	var renderFn = doTA.compile($('#dota-template').text().trim(), {watchDiff: 1, diffLevel: 2,
-	strip: 1, debug: 0});
+(function(){'use strict';
+	var renderFn = doTA.compile($('#dota-template').text().trim(), {watchDiff: 1, strip: 2, debug: 0});
 	var BoxView = {};
+	console.log(renderFn);
 
-	var init = function() {
-	BoxView.boxes =	_.map(_.range(N), function() { return 0; });
-	$('#grid').append(renderFn(BoxView));
-	};
-
-	var animate = function() {
-	for (var i = 0; i < BoxView.boxes.length; i++) {
-		BoxView.boxes[i]++;
+	function init() {
+		BoxView.boxes =	_.map(_.range(N), function() { return 0; });
+		$('#grid').append(renderFn(BoxView));
 	}
-	renderFn(BoxView, 0, 0, 1);
-	};
+
+	function animate() {
+		for (var i = 0; i < BoxView.boxes.length; i++) {
+			BoxView.boxes[i]++;
+		}
+		renderFn(BoxView, 0, 0, 1);
+	}
 
 	window.runDoTA = function() {
-	reset();
-	init();
-	benchmarkLoop(animate);
+		reset();
+		init();
+		benchmarkLoop(animate);
 	};
 })();
 
 // Benchmarks script
-(function(){
+(function(){'use strict';
 	window.timeout = null;
 	window.totalTime = null;
 	window.loopCount = null;
