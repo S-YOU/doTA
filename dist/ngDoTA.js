@@ -997,7 +997,7 @@ var doTA = (function() {'use strict';
 	var varOrStringRegex = /'[^']*'|"[^"]*"|[\w$]+|[^\w$'"]+/g;
 	var quotedStringRegex = /"[^"]*"|'[^']*'/g;
 	var whiteSpaceRegex = /\s{2,}|\n/g;
-	var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'\s]+)"(?=[\s>])/g;
+	var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'=\s]+)"(?=[\s>])/g;
 	var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
 	var $indexRegex = /\$index/g;
 	var $parent$indexRegex = /(?:\$parent\.)+\$index/g;
