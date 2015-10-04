@@ -1,7 +1,4 @@
 var doTA = (function() {'use strict';
-	// var msie = (typeof document !== 'undefined' && document.documentMode) ||
-	//	 (typeof navigator !== 'undefined' && /Edge/.test(navigator.userAgent) && 12);
-
 	/* for ie8 */
 	if (!String.prototype.trim) {
 		String.prototype.trim = function() {
@@ -14,6 +11,19 @@ var doTA = (function() {'use strict';
 		delete Object.prototype.watch;
 		delete Object.prototype.unwatch;
 	}
+
+	var doTA = {
+		diff: diff1,
+		diff2: diff2,
+		diff3: diff3,
+		getId: getUniqueId,
+		initCH: initCompileHash,
+		compile: compileHTML,
+		// PS: parseStyle,
+		C: {}, //Cached compiled functions
+		D: {}, //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
+		H: {} //HashMap for TextDiff
+	};
 
 	// pretty indent for debugging
 	function indent(n, x) {
@@ -179,7 +189,6 @@ var doTA = (function() {'use strict';
 					prevPos = pos;
 					pos = html.indexOf('>', prevPos);
 					// console.log(['opentag', prevPos, pos, html.substring(prevPos, pos), parseAttr(html.substring(prevPos, pos))])
-					// func.openTag.apply(this, parseAttr(html.substring(prevPos, pos)));
 					parseAttr(html.substring(prevPos, pos), func);
 				}
 			} else if (html.charAt(pos) === '>') { //&& html.charAt(pos + 1) !== '<'
@@ -202,7 +211,7 @@ var doTA = (function() {'use strict';
 	}
 
 	//diff and patch dom with exact same structure
-	function diffPatchExact(prevKey, html2) {
+	function diff1(prevKey, html2) {
 		var html1 = doTA.H[prevKey];
 		var prevPos1 = 0, pos1 = html1.indexOf('<');
 		var prevPos2 = 0, pos2 = html2.indexOf('<');
@@ -232,7 +241,7 @@ var doTA = (function() {'use strict';
 						//record id
 						//tagId = getTagId(part1);
 						posx = part1.indexOf(' id="');
-						0 <= posx && (posx += 5, endPosx = part1.indexOf('"', posx), tagId = part1.substring(posx, endPosx));
+						0 <= posx && (posx += 5, endPosx = part1.indexOf('"', posx), tagId = part1.substring(posx, endPosx)); //jshint ignore: line
 					}
 				}
 
@@ -443,7 +452,7 @@ var doTA = (function() {'use strict';
 		var tagId1, tagId2, prevTagId1, prevTagId2;
 		var tagNo1, tagNo2, subNo1, subNo2, dotPos1, dotPos2;
 		var tagStartPos1, tagStartPos2;
-		var LVL; //this is needed for fnInline
+		var LVL; // jshint ignore:line
 		// console.log(html1);
 		// console.log(html2);
 		// var logger = [];
@@ -984,13 +993,13 @@ var doTA = (function() {'use strict';
 		return ret;
 	}
 
-	function parseStyle(styleObj) {
-		var ret = '';
-		for (var x in styleObj) {
-			ret += x + ':' + styleObj[x] + ';';
-		}
-		return ret;
-	}
+	// function parseStyle(styleObj) {
+	// 	var ret = '';
+	// 	for (var x in styleObj) {
+	// 		ret += x + ':' + styleObj[x] + ';';
+	// 	}
+	// 	return ret;
+	// }
 
 	// ToDo: check compile performance with regex
 	var ngClassRegex = /('[^']+'|"[^"]+"|[\w$]+)\s*:\s*((?:[$.\w]+|\([^)]+\)|[^},])+)/g;
@@ -1025,7 +1034,7 @@ var doTA = (function() {'use strict';
 		var WatchMap = {}, Watched;
 		var doTAPass, doTAContinue;
 		var compiledFn;
-		var uniqueId = this.getId(options.dotaRender);
+		var uniqueId = doTA.getId(options.dotaRender);
 		var idHash = {};
 		var FnText = '';
 
@@ -1178,12 +1187,12 @@ var doTA = (function() {'use strict';
 			}
 		}
 
-		function apply$index(attrVal) {
+		function apply$index(val) {
 			var count, tmpRepeatLevel;
 
-			if (attrVal.indexOf('$parent.$index') >= 0) {
+			if (val.indexOf('$parent.$index') >= 0) {
 				tmpRepeatLevel = ngRepeatLevel;
-				attrVal = attrVal.replace($parent$indexRegex, function($0) {
+				val = val.replace($parent$indexRegex, function($0) {
 					count = $0.match(/\$parent/g).length; //may need to rewrite with indexOf
 					while (count>0) {
 						while (tmpRepeatLevel >= 0 && typeof LevelVarMap[--tmpRepeatLevel] === 'undefined') {}
@@ -1192,10 +1201,10 @@ var doTA = (function() {'use strict';
 					return "'+" + LevelVarMap[tmpRepeatLevel] + "+'";
 				});
 			}
-			if (attrVal.indexOf('$index') >= 0) {
-				return attrVal.replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
+			if (val.indexOf('$index') >= 0) {
+				return val.replace($indexRegex, "'+" + LevelVarMap[ngRepeatLevel] + "+'");
 			}
-			return attrVal;
+			return val;
 		}
 
 		//parse the element
@@ -1203,8 +1212,8 @@ var doTA = (function() {'use strict';
 			//open tag with attributes
 			openTag: function(tagName, attr, selfClosing) {
 				// debug && console.log('openTag', [tagName, attr]);
-				var parsedAttr = {}, customId, tagId, noValAttr = '';
-				var attrName, attrVal, attrSkip, oneTimeBinding, doTAPassThis, x;
+				var parsedAttr = {}, customId, noValAttr = '';
+				var doTAPassThis, x;
 
 				//skip parsing if dota-pass is specified (interpolation will still be expanded)
 				// https://jsperf.com/hasownproperty-vs-in-vs-undefined/12
@@ -1224,7 +1233,7 @@ var doTA = (function() {'use strict';
 
 					if (diffLevel && attr.skip) {
 						skipLevel = level;
-						attrSkip = attr.skip;
+						var attrSkip = attr.skip;
 						attr.skip = void 0;
 						FnText += indent(level, 1) + 'var O'+ level + '=N+' + attrSkip + '; \n';
 					}
@@ -1306,7 +1315,7 @@ var doTA = (function() {'use strict';
 					//re-render sub template
 					if (attr.refresh) {
 						customId = 1;
-						oneTimeBinding = attr.refresh.indexOf('::');
+						var oneTimeBinding = attr.refresh.indexOf('::');
 						FnText += indent(level, 2) +
 							(!Watched ? 'var ' + (watchDiff ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
 							'var W={N:N,I:N+"' + '.' + uniqueId + '",W:"' +
@@ -1388,7 +1397,6 @@ var doTA = (function() {'use strict';
 
 					if (attr['ng-style']) {
 						parsedAttr.style = (attr.style ? attr.style + ';' : '') + interpolate(attr['ng-style']);
-							// "'+doTA.PS(" + interpolateInner(attr['ng-style']) + ")+'";
 						attr['ng-style'] = void 0;
 						attr.style = void 0;
 					}
@@ -1430,13 +1438,13 @@ var doTA = (function() {'use strict';
 
 					// expand interpolations on attributes, and some more
 					for (x in attr) {
-						attrVal = attr[x];
+						var attrVal = attr[x];
 						if (attrVal === void 0) { continue; }
 
 						// some ng- attributes
 						if (x.substr(0, 3) === 'ng-') {
 							//some ng-attr are just don't need it here.
-							attrName = x.substr(3);
+							var attrName = x.substr(3);
 							//something like ng-src, ng-href, etc.
 							if (lazyNgAttrRegex.test(attrName)) {
 								x = attrName;
@@ -1488,7 +1496,7 @@ var doTA = (function() {'use strict';
 
 				//make id attr come before anything
 				if (customId || watchDiff) {
-					tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ( (
+					var tagId = idHash[uniqueId + '.' + level] = parsedAttr.id || ( (
 						keyLevel < level && KeyMap[keyLevel] || options.key ?
 						"'+" + (options.key || KeyMap[keyLevel]) + "+'.'+M+++'." :
 						"'+N+++'."
@@ -1695,14 +1703,16 @@ var doTA = (function() {'use strict';
 		// console.log(FnText);
 
 		try {
-			//$scope, $filter
+			/*jshint evil: true */
 			if (watchDiff || diffLevel) {
+				//$scope, $filter, $attr, isPatch, IdCounter, isKey, LoopIdCounter
 				compiledFn = new Function('S', 'F', '$attr', 'X', 'N', 'K', 'M', FnText);
 			} else if (options.params) {
 				compiledFn = new Function('S', 'F', '$attr', FnText);
 			} else {
 				compiledFn = new Function('S', 'F', FnText);
 			}
+			/*jshint evil: false */
 			if (Watched) {
 				compiledFn = {W:[], F: compiledFn};
 			}
@@ -1744,24 +1754,17 @@ var doTA = (function() {'use strict';
 		}
 	}
 
-	var doTAObj = {
-		diff: diffPatchExact,
-		diff2: diff2,
-		diff3: diff3,
-		getId: getUniqueId,
-		initCH: initCompileHash,
-		compile: compileHTML,
-		PS: parseStyle,
-		C: {}, //Cached compiled functions
-		D: {}, //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
-		H: {} //HashMap for TextDiff
-	};
-
 	//warm-up most used functions
-	doTAObj.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x">x{{x}}</div><!--x-->', {
-		watchDiff: 1, diffLevel: 2});
+	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="k,v in y">{{v|json:4}}</div>', {
+		dotaRender: 1});
+	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="x in 1:10:2">{{x}}</div>', {
+		watchDiff: 1, dotaRender: 1});
+	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
+		watchDiff: 1, diffLevel: 2, dotaRender: 1});
+	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
+		watchDiff: 1, diffLevel: 3, dotaRender: 1});
 
-	return doTAObj;
+	return doTA;
 })();
 
 if (typeof module !== "undefined" && module.exports) {
@@ -1769,5 +1772,5 @@ if (typeof module !== "undefined" && module.exports) {
 //IE8
 } else if (typeof console === "undefined") {
 	var noop = function() {};
-	console = {log: noop, time: noop, timeEnd: noop};
+	var console = {log: noop, time: noop, timeEnd: noop};
 }
