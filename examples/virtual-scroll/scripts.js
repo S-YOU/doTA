@@ -17,6 +17,7 @@ angular.module('app', ['doTA'])
 	//colDefs
 	var defaultWidth = 125;
 	var scrollBarSize = 17;
+	var borderSize = 1;
 	var colDef = [
 		{id: 'id', name: 'ID', width: 90, template_id : 'id', group: 'ID:Text (Pinned)', hClass: 'red'},
 		{id: 'label', name: 'Text', width: 130, template_id: 'text', group: 'ID:Text (Pinned)'},
@@ -354,13 +355,13 @@ angular.module('app', ['doTA'])
 		$scope.height = $scope.outerHeight;
 
 		$scope.bodyWidth = $scope.outerWidth - scrollBarSize;
-		$scope.bodyHeight = $scope.outerHeight - $scope.headerHeight;
+		$scope.bodyHeight = $scope.outerHeight - $scope.headerHeight - scrollBarSize;
 		$scope.rows = $scope.bodyHeight / $scope.cellHeight | 0; //dynamic row count
 
 		// console.log('width/height/bodyHeight', [$scope.width, $scope.height, $scope.bodyHeight],
 		//	 'bodyHeight/rows', [$scope.bodyHeight, $scope.rows]);
 
-		$scope.totalHeight = $scope.cellHeight * $scope.data.length + scrollBarSize; //calc total height
+		$scope.totalHeight = $scope.cellHeight * $scope.data.length + scrollBarSize + borderSize; //calc total height
 		vScale = hScale = 1; //initial scale
 		if ($scope.totalHeight > vMaxScroll) {
 			vScale = $scope.totalHeight / vMaxScroll;
@@ -402,7 +403,7 @@ angular.module('app', ['doTA'])
 		$scope.offsetRight = offsetRight;
 
 		if (g.pinLeft) {
-			g.widthLeft = widthMap[g.pinLeft - 1] + 1;
+			g.widthLeft = widthMap[g.pinLeft - 1];
 			$scope.bodyWidth = $scope.outerWidth - g.widthLeft - scrollBarSize;
 		}
 

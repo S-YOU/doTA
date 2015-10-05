@@ -25,6 +25,16 @@ html, body {
 	height: calc(100% - 150px);
 }
 
+.relative {
+	position: relative;
+}
+.absolute {
+	position: absolute;
+}
+.right {
+	float: right;
+}
+
 input::-webkit-inner-spin-button { display: none; }
 input::-webkit-clear-button { display: none; }
 
@@ -125,9 +135,10 @@ label [disabled] + span {
 /*pinned column specific */
 .pinned.body {
 	margin-right: -17px;
+	margin-bottom: -17px;
 	overflow: scroll;
 }
-.pinned::-webkit-scrollbar { width: 0; height: 0;}
+/*.pinned::-webkit-scrollbar { width: 0; height: 0;}*/
 
 /* body specific */
 .body .cell + .cell {
