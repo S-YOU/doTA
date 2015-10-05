@@ -26,9 +26,10 @@
 	}
 
 	//retrieve nested value from object, support a.b or a[b]
-	function resolveObject(path, obj) {
-		if (path.indexOf('.') >= 0 || path.indexOf('[') >= 0) {
-			var chunks = path.replace(/[\]]$/, '').split(/[.\[\]"']+/g);
+	function resolveDot(path, obj) {
+		//console.log(['resolveDot', path, obj]);
+		if (path.indexOf('.') > 0) {
+			var chunks = path.split('.');
 			return chunks.reduce(function (prev, curr) {
 				return prev ? prev[curr] : undefined;
 			}, obj);
@@ -37,12 +38,43 @@
 		}
 	}
 
-	//get nested value as assignable fn like $parse.assign
-	function parseObject(path, obj) {
-		if (path.indexOf('.') >= 0 || path.indexOf('[') >= 0) {
-			var chunks = path.replace(/[\]]$/, '').split(/[.\[\]"']+/g);
-			path = chunks.splice(-1, 1)[0];
-			// console.log('path, last', chunks, path)
+	function resolveObject(path, obj) {
+		if (path.indexOf('[') > 0) {
+			var result;
+			while (path.indexOf('[') > 0) {
+				/*jshint loopfunc: true */
+				path = path.replace(/([$\w.]+)\[([^[\]]+)\](?:\.([$\w.]+))?/g, function($0, lpart, part, rpart) {
+					var lobj = resolveDot(lpart, obj);
+					//console.log(['part', part, 'lpart', lpart, 'lobj', lobj]);
+					var robj = resolveDot(part, lobj);
+					//console.log(['part', part, 'lobj', lobj, 'robj', robj]);
+					if (typeof robj === 'object' && rpart) {
+						return (result = resolveDot(rpart, robj));
+					}
+					return (result = robj);
+				});
+				/*jshint loopfunc: false */
+			}
+			return result;
+		} else {
+			return resolveDot(path, obj);
+		}
+	}
+
+	// var obj2 = {
+	// 	params: { groups: {'test': 1234, abcd: 'efgh'}},
+	// 	groups: [{_id: 'test'},{_id: 'abcd'}]
+	// };
+	// console.log(resolveObject('params.groups[groups[0]._id]', obj2));
+	// console.log(resolveObject('params.groups[groups[1]._id]', obj2));
+	// console.log(resolveObject('groups.0._id', obj2));
+	// console.log(resolveObject('groups.0', obj2));
+
+	function parseDot(path, obj) {
+		//console.log(['resolveDot', path, obj]);
+		if (path.indexOf('.') > 0) {
+			var chunks = path.split('.');
+			path = chunks.pop();
 			obj = chunks.reduce(function (prev, curr) {
 				// console.log('parseObject', [prev, curr])
 				if (!prev[curr]) {
@@ -58,6 +90,32 @@
 		};
 	}
 
+	//get nested value as assignable fn like $parse.assign
+	function parseObject(path, obj) {
+		if (path.indexOf('[') > 0) {
+			var result;
+			while (path.indexOf('[') > 0) {
+				/*jshint loopfunc: true */
+				path = path.replace(/([$\w.]+)\[([^[\]]+)\](?:\.([$\w.]+))?/g, function($0, lpart, part, rpart) {
+					var lobj = resolveDot(lpart, obj);
+					//console.log(['part', part, 'lpart', lpart, 'lobj', lobj]);
+					if (rpart) {
+						var robj = resolveDot(part, lobj);
+						result = parseDot(rpart, robj);
+						return resolveDot(rpart, robj);
+					} else {
+						result = parseDot(part, lobj);
+						return resolveDot(part, lobj);
+					}
+				});
+				/*jshint loopfunc: false */
+			}
+			return result;
+		} else {
+			return parseDot(path, obj);
+		}
+	}
+
 	// var obj = {};
 	// var parsed = parseObject('name', obj);
 	// parsed.assign('test');
@@ -65,6 +123,19 @@
 	// parsed = parseObject('three.one', obj);
 	// parsed.assign('haha');
 	// console.log(obj);
+
+	// var obj2 = {
+	// 	params: { groups: {'test': 1234, abcd: 'efgh'}},
+	// 	groups: [{_id: 'test'},{_id: 'abcd'}]
+	// };
+	// parsed = parseObject('groups.1._id', obj2);
+	// console.log(obj2);
+	// parsed.assign('zzzz');
+	// console.log(JSON.stringify(obj2,0,4));
+	// parsed = parseObject('params.groups[groups[0]._id]', obj2);
+	// console.log(obj2);
+	// parsed.assign(23923223);
+	// console.log(JSON.stringify(obj2,0,4));
 
 	//debounce for events like resize
 	function debounce(fn, timeout) {
@@ -227,7 +298,9 @@
 		forEachArray(elem.querySelectorAll('[dota-model]'), function(partial) {
 			var dotaPass = partial.getAttribute('dota-pass');
 			// console.log('dotaPass', [dotaPass]);
-			if (dotaPass != undefined) { return; } //null or undefined
+			if (dotaPass != null) { // jshint ignore:line
+				return;
+			} //null or undefined
 
 			var modelName = partial.getAttribute('dota-model');
 
@@ -241,10 +314,10 @@
 				((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
 			var curValue = resolveObject(modelName, scope);
 
-			// console.log('partial', [partial.tagName, partial.type, curValue, partial.value]);
+			// console.log('partial', [partial.tagName, modelName, bindProp, partial.type, curValue, partial.value, partial[bindProp]]);
 			if (bindProp) {
 				//set true or false on dom properties
-				partial[bindProp] = partial.value == curValue; // loose compare
+				partial[bindProp] = partial.value == curValue; //  loose compare
 			} else {
 				if (typeof curValue !== 'undefined') {
 					partial.value = curValue;
@@ -252,26 +325,34 @@
 			}
 
 			//bind each events
-			var parsed;
-			forEachArray(updateOn.split(' '), function(evtName){
-				evtName = evtName.trim();
-				partial.addEventListener(evtName, throttle(function(evt) {
-					if (!parsed) {
-						parsed = parseObject(modelName, scope);
-					}
-					evt.preventDefault();
-					evt.stopPropagation();
-
-					// console.log('event', evtName, evt.target, [evt.target[bindProp || 'value']])
-					scope.$applyAsync((function(){
-						if (bindProp) {
-							parsed.assign(bindProp && evt.target[bindProp] ? evt.target.value : undefined);
-						} else {
-							parsed.assign(evt.target.value);
+			var events = updateOn.split(' ');
+			for (var i = 0; i < events.length; i++) {
+				evtName = events[i].trim();
+				partial.addEventListener(evtName, throttle((function (partial, modelName, bindProp) {
+					var parsed;
+					return function (evt) {
+						if (!parsed) {
+							parsed = parseObject(modelName, scope);
 						}
-					}));
-				}, throttleVal));
-			});
+						if (ie8) {
+							evt.returnValue = false;
+							evt.cancelBubble = true;
+						} else {
+							evt.preventDefault();
+							evt.stopPropagation();
+						}
+
+						// console.log('event', modelName, evtName, partial, bindProp, [partial[bindProp || 'value']]);
+						scope.$applyAsync((function () {
+							if (bindProp) {
+								parsed.assign(bindProp && partial[bindProp] ? partial.value : undefined);
+							} else {
+								parsed.assign(partial.value);
+							}
+						}));
+					};
+				})(partial, modelName, bindProp), throttleVal));
+			}
 		});
 	}
 
