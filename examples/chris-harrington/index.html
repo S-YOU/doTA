@@ -241,14 +241,14 @@
 					<div class="col-md-5 text-right time" id="run-dota" ng-click="run()">Run</div>
 				</div>
 				<div ng-if="data">
-				  <div dota-render=1 inline=1 event="click" watch-diff="[data,selected]" strip=1 debug=0>
-					  <div class="row" ng-repeat="item in data">
-						  <div class="col-md-12 test-data">
-							  <span ng-class="{ selected: item.id === selected }"
+					<div dota-render=1 inline=1 event="click" watch-diff="[data,selected]" strip=2>
+						<div class="row" ng-repeat="item in data">
+							<div class="col-md-12 test-data">
+								<span ng-class="{ selected: item.id === selected }"
 								ng-click="select(data[$index])">{{item.label}}</span>
-						  </div>
-					  </div>
-				  </div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 

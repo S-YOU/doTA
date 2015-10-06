@@ -226,7 +226,7 @@ angular.module('app', ['doTA'])
 
 	function virtualScroll(elem, hOnly, vOnly) {
 		if (suppressScroll > 0) { suppressScroll--; return; }
-		console.log(elem);
+		// console.log(elem);
 
 		if (!hOnly) {
 			var scrollTop = elem.scrollTop;
@@ -290,7 +290,7 @@ angular.module('app', ['doTA'])
 					xWidth += g.colDef[i] && g.colDef[i].width || defaultWidth;
 				}
 				scrollOffsetLeft = widthMap[offsetLeft - 1] / hScale; //$scope.totalWidth - $scope.bodyWidth - (xWidth - $scope.bodyWidth);
-				console.warn('right corner', [$scope.width, $scope.bodyWidth, xWidth]);
+				// console.warn('right corner', [$scope.width, $scope.bodyWidth, xWidth]);
 			// } else if (offsetLeft && !offsetRight) {
 			// 	offsetRight = widthMap.length;
 			// 	console.log('no offsetRight', [offsetRight, scrollOffsetLeft, offsetRight]);
@@ -306,10 +306,10 @@ angular.module('app', ['doTA'])
 		// if (offsetRight - offsetLeft	> 7) {
 		//	 console.log('offsetTop|offsetLeft/offsetRight', [offsetTop, offsetLeft, offsetRight]);
 		// }
-		console.log('useWhat/rowType', [+$scope.useWhat, +$scope.rowType],
-			'scrollLeft/scrollTop/scrollOffsetLeft', [$scope.scrollLeft, $scope.scrollTop, $scope.scrollOffsetLeft],
-			'elem.scrollLeft/elem.scrollTop', [elemCenter.scrollLeft, elemCenter.scrollTop],
-			'offsetTop/offsetLeft/offsetRight', [$scope.offsetTop, $scope.offsetLeft, $scope.offsetRight]);
+		// console.log('useWhat/rowType', [+$scope.useWhat, +$scope.rowType],
+		// 	'scrollLeft/scrollTop/scrollOffsetLeft', [$scope.scrollLeft, $scope.scrollTop, $scope.scrollOffsetLeft],
+		// 	'elem.scrollLeft/elem.scrollTop', [elemCenter.scrollLeft, elemCenter.scrollTop],
+		// 	'offsetTop/offsetLeft/offsetRight', [$scope.offsetTop, $scope.offsetLeft, $scope.offsetRight]);
 
 		applyPatch(hOnly, vOnly);
 	}
@@ -424,7 +424,7 @@ angular.module('app', ['doTA'])
 	function patch(hOnly, vOnly){
 		// console.time('patch');
 		compileFn($scope, $filter, 0, 1);
-		console.log('scrollTop', $scope.scrollTop);
+		// console.log('scrollTop', $scope.scrollTop);
 		if (elemLeft.scrollTop !== $scope.scrollTop) {
 			suppressScroll = 1;
 			elemLeft.scrollTop = $scope.scrollTop;
