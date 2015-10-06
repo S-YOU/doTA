@@ -1450,7 +1450,7 @@ var doTA = (function() {'use strict';
 
 					//some cleanup
 					if (attrClass) {
-						parsedAttr.class = attrClass = attrClass.replace(/\+''\+/g, '+');
+						attrClass = attrClass.replace(/\+''\+/g, '+');
 					}
 
 					// expand interpolations on attributes, and some more
@@ -1470,13 +1470,12 @@ var doTA = (function() {'use strict';
 							} else if (optEvent && EVENTS[attrName]) {
 								//add class 'de' for one time querying
 								if (attrClass) {
-									if (attrClass[0] !== 'd' && attrClass[1] !== 'e') {
-										parsedAttr.class = 'de ' + attrClass;
+									if (attrClass[0] !== 'd' || attrClass[1] !== 'e') {
+										attrClass = 'de ' + attrClass;
 									}
 								} else {
-									parsedAttr.class = 'de';
+									attrClass = 'de';
 								}
-								// parsedAttr.de = 1;
 								x = 'de-' + attrName;
 
 							} else if (noValAttrRegex.test(attrName)) {
@@ -1529,8 +1528,12 @@ var doTA = (function() {'use strict';
 					FnText += " " + k + '="' + parsedAttr[k] + '"';
 				}
 
+				if (attrClass) {
+					FnText += ' class="' + attrClass + '"';
+				}
+
 				//attach boolean attributes at last
-				FnText += noValAttr +	(selfClosing ? ' /' : '') + ">';\n";
+				FnText += noValAttr + (selfClosing ? ' /' : '') + ">';\n";
 
 				if (optWatchDiff) {
 					// FnText += indent(level) + "N++; \n";

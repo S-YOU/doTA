@@ -30,7 +30,7 @@ module.exports = {
 	'diffLvl2': "<table width=\"100%\" cellspacing=\"2\" ng-class=\"{ 'filtered': vm.form.filter }\">\n		<tr ng-repeat=\"row in vm.grid\">\n			<td class=\"test\">\n				{{ row.id }}\n			</td>\n			<td\n				ng-repeat=\"item in row.items\"\n				class=\"item\"\n				ng-class=\"{ 'hidden': item.isHiddenByFilter }\">\n				<span ng-if=\"item.isHiddenByFilter\">0</span>\n				<span ng-if=\"!item.isHiddenByFilter\" skip=200>{{ item.value }}\n					<span ng-if=\"item.isHiddenByFilter\">0</span>\n					<span ng-repeat=\"x in vm.someArr\"></span>\n					<span ng-if=\"item.isHiddenByFilter\">0</span>\n					<span ng-repeat=\"k,v in vm.someObj\"></span>\n					<span ng-if=\"item.isHiddenByFilter\">0</span>\n					<span ng-repeat=\"i in 1:10\"></span>\n				</span>\n				<span ng-if=\"item.isHiddenByFilter\"><input value=\"test\" ng-model=\"vm.value\" ng-blur=\"vm.blur($event)\" ng-value=\"item.value\"></span>\n				<span ng-if=\"item.isHiddenByFilter\">1</span>\n				<span ng-if=\"item.isHiddenByFilter\" ng-bind=\"vm.value\">2</span>\n				</td>\n		</tr>\n	</table>",
 
 	'disabled': '<input type="text" ng-value="x.id" disabled />',
-	'two single attr': '<thead dota-pass table-sort><div dota-pass=""></div></thead>'
+	'two single attr': '<thead dota-pass table-sort><div dota-pass=""></div></thead>',
 
 	// `<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
 	//	 <tr ng-repeat="row in vm.grid">
@@ -56,6 +56,6 @@ module.exports = {
 	//			 </td>
 	//	 </tr>
 	// </table>`
-
-	// 'broken': '<div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>'
-}
+	'ng-click': '<div ng-if="!editing" ng-click="startEditing()" class="center">&nbsp;</div><div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)"><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>',
+	'broken': '<div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>'
+};
