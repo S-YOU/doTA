@@ -10,15 +10,15 @@ doTA is not actually [doT](https://github.com/olado/doT), but produce similar fu
 This project has two libraries, doTA, and ngDoTA.
 
 ### doTA
-	- no dependencies
-	- can run on both server and client
-	- parse html from string and convert them into javascript function, which use to render with data (any objects)
-	- checkout this jsperf for quick look ([doT vs doTA vs Handlebar](http://jsperf.com/dot-dota-handlebar))
+- no dependencies
+- can run on both server and client
+- parse html from string and convert them into javascript function, which use to render with data (any objects)
+- checkout this jsperf for quick look ([doT vs doTA vs Handlebar](http://jsperf.com/dot-dota-handlebar))
 
 ### ngDoTA
-	- included doTA
-	- included angular directive called dota-render
-	- accept templateName or inline and render html with doTA by binding to $scope and $filter, without involving $digest cycle (0 watchers), unless you explicitly set compile or watch options
+- included doTA
+- included angular directive called dota-render
+- accept templateName or inline and render html with doTA by binding to $scope and $filter, without involving $digest cycle (0 watchers), unless you explicitly set compile or watch options
 
 ##### Checkout [examples](http://rawgit.com/S-YOU/doTA/master/examples/index.html) from github, which is based on various online benchmarks or blogs.
 
@@ -194,9 +194,9 @@ This project has two libraries, doTA, and ngDoTA.
 
 ### limitations on dota-render directive
 
-	- data must be available before directive called.
-	- if data is not ready, you need to wrap `dota-render` directive with `ng-if="data"`
-	- `ng-repeat="item in data"` is transformed into javascript loop, so internal variable like `item` is not available to angular, use `data[$index]` to get access to them. Normally to use with `ng-model="data[$index]"`
+- data must be available before directive called.
+- if data is not ready, you need to wrap `dota-render` directive with `ng-if="data"`
+- `ng-repeat="item in data"` is transformed into javascript loop, so internal variable like `item` is not available to angular, use `data[$index]` to get access to them. Normally to use with `ng-model="data[$index]"`
 
 ---
 
@@ -214,9 +214,10 @@ This project has two libraries, doTA, and ngDoTA.
 	- will re-render when watch triggers
 
 ### extra directives
-	- dota-include - like `ng-include="tpl/name"` but usign doTA - static
-	- dota-template - like `ng-include src="tpl/name"` - dynamic - one `$watcher`
-	- dota-http - a service which return compiled template as string
+
+- dota-include - like `ng-include="tpl/name"` but usign doTA - static
+- dota-template - like `ng-include src="tpl/name"` - dynamic - one `$watcher`
+- dota-http - a service which return compiled template as string
 
 ---
 
