@@ -27,8 +27,8 @@ var doTA = (function() {'use strict';
 
 	// pretty indent for debugging
 	function indent(n, x) {
-		var ret = new Array(n + 2).join('		');
-		return x ? ret.slice(0, -2 * x) : ret;
+		var ret = new Array(n + 2).join('    '); //4 spaces
+		return x ? ret.slice(0, -2 * x) : ret; //-2 spaces
 	}
 
 	// decode html entities
@@ -98,7 +98,7 @@ var doTA = (function() {'use strict';
 					valEndPos = chunk.indexOf(valStart, eqPos + 2);
 					if (valEndPos < 0) { throw 'ERR:Invalid HTML: [' + chunk + ']'; }
 
-					attrVal =	chunk.slice(eqPos + 2, valEndPos);
+					attrVal = chunk.slice(eqPos + 2, valEndPos);
 					attr[attrName] = decodeEntities(attrVal);
 					pos = valEndPos + 1;
 					//console.log(311, [valEndPos, attrName, attrVal]);
@@ -108,13 +108,13 @@ var doTA = (function() {'use strict';
 
 					//when no more attributes
 					if (valEndPos < 0) {
-						attrVal =	chunk.slice(eqPos + 1);
+						attrVal = chunk.slice(eqPos + 1);
 						attr[attrName] = decodeEntities(attrVal);
 						//console.log(442, [attrVal]);
 						break;
 
 					} else {
-						attrVal =	chunk.slice(eqPos + 1, valEndPos);
+						attrVal = chunk.slice(eqPos + 1, valEndPos);
 						attr[attrName] = decodeEntities(attrVal);
 						//console.log(313, [eqPos, valEndPos, attrVal]);
 						pos = valEndPos;
@@ -935,11 +935,11 @@ var doTA = (function() {'use strict';
 
 			//attr values
 			posA2 = chunkA.indexOf('"', posA1 + 2);
-			attrVal1 =	chunkA.slice(posA1 + 2, posA2);
+			attrVal1 = chunkA.slice(posA1 + 2, posA2);
 
 			posB1 = posA1 + posDiff;
 			posB2 = chunkB.indexOf('"', posB1 + 2);
-			attrVal2 =	chunkB.slice(posB1 + 2, posB2);
+			attrVal2 = chunkB.slice(posB1 + 2, posB2);
 
 			if (attrVal1 !== attrVal2) {
 				// value as property
