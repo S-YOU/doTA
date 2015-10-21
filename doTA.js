@@ -1731,7 +1731,7 @@
 		}
 		// console.log(FnText);
 
-		try {
+		//try {
 			/*jshint evil: true */
 			if (optWatchDiff || optDiffLevel) {
 				//$scope, $filter, $attr, isPatch, IdCounter, isKey, LoopIdCounter
@@ -1745,12 +1745,12 @@
 			if (Watched) {
 				compiledFn = {W:[], F: compiledFn};
 			}
-		} catch (err) {
-			if (typeof console !== "undefined") {
-				/**/console.log("doTA compile error:\n" + FnText);
-			}
-			throw err;
-		}
+		//} catch (err) {
+		//	if (typeof console !== "undefined") {
+		//		/**/console.log("doTA compile error:\n" + FnText);
+		//	}
+		//	throw err;
+		//}
 
 		// just for less array usage on heap profiling
 		// but this may trigger GC more

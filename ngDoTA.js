@@ -10,7 +10,7 @@
 	var textContent = ie8 ? 'innerText' : 'textContent';
 	var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
 	var hiddenDIV;
-	setTimeout(function(){
+	setTimeout(function() {
 		if (document.createElement) {
 			hiddenDIV = document.createElement('div');
 		}
