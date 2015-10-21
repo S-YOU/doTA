@@ -1,5 +1,10 @@
 /* global angular, doTA */
-(function (angular, document) {'use strict';
+(function(global, factory) {
+
+	factory(global, global.document, global.doTA);
+
+}(typeof window !== "undefined" ? window : this, function(window, document, doTA) {
+
 	var msie = document.documentMode;
 	var ie8 = msie <= 8;
 	var textContent = ie8 ? 'innerText' : 'textContent';
@@ -9,8 +14,9 @@
 		if (document.createElement) {
 			hiddenDIV = document.createElement('div');
 		}
-	},0);
+	}, 0);
 	var BoolMap = {0: 0, 'false': 0, 1: 1, 'true': 1};
+
 	function makeBool(attr, defaultValue){
 		return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
 	}
@@ -883,4 +889,4 @@
 			};
 		}]);
 
-})(window.angular, window.document);
+}));

@@ -1,4 +1,13 @@
-var doTA = (function() {'use strict';
+(function(global, factory) {
+
+	if (typeof module === "object" && typeof module.exports === "object") {
+		module.exports = factory(global);
+	} else {
+		factory(global);
+	}
+
+}(typeof window !== "undefined" ? window : this, function(window) {
+
 	/* for ie8 */
 	if (!String.prototype.trim) {
 		String.prototype.trim = function() {
@@ -1775,28 +1784,26 @@ var doTA = (function() {'use strict';
 	}
 
 	//warm-up most used functions
-	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="k,v in y">{{v|json:4}}</div>', {
-		dotaRender: 1});
+	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="k,v in y">{{v|json:4}}</div>', {
+	// 	dotaRender: 1});
 	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="x in 1:10:2">{{x}}</div>', {
 		watchDiff: 1, dotaRender: 1});
-	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
-		watchDiff: 1, diffLevel: 2, dotaRender: 1});
-	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
-		watchDiff: 1, diffLevel: 3, dotaRender: 1});
+	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
+	// 	watchDiff: 1, diffLevel: 2, dotaRender: 1});
+	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
+	// 	watchDiff: 1, diffLevel: 3, dotaRender: 1});
+	window.doTA = doTA;
 
 	return doTA;
-})();
-
-if (typeof module !== "undefined" && module.exports) {
-	module.exports = doTA;
-//IE8
-} else if (typeof console === "undefined") {
-	var noop = function() {};
-	var console = {log: noop, time: noop, timeEnd: noop};
-}
+}));
 
 /* global angular, doTA */
-(function (angular, document) {'use strict';
+(function(global, factory) {
+
+	factory(global, global.document, global.doTA);
+
+}(typeof window !== "undefined" ? window : this, function(window, document, doTA) {
+
 	var msie = document.documentMode;
 	var ie8 = msie <= 8;
 	var textContent = ie8 ? 'innerText' : 'textContent';
@@ -1806,8 +1813,9 @@ if (typeof module !== "undefined" && module.exports) {
 		if (document.createElement) {
 			hiddenDIV = document.createElement('div');
 		}
-	},0);
+	}, 0);
 	var BoolMap = {0: 0, 'false': 0, 1: 1, 'true': 1};
+
 	function makeBool(attr, defaultValue){
 		return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
 	}
@@ -2680,4 +2688,4 @@ if (typeof module !== "undefined" && module.exports) {
 			};
 		}]);
 
-})(window.angular, window.document);
+}));
