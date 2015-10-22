@@ -8,7 +8,6 @@ var doTA = require('../dist/doTA' + (DEBUG ? '' : '.min'));
 var templates = require('../fixtures/templates');
 var timer = require('./timer');
 
-
 function repeat(str, len) {
 	var ret = str;
 	while (--len > 0) {
@@ -17,8 +16,8 @@ function repeat(str, len) {
 	return ret;
 }
 
+var count = 1, keys = Object.keys(templates);
 timer(1);
-var count = 1;
 for (var i = 0; i < count; i++) {
 	for (var k in templates) {
 		var v = templates[k];
@@ -33,4 +32,4 @@ for (var i = 0; i < count; i++) {
 		}
 	}
 }
-timer(1, 'compile x ' + count);
+timer(1, `compile x ${keys.length} x ${count}`, keys.length * count);

@@ -1,12 +1,12 @@
 (function(global, factory) {
 
 	if (typeof module === "object" && typeof module.exports === "object") {
-		module.exports = factory(global);
+		module.exports = factory(global, global.document);
 	} else {
-		factory(global);
+		factory(global, global.document);
 	}
 
-}(typeof window !== "undefined" ? window : this, function(window) {
+}(typeof window !== "undefined" ? window : this, function(window, document) {
 
 	/* for ie8 */
 	if (!String.prototype.trim) {
@@ -21,6 +21,9 @@
 		delete Object.prototype.unwatch;
 	}
 
+	//less memory usage with this, javascript is single threaded anyway
+	var newNode = document && document.createElement('div');
+
 	var doTA = {
 		diff: diff1,
 		diff2: diff2,
@@ -31,7 +34,8 @@
 		// PS: parseStyle,
 		C: {}, //Cached compiled functions
 		D: {}, //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
-		H: {} //HashMap for TextDiff
+		H: {}, //HashMap for TextDiff
+		N: newNode
 	};
 
 	// pretty indent for debugging
@@ -175,10 +179,16 @@
 
 	//http://jsperf.com/object-key-vs-array-indexof-lookup/6
 	//var events = ' scroll change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste '
-	var EVENTS = {"scroll":1,"change":1,"click":1,"dblclick":1,"mousedown":1,"mouseup":1,"mouseover":1,"mouseout":1,"mousemove":1,"mouseenter":1,"mouseleave":1,"keydown":1,"keyup":1,"keypress":1,"submit":1,"focus":1,"blur":1,"copy":1,"cut":1,"paste":1};
+	var EVENTS = {
+		"scroll":1,"change":1,"click":1,"dblclick":1,
+		"mousedown":1,"mouseup":1,"mouseover":1,"mouseout":1,"mousemove":1,"mouseenter":1,"mouseleave":1,
+		"keydown":1,"keyup":1,"keypress":1,
+		"submit":1,"focus":1,"blur":1,
+		"copy":1,"cut":1,"paste":1
+	};
 	//no unicode supportedgit
 	// var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-	var VALID_CHARS = {"_":1,"$":1,"a":1,"b":1,"c":1,"d":1,"e":1,"f":1,"g":1,"h":1,"i":1,"j":1,"k":1,"l":1,"m":1,"n":1,"o":1,"p":1,"q":1,"r":1,"s":1,"t":1,"u":1,"v":1,"w":1,"x":1,"y":1,"z":1,"A":1,"B":1,"C":1,"D":1,"E":1,"F":1,"G":1,"H":1,"I":1,"J":1,"K":1,"L":1,"M":1,"N":1,"O":1,"P":1,"Q":1,"R":1,"S":1,"T":1,"U":1,"V":1,"W":1,"X":1,"Y":1,"Z":1};
+	// var VALID_CHARS = {"_":1,"$":1,"a":1,"b":1,"c":1,"d":1,"e":1,"f":1,"g":1,"h":1,"i":1,"j":1,"k":1,"l":1,"m":1,"n":1,"o":1,"p":1,"q":1,"r":1,"s":1,"t":1,"u":1,"v":1,"w":1,"x":1,"y":1,"z":1,"A":1,"B":1,"C":1,"D":1,"E":1,"F":1,"G":1,"H":1,"I":1,"J":1,"K":1,"L":1,"M":1,"N":1,"O":1,"P":1,"Q":1,"R":1,"S":1,"T":1,"U":1,"V":1,"W":1,"X":1,"Y":1,"Z":1};
 
 	// minimal stripped down html parser
 	function parseHTML(html, func) {
@@ -314,9 +324,6 @@
 		// console.log('getOutHTML', tagName, [tagName, pos2, pos2, ])
 		return ++POS;
 	}
-
-	//less memory usage with this, javascript is single threaded anyway
-	var newNode = typeof document !== 'undefined' && document.createElement('div');
 
 	// FlatDOM: diff html as text and patch dom nodes
 	function diff2(prevKey, html2) {
@@ -1021,23 +1028,26 @@
 	var quotedStringRegex = /"[^"]*"|'[^']*'/g;
 	var whiteSpaceRegex = /\s{2,}|\n/g;
 	var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'=\s]+)"(?=[\s>])/g;
-	var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
+	// var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
 	var $indexRegex = /\$index/g;
 	var $parent$indexRegex = /(?:\$parent\.)+\$index/g;
 
 	// no-val attributes, for more exhaustive list - https://github.com/kangax/html-minifier/issues/63
-	var noValAttrRegex = /^(?:checked|selected|disabled|readonly|multiple|required|hidden|nowrap)/;
+	//var noValAttrRegex = /^(?:checked|selected|disabled|readonly|multiple|required|hidden)/;
 
 	// export as doTA.compile
 	function compileHTML(template, options) {
 		options = options || {};
 		var val_mod = options.loose ? "||''" : '';
 		var VarMap = {
-			true: 1, false: 1, null: 1, void: 1, undefined: 1, this: 1,
+			true: 1, false: 1, null: 1, undefined: 1, this: 1,
 			doTA: 1, $index: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
-			Math: 1, Date: 1, String: 1, Object: 1, Array: 1, Infinity: 1, NaN: 1,
+			Math: 1, Date: 1
+			// String: 1, Object: 1, Array: 1,
+			// Infinity: 1, NaN: 1,
 			// alert: 1, confirm: 1, prompt: 1,
-			var: 1, in: 1
+			//var: 1, in: 1
+			//void: 1,
 		};
 		var level = 0, ngRepeatLevel;
 		var ngIfLevel, skipLevel, ngIfCounterTmp, ngIfLevels = [], ngIfLevelMap = {};
@@ -1098,19 +1108,22 @@
 				//ToDo: still buggy, this need to improve
 				var vv = '';
 				var matches = v.match(varOrStringRegex);
+				var match, match0;
 				//DEBUG && console.log(12, matches);
 				for(var i = 0; i < matches.length; i++) {
-
-					if (VALID_CHARS[matches[i][0]] && !VarMap[matches[i]] &&
-						(!i || matches[i-1][matches[i-1].length-1] !== '.')) {
-						vv += 'S.' + matches[i];
+					match = matches[i];
+					match0 = match[0];
+					if (
+						(match0 === '$' || match0 === '_' || (match0 >= 'a' && match0 <= 'z') || (match0 >= 'A' && match0 <= 'Z')) &&
+						!VarMap[match] &&
+						(!i || matches[i-1][matches[i-1].length-1] !== '.')
+						) {
+						vv += 'S.' + match;
+					} else if (match.indexOf('$index') >= 0) {
+						//only support last level for now
+						vv += match.replace($indexRegex, LevelVarMap[ngRepeatLevel]);
 					} else {
-						if (matches[i].indexOf('$index') >= 0) {
-							//only support last level for now
-							vv += matches[i].replace($indexRegex, LevelVarMap[ngRepeatLevel]);
-						} else {
-							vv += matches[i];
-						}
+						vv += match;
 					}
 				}
 				//DEBUG && console.log(55, vv);
@@ -1129,7 +1142,7 @@
 					ret += str.substring(prevQuotePos, quotePos);
 					//escaped quote
 					if (str[quotePos - 1] !== '\\') {
-						ret += "\\";
+						ret += '\\';
 					}
 					prevQuotePos = quotePos;
 					quotePos = str.indexOf("'", prevQuotePos + 1);
@@ -1472,7 +1485,7 @@
 							//some ng-attr are just don't need it here.
 							var attrName = x.substr(3);
 							//something like ng-src, ng-href, etc.
-							if (lazyNgAttrRegex.test(attrName)) {
+							if (attrName === 'src' || attrName === 'alt' || attrName === 'title' || attrName === 'href') {
 								x = attrName;
 
 							//convert ng-events to dota-events, to be bind later with native events
@@ -1487,7 +1500,9 @@
 								}
 								x = 'de-' + attrName;
 
-							} else if (noValAttrRegex.test(attrName)) {
+							} else if (attrName === 'required' || attrName === 'hidden' ||
+							attrName === 'checked' || attrName === 'selected' ||
+							attrName === 'disabled' || attrName === 'readonly' || attrName === 'multiple') {
 								noValAttr += "'+(" + attachScope(attrVal) + "?' " + attrName + "=\"\"':'')+'";
 								//noValAttr will attach later
 								continue;
@@ -1754,7 +1769,7 @@
 
 		// just for less array usage on heap profiling
 		// but this may trigger GC more
-		FnText = LevelMap = LevelVarMap = VarMap = ngIfLevels = ngIfLevelMap = WatchMap = idHash = void 0;
+		// FnText = LevelMap = LevelVarMap = VarMap = ngIfLevels = ngIfLevelMap = WatchMap = idHash = void 0;
 		return compiledFn;
 	}
 
@@ -1786,10 +1801,10 @@
 	//warm-up most used functions
 	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="k,v in y">{{v|json:4}}</div>', {
 	// 	dotaRender: 1});
-	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="x in 1:10:2">{{x}}</div>', {
-		watchDiff: 1, dotaRender: 1});
-	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
-	// 	watchDiff: 1, diffLevel: 2, dotaRender: 1});
+	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="x in 1:10:2">{{x}}</div>', {
+	// 	watchDiff: 1, dotaRender: 1});
+	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
+		watchDiff: 1, diffLevel: 2, dotaRender: 1});
 	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
 	// 	watchDiff: 1, diffLevel: 3, dotaRender: 1});
 	window.doTA = doTA;
@@ -1808,13 +1823,12 @@
 	var ie8 = msie <= 8;
 	var textContent = ie8 ? 'innerText' : 'textContent';
 	var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
-	var hiddenDIV;
-	setTimeout(function() {
-		if (document.createElement) {
-			hiddenDIV = document.createElement('div');
-		}
-	}, 0);
+	var frag, newNode = doTA.N;
 	var BoolMap = {0: 0, 'false': 0, 1: 1, 'true': 1};
+
+	setTimeout(function() {
+		frag = document.createDocumentFragment();
+	});
 
 	function makeBool(attr, defaultValue){
 		return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
@@ -2322,10 +2336,10 @@
 							// console.log('cacheDOM()', attrs)
 							$scope.$on("$destroy", function(){
 								console.log('$destroy', elem);
-								// alert(['$destroy', elem[0], hiddenDIV]);
-								if (hiddenDIV) {
+								// alert(['$destroy', elem[0], frag]);
+								if (frag) {
 									doTA.D[attrDoTARender] = elem[0];
-									hiddenDIV.appendChild(elem[0]);
+									frag.appendChild(elem[0]);
 								}
 							});
 						}
@@ -2473,7 +2487,7 @@
 								//if node has some child, use appendChild
 								if (elem[0].firstChild) {
 									console.time('appendChild:' + attrDoTARender);
-									var newNode = document.createElement('div'), firstChild;
+									var firstChild;
 									newNode.innerHTML = renderedHTML;
 
 									//if needed, attach events and $compile

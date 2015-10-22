@@ -9,13 +9,12 @@
 	var ie8 = msie <= 8;
 	var textContent = ie8 ? 'innerText' : 'textContent';
 	var listenerName = ie8 ? 'attachEvent' : 'addEventListener';
-	var hiddenDIV;
-	setTimeout(function() {
-		if (document.createElement) {
-			hiddenDIV = document.createElement('div');
-		}
-	}, 0);
+	var frag, newNode = doTA.N;
 	var BoolMap = {0: 0, 'false': 0, 1: 1, 'true': 1};
+
+	setTimeout(function() {
+		frag = document.createDocumentFragment();
+	});
 
 	function makeBool(attr, defaultValue){
 		return attr in BoolMap ? BoolMap[attr] : attr || defaultValue;
@@ -523,10 +522,10 @@
 							// console.log('cacheDOM()', attrs)
 							$scope.$on("$destroy", function(){
 								console.log('$destroy', elem);
-								// alert(['$destroy', elem[0], hiddenDIV]);
-								if (hiddenDIV) {
+								// alert(['$destroy', elem[0], frag]);
+								if (frag) {
 									doTA.D[attrDoTARender] = elem[0];
-									hiddenDIV.appendChild(elem[0]);
+									frag.appendChild(elem[0]);
 								}
 							});
 						}
@@ -674,7 +673,7 @@
 								//if node has some child, use appendChild
 								if (elem[0].firstChild) {
 									console.time('appendChild:' + attrDoTARender);
-									var newNode = document.createElement('div'), firstChild;
+									var firstChild;
 									newNode.innerHTML = renderedHTML;
 
 									//if needed, attach events and $compile
