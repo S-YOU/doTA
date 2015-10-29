@@ -2115,6 +2115,8 @@
 
 	function addNgModels(elem, scope, uniqueId) {
 		forEachArray(elem.querySelectorAll('[dota-model]'), function(partial) {
+			if (partial.dm) return;
+			partial.dm = 1;
 			var dotaPass = partial.getAttribute('dota-pass');
 			// console.log('dotaPass', [dotaPass]);
 			if (dotaPass != null) { // jshint ignore:line
@@ -2382,6 +2384,9 @@
 								Watchers.pop()();
 							}
 							forEachArray(rawElem.querySelectorAll('[dota-bind]'), function(partial) {
+								//ToDo: need to run only once
+								// if (partial.__dota_b) return;
+								// partial.__dota_b = 1;
 								//override ng-bind
 								var bindExpr = partial.getAttribute('dota-bind');
 								var oneTimePos = bindExpr.indexOf('::');
@@ -2392,11 +2397,12 @@
 								if (BindValues[bindExpr]) {
 									partial.innerHTML = BindValues[bindExpr];
 								}
-								var oneTimeExp = scope.$watchCollection(bindExpr, function(newVal, oldVal){
+								console.log('binding', bindExpr);
+								var oneTimeExp = scope.$watch(bindExpr, function(newVal, oldVal){
 									if (newVal && oneTimePos >= 0) { oneTimeExp(); }
-									console.log(attrDoTARender, 'watch before bindExpr', [newVal, oldVal]);
+									console.log(attrDoTARender, 'watch fired before bindExpr', [newVal, oldVal]);
 									partial[textContent] = BindValues[bindExpr] = newVal || '';
-									console.log(attrDoTARender, 'watch after render');
+									console.log(attrDoTARender, 'watch fired after render');
 								});
 								Watchers.push(oneTimeExp);
 							});
