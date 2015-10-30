@@ -373,7 +373,7 @@ var N = 100;
 (function(){'use strict';
 	var renderFn = doTA.compile($('#dota-template').text().trim(), {watchDiff: 1, strip: 2, debug: 0});
 	var BoxView = {};
-	console.log(renderFn);
+	// console.log(renderFn);
 
 	function init() {
 		BoxView.boxes =	_.map(_.range(N), function() { return 0; });

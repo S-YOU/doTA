@@ -386,6 +386,11 @@
 					var Watchers = [], BindValues = {};
 
 					return function($scope, elem, attrs) {
+						//ToDo: check Watchers scope
+						while (Watchers.length) {
+							Watchers.pop()();
+						}
+
 						//used attributes, good for minification with closure compiler;
 						var attrCacheDOM = attrs.cacheDom;
 						var attrDoTARender = attrs.dotaRender;
@@ -565,14 +570,9 @@
 						// attach ng-bind
 						////////////////////////////////////////////////////////////////////////////
 						function addNgBind(rawElem, scope, attrDoTARender) {
-							//ToDo: check Watchers scope
-							while (Watchers.length) {
-								Watchers.pop()();
-							}
 							forEachArray(rawElem.querySelectorAll('[dota-bind]'), function(partial) {
-								//ToDo: need to run only once
-								// if (partial.__dota_b) return;
-								// partial.__dota_b = 1;
+								if (partial.db) return;
+								partial.db = 1;
 								//override ng-bind
 								var bindExpr = partial.getAttribute('dota-bind');
 								var oneTimePos = bindExpr.indexOf('::');
