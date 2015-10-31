@@ -3,7 +3,7 @@
 
 	factory(global, global.document, global.doTA);
 
-}(typeof window !== "undefined" ? window : this, function(window, document, doTA) {
+}(this, function(window, document, doTA) {
 
 	var msie = document.documentMode;
 	var ie8 = msie <= 8;
