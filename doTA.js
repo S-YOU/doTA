@@ -180,7 +180,7 @@
 	//http://jsperf.com/object-key-vs-array-indexof-lookup/6
 	//var events = ' scroll change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste '
 	var EVENTS = {
-		"scroll":1,"change":1,"click":1,"dblclick":1,
+		"scroll":1,"change":1,"input":1,"click":1,"dblclick":1,
 		"mousedown":1,"mouseup":1,"mouseover":1,"mouseout":1,"mousemove":1,"mouseenter":1,"mouseleave":1,
 		"keydown":1,"keyup":1,"keypress":1,
 		"submit":1,"focus":1,"blur":1,
@@ -1042,8 +1042,7 @@
 		var VarMap = {
 			true: 1, false: 1, null: 1, undefined: 1, this: 1,
 			doTA: 1, $index: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
-			Math: 1, Date: 1
-			// String: 1, Object: 1, Array: 1,
+			Math: 1, Date: 1, String: 1, Object: 1, Array: 1
 			// Infinity: 1, NaN: 1,
 			// alert: 1, confirm: 1, prompt: 1,
 			//var: 1, in: 1

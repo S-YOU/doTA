@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+<title>Spreadsheet - doTA</title>
+<style type="text/css">
+html,body {margin:0;padding:0;}
+table {border-collapse:collapse;}
+tr:first-child td,td:first-child {background:#ddd;}
+td {border:1px solid #888;padding:0;text-align:center;}
+td input {border:0;display:block;height:20px;padding:1px;width:80px;}
+a {border:1px solid #888;border-top:0;display:inline-block;margin:3px;padding:0 3px;text-decoration:none;}
+.formula {margin:3px;width:1337px;}
+</style>
+</head>
+<body>
+
+<div ng-app="app" ng-controller="ctrl" dota-render=1 inline=1 strip=2 loose=0 debug=0>
+	<table>
+		<tr ng-repeat="i in 0:27" >
+			<td ng-repeat="j in 0:17" ng-init="letter=String.fromCharCode(97 + j - 1)">
+				<span ng-if="!i||!j">{{i||letter}}</span>
+				<input ng-if="i&&j" ng-value="data[letter+i]||''"
+					ng-input="update('{{letter+i}}',$event)" />
+			</td>
+		</tr>
+	</table>
+</div>
+
+<div style="bottom:0;float:right;text-align:right;padding:5px;">
+Forked from <a href="http://lhorie.github.io/mithril-blog/examples/spreadsheet.html" target=_blank>
+http://lhorie.github.io/mithril-blog/examples/spreadsheet.html</a>
+<div>Back to <a href="../">Examples Index</a></div>
+</div>
+
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+<script type="text/javascript" src="../../dist/ngDoTA.min.js"></script>
+<script>
+angular.module('app', ['doTA']).
+	controller('ctrl', ['$scope', function($scope){
+		$scope.data = JSON.parse(localStorage["spreadsheet"] || "{}");
+
+		$scope.update = function(cell, $event) {
+			var value = $event.target.value;
+			console.log('update', cell, value);
+			if (value != null && value[0] == "=") {
+				try {
+					with ($scope.data) {
+						$scope.data[cell] = eval(value.substring(1))
+					}
+				} catch (e) {}
+			} else {
+				$scope.data[cell] = isNaN(+value) ? value : +value;
+			}
+			localStorage["spreadsheet"] = JSON.stringify($scope.data);
+		};
+}]);
+</script>
+</body>
+</html>
