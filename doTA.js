@@ -1280,7 +1280,6 @@
 					if (attr['ng-repeat']) {
 						//console.log(21,[x], [val]);
 						LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
-						var idx = 'i' + level, l = 'l'+ level;
 						var NG_REPEAT = attr['ng-repeat'];
 						var inPos = NG_REPEAT.indexOf(' in ');
 						var repeatVar = NG_REPEAT.substr(0, inPos), repeatSrc = NG_REPEAT.substr(inPos + 4);
@@ -1290,7 +1289,7 @@
 
 						//store variable name to use for $index later
 						//this is ng-repeat specific, LevelMap[level] is same for ng-if too
-						LevelVarMap[level] = idx;
+
 						ngRepeatLevel = level;
 
 						if (pipePos > 0) {
@@ -1316,6 +1315,7 @@
 							FnText += indent(level, 1) + 'for(var ' +
 								repeatVar + '=' + start + ';' +
 								repeatVar + (step > 0 ? '<' : '>') + end + ';' + repeatVar + '+=' + step + '){\n';
+							LevelVarMap[level] = repeatVar;
 							VarMap[repeatVar] = 1;
 
 						// Object: "k, v in {}" ==> (for in {})
@@ -1327,16 +1327,19 @@
 							FnText += indent(level, 1) + 'for(var ' + key + ' in D' + level + '){\n';
 							//														 space is needed for manual uglify	->	vvv
 							FnText += indent(level) + value + ' = ' + 'D' + level + '[' + key + ']; \n';
+							LevelVarMap[level] = key;
 							VarMap[key] = VarMap[value] = 1;
 
 						// Array: "k in []" ==> while loop
 						} else {
+							var idx = 'i' + level, l = 'l'+ level;
 							FnText += indent(level, 1) + 'var ' +
 								repeatVar + ',D' + level + '=' + repeatSrcNew + ',' +
 								idx + '=-1,' + l + '=D' + level + '.length;\n';
 							FnText += indent(level, 1) + 'while(++' + idx + '<' + l + '){\n';
 							//												space is needed for manual uglify	->	vvv
 							FnText += indent(level) + repeatVar + '=D' + level + '[' + idx + ']; \n';
+							LevelVarMap[level] = idx;
 							VarMap[repeatVar] = 1;
 						}
 						//remote attribute not to get forwarded to angular
