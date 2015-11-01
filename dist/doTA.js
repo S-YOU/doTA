@@ -6,7 +6,7 @@
 		factory(global, global.document);
 	}
 
-}(this, function(window, document) {
+}(typeof window !== 'undefined' ? window : this, function(window, document) {
 
 	/* for ie8 */
 	if (!String.prototype.trim) {

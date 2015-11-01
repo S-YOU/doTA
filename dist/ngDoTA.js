@@ -6,7 +6,7 @@
 		factory(global, global.document);
 	}
 
-}(this, function(window, document) {
+}(typeof window !== 'undefined' ? window : this, function(window, document) {
 
 	/* for ie8 */
 	if (!String.prototype.trim) {
@@ -1819,7 +1819,7 @@
 
 	factory(global, global.document, global.doTA);
 
-}(this, function(window, document, doTA) {
+}(typeof window !== 'undefined' ? window : this, function(window, document, doTA) {
 
 	var msie = document.documentMode;
 	var ie8 = msie <= 8;
