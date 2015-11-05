@@ -99,6 +99,7 @@ This project has two libraries, doTA, and ngDoTA.
 - cache-dom
 	- before `$scope` is destroyed, relocate DOM to safer place, and reuse it as is when same directive is called again.
 	- for static DOM, no dynamic binding.
+	- specify `2` to run `onLoad` expressions
 
 - dota-onload
 	- evalulate javascript when done, `this` is bind to current DOM

@@ -392,7 +392,7 @@
 						}
 
 						//used attributes, good for minification with closure compiler;
-						var attrCacheDOM = attrs.cacheDom;
+						var attrCacheDOM = attrs.cacheDom | 0;
 						var attrDoTARender = attrs.dotaRender;
 						var attrScope = attrs.scope;
 						var attrNgController = attrs.ngController;
@@ -433,6 +433,9 @@
 							console.log('cacheDOM: just moved cached DOM', doTA.D[attrDoTARender]);
 							var cachedElem = msie ? doTA.D[attrDoTARender].cloneNode(true) : doTA.D[attrDoTARender];
 							elem[0].parentNode.replaceChild(cachedElem, elem[0]);
+							if (attrCacheDOM === 2) {
+								onLoad();
+							}
 							return;
 						}
 
@@ -640,6 +643,24 @@
 							}
 						}
 
+						function onLoad() {
+							if(attrDoTAOnload){
+								setTimeout(function(){
+									var onLoadFn = new Function(attrDoTAOnload);
+									onLoadFn.apply(elem[0]);
+									console.log(attrDoTARender,'after eval');
+								});
+							}
+
+							//execute scope functions
+							if(attrDoTAOnloadScope) {
+								setTimeout(function() {
+									NewScope.$evalAsync(attrDoTAOnloadScope);
+									console.log(attrDoTARender, 'after scope $evalAsync scheduled');
+								});
+							}
+						}
+
 						////////////////////////////////////////////////////////////////////////////
 						// render the template, cache-dom, run onload scripts, add dynamic watches
 						////////////////////////////////////////////////////////////////////////////
@@ -709,21 +730,7 @@
 							}
 
 							//execute raw functions, like jQuery
-							if(attrDoTAOnload){
-								setTimeout(function(){
-									var onLoadFn = new Function(attrDoTAOnload);
-									onLoadFn.apply(elem[0]);
-									console.log(attrDoTARender,'after eval');
-								});
-							}
-
-							//execute scope functions
-							if(attrDoTAOnloadScope) {
-								setTimeout(function() {
-									NewScope.$evalAsync(attrDoTAOnloadScope);
-									console.log(attrDoTARender, 'after scope $evalAsync scheduled');
-								});
-							}
+							onLoad();
 
 							if (attrCacheDOM) {
 								cacheDOM();
