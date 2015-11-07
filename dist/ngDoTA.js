@@ -2190,7 +2190,6 @@
 
 		.directive('dotaRender', ['doTA', '$http', '$filter', '$templateCache', '$compile', '$controller',
 			function(doTA, $http, $filter, $templateCache, $compile, $controller) {
-			var scopes = {}; //scope management
 
 			return {
 				restrict: 'A',
@@ -2199,7 +2198,8 @@
 				controller: angular.noop,
 				link: angular.noop,
 				compile: function() {
-					var Watchers = [], BindValues = {};
+					var Watchers = [], BindValues = {}, scopes = {};
+					console.info('dotaRender compileFn');
 
 					return function($scope, elem, attrs) {
 						//ToDo: check Watchers scope
