@@ -46,7 +46,7 @@
 			.pipe(replace(/^\s*console\..*$/gm, ''))
 			.pipe(replace(/\bindent\([^)]+\)\s*\+\s*|\\n(?=['"}]|$)/g, ''))
 			.pipe(closure())
-			.pipe(uglify())
+			.pipe(uglify({mangle:true, compress:{drop_console: true}}))
 			.on('error', console.error)
 			.pipe(rename({
 				extname: '.min.js'
