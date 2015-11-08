@@ -219,6 +219,12 @@
 		});
 	}
 
+	function evalExpr(expr) {
+		return new Function('S', 'return ' + expr.replace(/[$\w.]+/g, function($0) {
+				return 'S.' + $0;
+			}));
+	}
+
 	function eventHandlerFn(scope, expr) {
 		return function(evt){
 			if (ie8) {
@@ -386,6 +392,7 @@
 					console.info('dotaRender compileFn');
 
 					return function($scope, elem, attrs) {
+						console.time('dotaRender');
 						//ToDo: check Watchers scope
 						while (Watchers.length) {
 							Watchers.pop()();
@@ -399,7 +406,8 @@
 						var attrLoose = attrs.loose;
 						var attrEvent = attrs.event;
 						var attrDebug = attrs.debug;
-						var attrWatch = attrs.watch;
+						var attrWatch = attrs.hasOwnProperty('watch') && attrs.watch;
+						var attrWatchDiff = attrs.watchDiff;
 						var attrCompile = attrs.compile;
 						var attrModel = attrs.model;
 						var attrBind = attrs.bind;
@@ -408,7 +416,6 @@
 						var attrDoTAOnloadScope = attrs.dotaOnloadScope;
 						var attrLoaded = attrs.loaded;
 						var attrInline = attrs.inline;
-						var attrWatchDiff = attrs.watchDiff;
 						var origAttrMap = attrs.$attr;
 						var params = {};
 						var NewScope;
@@ -421,7 +428,6 @@
 						if (attrs.diffLevel) {
 							attrs.diffLevel = +attrs.diffLevel;
 						}
-						attrWatch = attrs.watch = typeof attrWatch === 'string' ? attrWatch : 0; //Firefox throw error if does not exists
 
 						//to prevent angular binding this
 						if (attrNgController) {
@@ -500,7 +506,7 @@
 							if (oneTimePos >= 0) {
 								attrWatch = attrWatch.slice(oneTimePos + 2);
 							}
-							var oneTimeExp = NewScope.$watchCollection(attrWatch, function(newVal, oldVal){
+							var oneTimeExp = NewScope['$watch' + (attrWatch[0] === '[' ? 'Collection': '')](evalExpr(attrWatch), function(newVal, oldVal){
 								if(newVal !== undefined && newVal !== oldVal && doTA.C[attrDoTARender]) {
 									if (oneTimePos >= 0) oneTimeExp();
 									console.log(attrDoTARender, 'watch before render');
@@ -513,7 +519,7 @@
 						// watch and partially render by diffing. diff-level = 2 may be used to patch children
 						if(attrWatchDiff) {
 							console.log(attrDoTARender, 'registering diff watch for', attrWatchDiff);
-							NewScope.$watchCollection(attrWatchDiff, function(newVal, oldVal){
+							NewScope['$watch' + (attrWatchDiff[0] === '[' ? 'Collection': '')](evalExpr(attrWatchDiff), function(newVal, oldVal){
 								if(newVal !== oldVal && doTA.C[attrDoTARender]) {
 									console.log(attrDoTARender, 'diff watch before render');
 									render(doTA.C[attrDoTARender], true);
@@ -569,6 +575,7 @@
 							return compiledFn;
 						}
 
+
 						////////////////////////////////////////////////////////////////////////////
 						// attach ng-bind
 						////////////////////////////////////////////////////////////////////////////
@@ -587,13 +594,16 @@
 									partial.innerHTML = BindValues[bindExpr];
 								}
 								console.log('binding', bindExpr);
-								var oneTimeExp = scope.$watch(bindExpr, function(newVal, oldVal){
+								console.time('dota-bind');
+								var oneTimeExp = scope['$watch' + (bindExpr[0] === '[' ? 'Collection': '')](evalExpr(bindExpr), function(newVal, oldVal){
 									if (newVal && oneTimePos >= 0) { oneTimeExp(); }
 									console.log(attrDoTARender, 'watch fired before bindExpr', [newVal, oldVal]);
 									partial[textContent] = BindValues[bindExpr] = newVal || '';
 									console.log(attrDoTARender, 'watch fired after render');
 								});
 								Watchers.push(oneTimeExp);
+								console.timeEnd('dota-bind');
+								console.log(partial);
 							});
 						}
 
@@ -755,9 +765,9 @@
 									var w = func.W[i];
 									// console.log('watch', w);
 
-									watches[w.I] = NewScope.$watchCollection(w.W, (function(w) {
+									watches[w.I] = NewScope['$watch' + (w.W[0] === '[' ? 'Collection': '')](evalExpr(w.W), (function(w) {
 										return function(newVal, oldVal){
-											console.log('$watch trigger', [newVal, oldVal]);
+											console.log('sub watch trigger', [newVal, oldVal]);
 											if (newVal === oldVal && !newVal) { return; }
 											console.log(attrDoTARender, w.W, 'partial watch before render');
 											var oldTag = document.getElementById(w.I);
@@ -827,6 +837,7 @@
 							}
 						}
 
+						console.timeEnd('dotaRender');
 						//////////////////////////////////////////////////
 
 					};
@@ -863,7 +874,7 @@
 						console.log('dotaTemplate - compile', [attrs.dotaTemplate]);
 						var attrCompile = makeBool(attrs.compile, 1);
 
-						scope.$watch(attrs.dotaTemplate, function(newVal, oldVal) {
+						scope.$watch(evalExpr(attrs.dotaTemplate), function(newVal, oldVal) {
 							if (newVal) {
 								console.log('dotaTemplate', newVal);
 								$http.get(newVal, {cache: $templateCache}).success(function (data) {
