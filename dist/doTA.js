@@ -35,7 +35,10 @@
 		C: {}, //Cached compiled functions
 		D: {}, //Cached DOM to be used by ngDoTA, needed here to prevent unneccessary rendering
 		H: {}, //HashMap for TextDiff
-		N: newNode
+		W: {}, //Watched Functions
+		U: {},
+		N: newNode,
+		X: 0
 	};
 
 	// pretty indent for debugging
@@ -1072,7 +1075,7 @@
 		if (optKey) {
 			FnText += indent(level) + "var R='';\n";
 		} else {
-			FnText += indent(level) + "'use strict';var " +
+			FnText += indent(level) + "var " +
 			(optWatchDiff ? 'M,N=1,' : '') +
 			"R='';\n"; //ToDO: check performance on var declaration
 		}
@@ -1358,14 +1361,14 @@
 						customId = 1;
 						var oneTimeBinding = attr.refresh.indexOf('::');
 						FnText += indent(level, 2) +
-							(!Watched ? 'var ' + (optWatchDiff ? '': 'N=1,') + 'T=this;T.W=[];' : '') +
+							(!Watched ? 'var ' + (optWatchDiff ? '': 'N=1,') + 'T=doTA.W[' + uniqueId + ']=[];' : '') +
 							'var W={N:N,I:N+"' + '.' + uniqueId + '",W:"' +
 							(oneTimeBinding >=0 ? attr.refresh.substr(oneTimeBinding + 2) + '",O:1': attr.refresh + '"') +
 							(attr.compile ? ',C:1' : '') +
-							'};T.W.push(W);\n';
+							'};T.push(W);\n';
 						WatchMap[level] = Watched = 1;
 						FnText += indent(level, 2) + 'W.F=function(S,F,$attr,X,N){var R="";\n';
-						attr.refresh = void 0;
+						//attr.refresh = void 0;
 					}
 
 					if (attr['ng-init']) {
@@ -1455,6 +1458,7 @@
 						} else {
 							parsedAttr['dota-model'] = attr['ng-model'];
 						}
+						attrClass += (attrClass ? ' ' : '') + 'dm' + uniqueId;
 						attr['ng-model'] = void 0;
 					}
 
@@ -1464,6 +1468,7 @@
 						} else {
 							parsedAttr['dota-bind'] = attr['ng-bind'];
 						}
+						attrClass += (attrClass ? ' ' : '') + 'db' + uniqueId;
 						attr['ng-bind'] = void 0;
 					}
 
@@ -1495,10 +1500,10 @@
 								//add class 'de' for one time querying
 								if (attrClass) {
 									if (attrClass[0] !== 'd' || attrClass[1] !== 'e') {
-										attrClass = 'de ' + attrClass;
+										attrClass = 'de' + uniqueId + ' ' + attrClass;
 									}
 								} else {
-									attrClass = 'de';
+									attrClass = 'de' + uniqueId;
 								}
 								x = 'de-' + attrName;
 
@@ -1759,8 +1764,11 @@
 				compiledFn = new Function('S', 'F', FnText);
 			}
 			/*jshint evil: false */
+
+			compiledFn.id = uniqueId;
 			if (Watched) {
-				compiledFn = {W:[], F: compiledFn};
+				compiledFn.W = 1;
+			//	compiledFn = {W:[], F: compiledFn};
 			}
 		//} catch (err) {
 		//	if (typeof console !== "undefined") {
@@ -1775,28 +1783,25 @@
 		return compiledFn;
 	}
 
-	var compiledHash = {};
-	var lastId = 0;
-
 	function initCompileHash(obj) {
 		for (var x in obj) {
-			compiledHash[x] = obj[x];
-			if (obj[x] > lastId) {
-				lastId = obj[x];
+			doTA.U[x] = obj[x];
+			if (obj[x] > doTA.X) {
+				doTA.X = obj[x];
 			}
 		}
 	}
 
 	function getUniqueId(key) {
 		if (key) {
-			if (compiledHash[key]) {
-				return compiledHash[key];
+			if (doTA.U[key]) {
+				return doTA.U[key];
 			} else {
-				compiledHash[key] = lastId;
-				return lastId++;
+				doTA.U[key] = doTA.X;
+				return doTA.X++;
 			}
 		} else {
-			return lastId++;
+			return doTA.X++;
 		}
 	}
 
@@ -1806,7 +1811,7 @@
 	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="x in 1:10:2">{{x}}</div>', {
 	// 	watchDiff: 1, dotaRender: 1});
 	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
-		watchDiff: 1, diffLevel: 2, dotaRender: 1});
+		watchDiff: 1, diffLevel: 2, dotaRender: 0});
 	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
 	// 	watchDiff: 1, diffLevel: 3, dotaRender: 1});
 	window.doTA = doTA;
