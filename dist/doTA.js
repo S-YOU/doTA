@@ -1704,7 +1704,7 @@
 						'" style="display:none"></' + tagName + '>\');\n';
 					WatchMap[level] = 0;
 					FnText += indent(level, 2) + 'return R;}; \n';
-					FnText += indent(level, 2) + 'R+=W.F(S,F,' + (optParams ? '$attr': '0') + ',0,N); \n';
+					FnText += indent(level, 2) + 'R+=W.F(S,F,' + (optParams ? '$attr': '0') + ',0,N++); \n';
 				}
 
 				//reset dota-pass when out of scope
