@@ -1454,9 +1454,9 @@
 
 					if (optModel && attr['ng-model']) {
 						if (attr['ng-model'].indexOf('$index') >= 0) {
-							parsedAttr['dota-model'] = apply$index(attr['ng-model']);
+							parsedAttr['dota-model'] = apply$index(interpolate(attr['ng-model']));
 						} else {
-							parsedAttr['dota-model'] = attr['ng-model'];
+							parsedAttr['dota-model'] = interpolate(attr['ng-model']);
 						}
 						attrClass += (attrClass ? ' ' : '') + 'dm' + uniqueId;
 						attr['ng-model'] = void 0;
@@ -1464,9 +1464,9 @@
 
 					if (optBind && attr['ng-bind']) {
 						if (attr['ng-bind'].indexOf('$index') >= 0) {
-							parsedAttr['dota-bind'] = apply$index(attr['ng-bind']);
+							parsedAttr['dota-bind'] = apply$index(interpolate(attr['ng-bind']));
 						} else {
-							parsedAttr['dota-bind'] = attr['ng-bind'];
+							parsedAttr['dota-bind'] = interpolate(attr['ng-bind']);
 						}
 						attrClass += (attrClass ? ' ' : '') + 'db' + uniqueId;
 						attr['ng-bind'] = void 0;
