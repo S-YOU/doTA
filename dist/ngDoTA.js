@@ -2142,6 +2142,7 @@
 			} //null or undefined
 
 			var modelName = partial.getAttribute('dota-model');
+			var initValue = partial.getAttribute('value');
 
 			//textbox default event is input unless IE8, all others are change event
 			var updateOn = partial.getAttribute('update-on') ||
@@ -2153,10 +2154,13 @@
 				((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
 			var curValue = resolveObject(modelName, scope);
 
-			//console.log('partial', [partial.tagName, modelName, bindProp, partial.type, curValue, partial.value, partial[bindProp]]);
+			console.log('partial', [partial.tagName, modelName, bindProp, partial.type, curValue, partial.value, partial[bindProp]]);
 			if (bindProp) {
 				//set true or false on dom properties
-				partial[bindProp] = partial.value == curValue; //  loose compare
+				if (initValue)
+					partial[bindProp] = partial.value == curValue; //  loose compare
+				else
+					partial[bindProp] = curValue;
 			} else {
 				if (typeof curValue !== 'undefined') {
 					partial.value = curValue;
@@ -2185,8 +2189,13 @@
 
 						// console.log('event', modelName, evtName, partial, bindProp, [partial[bindProp || 'value']]);
 						scope.$applyAsync((function () {
+							//console.log("value", [partial.value, partial.getAttribute('value'), curValue, bindProp, initValue, partial[bindProp]]);
 							if (bindProp) {
-								parsed.assign(bindProp && partial[bindProp] ? partial.value : undefined);
+								if (initValue) {
+									parsed.assign(partial[bindProp] ? partial.value : undefined);
+								} else {
+									parsed.assign(partial[bindProp]);
+								}
 							} else {
 								parsed.assign(partial.value);
 							}

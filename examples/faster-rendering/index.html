@@ -16,8 +16,8 @@ Scripts are based from this
 
 		<div dota-render=1 inline=1 watch-diff=data model=1 bind=1 event=1>
 			<button ng-click="refresh()">Refresh Data</button>
-			<div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]}}</span></div>
-			<div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,radio]"></span></div>
+			<div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,radio]}}</span></div>
+			<div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,radio]"></span></div>
 			<input ng-model="name" throttle="15">
 			<input ng-model="name2" ng-value="name3">
 			<input ng-model="params.x.y.z">
@@ -33,6 +33,14 @@ Scripts are based from this
 			<label>
 				<input type="checkbox" ng-model="checkbox2" value="c2">
 				CHK VALUE 2
+			</label>
+			<label>
+				<input type="checkbox" ng-model="checkbox3">
+				CHK VALUE 3
+			</label>
+			<label>
+				<input type="checkbox" ng-model="checkbox4">
+				CHK VALUE 4
 			</label>
 			<label>
 				<input name="radio" type="radio" ng-model="radio" value="r1">
@@ -60,7 +68,7 @@ Scripts are based from this
 
 	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
 	<!--<script src="../../../angular-defer/dist/angular-defer.min.js"></script>-->
-	<script src="../../dist/ngDoTA.min.js"></script>
+	<script src="../../dist/ngDoTA.js"></script>
 	<script>
 	angular.module('fasterAngular', ['doTA']).
 		controller('mycontroller', ['$scope', function($scope){
@@ -81,6 +89,7 @@ Scripts are based from this
 			$scope.params = {x: {y: {z: 1}}};
 			$scope.name = "test123";
 			$scope.checkbox2 = "c2";
+			$scope.checkbox4 = true;
 			// $scope.radio = "r2";
 			$scope.name3 = "name3Val";
 	}]);
