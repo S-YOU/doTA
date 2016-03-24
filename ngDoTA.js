@@ -351,7 +351,7 @@
 			//bind each events
 			var events = updateOn.split(' ');
 			for (var i = 0; i < events.length; i++) {
-				evtName = events[i].trim();
+				var evtName = events[i].trim();
 				partial.addEventListener(evtName, throttle((function (partial, modelName, bindProp) {
 					var parsed;
 					return function (evt) {
@@ -695,7 +695,7 @@
 						////////////////////////////////////////////////////////////////////////////
 						function render(func, patch) {
 
-							//unless prerender
+							//unless pre-render
 							if (func) {
 								//trigger destroying children
 								if (!patch && elem[0].firstChild) {

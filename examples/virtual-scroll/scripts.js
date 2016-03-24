@@ -117,7 +117,7 @@ angular.module('app', ['doTA'])
 	elemCenter = gridRoot.querySelector('.body-center');
 
 	//add some events
-	doTA.addEvents(gridRoot, $scope, {event: 'click dblclick mousemove'});
+	doTA.addEvents(gridRoot, $scope, 'click dblclick mousemove', compileFn.id);
 
 	var $window = angular.element(window);
 
