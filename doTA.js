@@ -1556,7 +1556,11 @@
 
 				//write back attributes
 				for(var k in parsedAttr) {
-					FnText += " " + k + '="' + parsedAttr[k] + '"';
+					if ((x=parsedAttr[k]) && x.indexOf('"') !== -1) {
+						FnText += " " + k + '="' + x.replace(/"/g, "\\'") + '"';
+					} else {
+						FnText += " " + k + '="' + x + '"';
+					}
 				}
 
 				if (attrClass) {

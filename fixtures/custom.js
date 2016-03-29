@@ -32,6 +32,9 @@ module.exports = {
 	'disabled': '<input type="text" ng-value="x.id" disabled />',
 	'two single attr': '<thead dota-pass table-sort><div dota-pass=""></div></thead>',
 
+	'single quote': '<div onclick=\'test("google")\' class="google login button"></div>',
+	'double quote': '<div onclick="test(\'google\')" class="google login button"></div>',
+
 	// `<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
 	//	 <tr ng-repeat="row in vm.grid">
 	//		 <td class="test">
