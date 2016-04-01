@@ -1236,7 +1236,7 @@
 				val = val.replace($parent$indexRegex, function($0) {
 					count = $0.match(/\$parent/g).length; //may need to rewrite with indexOf
 					while (count>0) {
-						while (tmpRepeatLevel >= 0 && typeof LevelVarMap[--tmpRepeatLevel] === 'undefined') {}
+						while (tmpRepeatLevel >= 0 && LevelVarMap[--tmpRepeatLevel] === void 0) {}
 						--count;
 					}
 					return "'+" + LevelVarMap[tmpRepeatLevel] + "+'";
@@ -1258,14 +1258,14 @@
 
 				//skip parsing if dota-pass is specified (interpolation will still be expanded)
 				// https://jsperf.com/hasownproperty-vs-in-vs-undefined/12
-				if (typeof attr['dota-pass'] !== 'undefined') {
+				if (attr['dota-pass'] !== void 0) {
 					if (attr['dota-pass'] === 'this') {
 						doTAPass = doTAPassThis = 1;
 					} else {
 						doTAPass = level; doTAContinue = 0;
 					}
 				//re-enable dota parsing
-				} else if (typeof attr['dota-continue'] !== 'undefined') {
+				} else if (attr['dota-continue'] !== void 0) {
 					doTAContinue = level;
 				}
 
@@ -1409,7 +1409,7 @@
 							attr.elif = void 0;
 						}
 
-						if (typeof attr['else'] !== 'undefined' && !optWatchDiff) {
+						if (attr['else'] !== void 0 && !optWatchDiff) {
 							FnText += indent(level, 1) + 'else{\n';
 							LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
 							attr['else'] = void 0;
@@ -1591,7 +1591,7 @@
 					}
 					FnText += indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attr['dota-render'] + '";\n';
 					//only expand if renderFn is ready in cache, but not in cache-dom (which unneeded)
-					FnText += indent(level) + 'if(typeof doTA.C[U]!=="undefined"&&typeof doTA.D[U]==="undefined"){' +
+					FnText += indent(level) + 'if(doTA.C[U]&&!doTA.D[U]){' +
 						'R+=doTA.C[U](S,F,P)}; \n';
 				}
 
@@ -1635,7 +1635,7 @@
 				//clear ng-repeat $index
 				if (ngRepeatLevel === level) {
 					LevelVarMap[level] = 0;
-					while (ngRepeatLevel >=0 && typeof LevelVarMap[--ngRepeatLevel] === 'undefined') {}
+					while (ngRepeatLevel >=0 && LevelVarMap[--ngRepeatLevel] === void 0) {}
 				}
 
 				//reset dota-pass when out of scope
@@ -1698,7 +1698,7 @@
 				//clear ng-repeat $index
 				if (ngRepeatLevel === level) {
 					LevelVarMap[level] = 0;
-					while (ngRepeatLevel >=0 && typeof LevelVarMap[--ngRepeatLevel] === 'undefined') {}
+					while (ngRepeatLevel >=0 && LevelVarMap[--ngRepeatLevel] === void 0) {}
 				}
 
 				//add blank node if $watch block return nothing, mostly occur with ng-if
@@ -1735,7 +1735,7 @@
 
 		if (optWatchDiff && optDiffLevel !== 0) {
 			//http://jsperf.com/hasownproperty-vs-in-vs-undefined/87
-			FnText += indent(0) + 'if(X&&typeof doTA.H[' + uniqueId + ']!=="undefined"){doTA.diff' + (optDiffLevel || '') +
+			FnText += indent(0) + 'if(X&&doTA.H[' + uniqueId + ']){doTA.diff' + (optDiffLevel || '') +
 				'(' + uniqueId + ',R)}' +
 				'doTA.H[' + uniqueId + ']=R;\n';
 		}
