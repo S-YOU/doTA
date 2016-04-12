@@ -921,11 +921,13 @@
 		}])
 		.factory('dotaHttp', ['$compile', '$http', '$templateCache', '$filter', 'doTA',
 			function($compile, $http, $templateCache, $filter, doTA) {
-			return function (name, scope, callback, options){
-				options = options || {};
-				options.loose = 1;
-				options.dotaRender = name;
-				// options.debug = 1;
+			return function (name, scope, callback, _opt){
+				var options = {dotaRender: name, loose: 1};
+				if (_opt) {
+					for (var x in _opt) {
+						options[x] = _opt[x];
+					}
+				}
 				// /**/console.log('options')
 
 				if (doTA.C[name]) {
