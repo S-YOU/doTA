@@ -2,7 +2,7 @@
 	"name": "doTA",
 	"version": "0.0.1",
 	"description": "doT for Angular",
-	"main": "dist/ngDoTA.min.js",
+	"main": "dist/doTA.min.js",
 	"dependencies": {
 		"angular": "*"
 	},
