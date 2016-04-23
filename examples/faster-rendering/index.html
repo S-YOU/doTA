@@ -14,7 +14,7 @@ Scripts are based from this
 	<h1>Faster Rendering With doTA</h1>
 	<div ng-controller="mycontroller">
 
-		<div dota-render=1 inline=1 watch-diff=data model=1 bind=1 event=1>
+		<div render=1 inline=1 watch-diff=data model=1 bind=1 event=1>
 			<button ng-click="refresh()">Refresh Data</button>
 			<div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,radio]}}</span></div>
 			<div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,radio]"></span></div>
@@ -52,7 +52,7 @@ Scripts are based from this
 			</label>
 		</div>
 
-		<div dota-render=2 inline=1 watch=data>
+		<div render=2 inline=1 watch=data>
 			<table>
 				<tr ng-repeat="line in data">
 					<td>{{line[0]}}</td>

@@ -92,7 +92,7 @@ angular.module('app', ['doTA'])
 	//compile cell templates
 	for (var x in templates) {
 		doTA.C[TEMPLATE_ID + x] = doTA.compile(templates[x],
-			{dotaRender: TEMPLATE_ID, watchDiff: 1, diffLevel: 0, encode: 1, key: 'K'});
+			{render: TEMPLATE_ID, watchDiff: 1, diffLevel: 0, encode: 1, key: 'K'});
 	}
 
 	//initialize data
@@ -109,7 +109,7 @@ angular.module('app', ['doTA'])
 	// console.log(template);
 	//compile template to fn
 	var compileFn = doTA.compile(template, {strip: 1, encode: 1, loose: 0, event: 1,
-		watchDiff: 1, diffLevel: 3, debug: 0, dotaRender: TEMPLATE_ID, comment: 0});
+		watchDiff: 1, diffLevel: 3, debug: 0, render: TEMPLATE_ID, comment: 0});
 
 	//write to dom
 	gridRoot.innerHTML = compileFn($scope, $filter);

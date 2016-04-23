@@ -21,7 +21,7 @@
 		Rendering Large Datasets With AngularJS
 	</h1>
 
-<div dota-render=3 model=1 inline=1 event=1 loose=0 watch-diff="[vm.grid,vm.form.filter]" diff-level=2>
+<div render=3 model=1 inline=1 event=1 loose=0 watch-diff="[vm.grid,vm.form.filter]" diff-level=2>
 	<form>
 		<strong>Filter Data</strong>:
 		<input type="text" ng-model="vm.form.filter" throtte=15 />
@@ -43,7 +43,7 @@
 	</form>
 </div>
 
-<div dota-render=2 inline=1 strip=1 watch="vm.grid.length"
+<div render=2 inline=1 strip=1 watch="vm.grid.length"
 	watch-diff="vm.form.filter" loose=0 event=0 debug=0>
 	<table width="100%" cellspacing="2" ng-class="{ 'filtered': vm.form.filter }">
 		<tr ng-repeat="row in vm.grid">

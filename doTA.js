@@ -1058,7 +1058,7 @@
 		var WatchMap = {}, Watched;
 		var doTAPass, doTAContinue;
 		var compiledFn;
-		var uniqueId = doTA.getId(options.dotaRender);
+		var uniqueId = doTA.getId(options.render);
 		var idHash = {};
 		var FnText = '';
 		//options that need to repeatedly calling
@@ -1579,7 +1579,7 @@
 				}
 
 				//expand doTA templates with expand=1 option
-				if (attr['dota-render'] && attr.expand) {
+				if (attr['render'] && attr.expand) {
 					var attrArray = [];
 					//attach data-X attr, and scope-X attr
 					for(x in attr) {
@@ -1589,7 +1589,7 @@
 							attrArray.push('"' + x.slice(6) + '":S["' + attr[x] + '"]');
 						}
 					}
-					FnText += indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attr['dota-render'] + '";\n';
+					FnText += indent(level) + 'var P={' + attrArray.join(',') + '},U="' + attr['render'] + '";\n';
 					//only expand if renderFn is ready in cache, but not in cache-dom (which unneeded)
 					FnText += indent(level) + 'if(doTA.C[U]&&!doTA.D[U]){' +
 						'R+=doTA.C[U](S,F,P)}; \n';
@@ -1811,13 +1811,13 @@
 
 	//warm-up most used functions
 	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="k,v in y">{{v|json:4}}</div>', {
-	// 	dotaRender: 1});
+	// 	render: 1});
 	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x--><div ng-repeat="x in 1:10:2">{{x}}</div>', {
-	// 	watchDiff: 1, dotaRender: 1});
+	// 	watchDiff: 1, render: 1});
 	doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
-		watchDiff: 1, diffLevel: 2, dotaRender: 0});
+		watchDiff: 1, diffLevel: 2, render: 0});
 	// doTA.compile('<div class="x {{x}}" ng-class="{x:1}" ng-repeat="x in y" ng-if="x" ng-value="x" ng-disabled="0">x{{x}}</div><!--x-->', {
-	// 	watchDiff: 1, diffLevel: 3, dotaRender: 1});
+	// 	watchDiff: 1, diffLevel: 3, render: 1});
 	window.doTA = doTA;
 
 	return doTA;

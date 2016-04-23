@@ -17,7 +17,7 @@ This project has two libraries, doTA, and ngDoTA.
 
 ### ngDoTA
 - included doTA
-- included angular directive called dota-render
+- included angular directive called render
 - accept templateName or inline and render html with doTA by binding to $scope and $filter, without involving $digest cycle (0 watchers), unless you explicitly set compile or watch options
 
 ##### Checkout [examples](http://rawgit.com/S-YOU/doTA/master/examples/index.html) from github, which is based on various online benchmarks or blogs.
@@ -54,7 +54,7 @@ This project has two libraries, doTA, and ngDoTA.
 
 - ng-events
 	- enabled by default
-		- can be disabled by using event=0 on dota-render directive
+		- can be disabled by using event=0 on render directive
 		- supported `change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste`, but untested
 		- all the events and its expressions are lazy. angular won't involve until event fired.
 		- change event may be different behavior with angular, untested
@@ -78,19 +78,19 @@ This project has two libraries, doTA, and ngDoTA.
 
 - ng-model
 	- experimental, disabled by default
-	- enabled by using `model=1` on dota-render directive
+	- enabled by using `model=1` on render directive
 	- `ng-model="scope_var"` - only accept dot notation or without, does not use angular $parse
 		- one `$watchCollection` will be added
 
 - ng-bind
 	- experimental, disabled by default
-	- enabled by using `bind=1` on dota-render directive
+	- enabled by using `bind=1` on render directive
 	- `ng-bind="scope_var"` - apply scope_var to `textContent` or `innerText`
 		- one `$watchCollection` will be added
 
 ---
 
-### dota-render directive attributes
+### render directive attributes
 
 - inline
 	- get template string from `innerHTML` instead of from template
@@ -126,7 +126,7 @@ This project has two libraries, doTA, and ngDoTA.
 
 - scope
 	- will create new scope with `$scope.$new()`
-	- having `ng-controller` on dota-render directive will have new scope too, but only one.
+	- having `ng-controller` on render directive will have new scope too, but only one.
 
 - watch
 	- will add `$watchCollection` and will re-render the the whole template when watch triggered.
@@ -170,7 +170,7 @@ This project has two libraries, doTA, and ngDoTA.
 	- may be useful for hiding raw tags before angular render, with custom CSS (not included)
 
 			```css
-			[dota-render][loaded=false] {
+			[render][loaded=false] {
 				display:none;
 			}
 			```
@@ -193,10 +193,10 @@ This project has two libraries, doTA, and ngDoTA.
 - debug
 	- some debugging output - also need to use with non-minified version of doTA.js or ngDoTA.js
 
-### limitations on dota-render directive
+### limitations on render directive
 
 - data must be available before directive called.
-- if data is not ready, you need to wrap `dota-render` directive with `ng-if="data"`
+- if data is not ready, you need to wrap `render` directive with `ng-if="data"`
 - `ng-repeat="item in data"` is transformed into javascript loop, so internal variable like `item` is not available to angular, use `data[$index]` to get access to them. Normally to use with `ng-model="data[$index]"`
 
 ---
@@ -240,12 +240,12 @@ This project has two libraries, doTA, and ngDoTA.
 
 - Template
 	```html
-	<div dota-render='path/to/tpl.html'></div>
+	<div render='path/to/tpl.html'></div>
 	```
 
 - Inline
 	```html
-	<div dota-render='something_unique' inline=1>
+	<div render='something_unique' inline=1>
 		<div>some more html</div>
 	</div>
 	```
@@ -254,7 +254,7 @@ This project has two libraries, doTA, and ngDoTA.
 	```html
 	<div ng-controller="mycontroller">
 			<div ng-if="data">
-				<table dota-render=1 inline=1>
+				<table render=1 inline=1>
 					<tr ng-repeat="line in data">
 						<td>{{line[0]}}</td>
 						<td>{{line[1]}}</td>
@@ -270,7 +270,7 @@ This project has two libraries, doTA, and ngDoTA.
 - watch example
 	```html
 	<div ng-controller="mycontroller">
-		<table dota-render=1 inline=1 watch="data">
+		<table render=1 inline=1 watch="data">
 			<tr ng-repeat="line in data">
 			....
 	```
