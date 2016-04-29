@@ -61,6 +61,8 @@ label [disabled] + span {
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	font-size: 14px;
 	overflow: hidden;
+	border: 1px solid #808080;
+	position: relative;
 }
 .grid {
 	float: left;
@@ -73,8 +75,14 @@ label [disabled] + span {
 .grid-left > div {
 	border-right: 0;
 }
+.grid-left + .grid-center {
+	border-left: 1px solid #808080;
+}
 .grid-scroll > div {
 	border-left: 0;
+}
+.v-scroll .body, .h-scroll .body {
+	position: absolute;
 }
 .grid-bottom > div {
 	border-top: 0;
@@ -83,10 +91,9 @@ label [disabled] + span {
 	display:block;
 	background-color: #eee;
 	overflow: scroll;
-	border: 1px solid #808080;
 }
 .header {
-	border-bottom: 0;
+	border-bottom: 1px solid #808080;
 }
 .canvas {
 	display: block;

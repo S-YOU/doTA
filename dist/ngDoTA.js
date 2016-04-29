@@ -2051,27 +2051,24 @@
 	}
 
 	function eventHandlerFn(scope, expr) {
+		var propagate = expr && expr[0] === '^';
 		return function(evt){
-			if (ie8) {
-				//make $event.target always available
-				evt.target = evt.srcElement || document;
-				evt.returnValue = false;
-				evt.cancelBubble = true;
+			if (propagate) {
+				scope.$eval(expr.substr(1), {$event: evt})
+				scope.$applyAsync();
 			} else {
-				evt.preventDefault();
-				evt.stopPropagation();
+				if (ie8) {
+					//make $event.target always available
+					evt.target = evt.srcElement || document;
+					evt.returnValue = false;
+					evt.cancelBubble = true;
+				} else {
+					evt.preventDefault();
+					evt.stopPropagation();
+				}
+				scope.$evalAsync(expr, {$event: evt});
 			}
 
-			// if (scope.$evalAsync) {
-				//isedom: disallow, so no $target here
-				scope.$evalAsync(expr, {$event: evt});
-			// } else {
-			//	 scope.$event = evt;
-			//	 // var locals = {$event: evt};
-			//	 var fn = new Function('with(this){' + expr + '}');
-			//	 console.log('eventHandlerFn', fn, scope);
-			//	 fn.apply(scope);
-			// }
 		};
 	}
 

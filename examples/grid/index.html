@@ -34,9 +34,15 @@
 
 		<div class=vpad>
 			Rows:
-			<label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=0 checked />
+			<label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=100 />
+			<span> 100 Rows</span></label>
+			<label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=1000 />
+			<span> 1000 Rows</span></label>
+			<label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=10000 />
+			<span> 10k Rows</span></label>
+			<label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=1000000 />
 			<span> 1 Million Rows</span></label>
-			<label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=1 />
+			<label><input name=2 type=radio ng-model="rowType" ng-change="rowChange()" value=1000000000 />
 			<span> 1 Billion Rows</span></label>
 		</div>
 
@@ -46,9 +52,9 @@
 			<span> 25 Columns</span></label>
 			<label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=1000 />
 			<span> 1000 Columns</span></label>
-			<label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=100000 checked />
+			<label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=100000 />
 			<span> 100k Columns</span></label>
-			<label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=1000000 />
+			<label><input name=3 type=radio ng-model="colType" ng-change="colChange()" value=10000000 />
 			<span> 1 Million Columns</span></label>
 		</div>
 
@@ -56,7 +62,6 @@
 			Event: <em>
 				<span ng-bind="hoverStatus"></span>
 				<span ng-bind="clickStatus"></span>
-				<span ng-bind="keydownStatus"></span>
 			</em>
 		</div>
 
@@ -77,8 +82,7 @@
 	<div class="grid-root" tabindex=0
 		ng-mousemove="hoverHandler($event)"
 		ng-click="clickHandler($event)"
-		ng-dblclick="clickHandler($event,1)"
-		ng-keydown="^keydownHandler($event)">
+		ng-dblclick="clickHandler($event,1)">
 
 		<!--grid-left (pinned)-->
 		<div class="grid grid-left" ng-style="width:{{g.widthLeft}}px" ng-if="g.pinLeft">
@@ -105,14 +109,14 @@
 			</div>
 
 			<!--left grid body-->
-			<div class="body body-left pinned" ng-style="width:{{g.widthLeft+scrollBarSize}}px;height:{{bodyHeight+scrollBarSize}}px;" onscroll="virtualScroll(this,0,1)">
+			<div class="body body-left pinned" ng-style="width:{{g.widthLeft+scrollBarSize}}px;height:{{bodyHeight}}px;" onscroll="virtualScroll(this,0,1)">
 				<div class="canvas" ng-style="height:{{totalHeight}}px">
 					<div class="viewport" ng-style="top:{{scrollTop}}px">
 						<!--row-->
 						<div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)" key="K" skip="100" row="{{i+realOffsetTop}}"
 							class="row {{i%2?'odd':'even'}} {{g.rowClass ? g.rowClass(row, i+offsetTop) : ''}}">
 							<!--cell-->
-							<div class="cell" ng-repeat="j in 0:g.pinLeft" ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+							<div class="cell" ng-repeat="j in 0:g.pinLeft" ng-init="col=g.colDef[j]||getColDef(j),M=j*10+1"
 								ng-style="width:{{col.width || g.colWidth}}px" col="{{j}}" tabindex=0>
 								{{ col.template_id ? doTA.C["T_" + col.template_id](row,F,0,0,0,K,M) : row[col.id] }}
 							</div>
@@ -124,11 +128,11 @@
 		</div><!--grid-left-->
 
 		<!--grid-center-->
-		<div class="grid grid-center" ng-style="width:{{bodyWidth}}px">
+		<div class="grid grid-center" ng-style="width:{{bodyWidth-borderSize}}px;height:{{bodyHeight-borderSize}}">
 
 			<div class="header">
-				<div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth}}px;">
-					<div class="viewport" ng-style="left:{{offsetRight==g.colDef.length?scrollOffsetLeft-scrollLeft:0}}px">
+				<div class="canvas" ng-style="height:{{headerHeight}}px;width:{{totalWidth+widthGap}}px;">
+					<div class="viewport" ng-style="left:0px">
 						<!--header group-->
 						<div class="row group" key="K">
 							<div ng-repeat="j in offsetLeft:offsetRight" ng-init="col=g.colDef[j]||getColDef(j)" ng-hide="col.groupWidth===0 && j !== offsetLeft"
@@ -148,14 +152,14 @@
 			</div>
 
 			<!--grid-center body-->
-			<div class="body body-center pinned" ng-style="height:{{bodyHeight+scrollBarSize}}px;width:{{bodyWidth+scrollBarSize}}px" onscroll="virtualScroll(this)">
-				<div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth}}px">
-					<div class="viewport" ng-style="left:{{(offsetRight==g.colDef.length?scrollOffsetLeft:scrollLeft)}}px;top:{{scrollTop}}px;">
+			<div class="body body-center pinned" ng-style="height:{{bodyHeight}}px;width:{{bodyWidth+scrollBarSize}}px" onscroll="virtualScroll(this)">
+				<div class="canvas" ng-style="height:{{totalHeight}}px;width:{{totalWidth+widthGap}}px">
+					<div class="viewport" ng-style="left:{{scrollLeft}}px;top:{{scrollTop}}px;">
 						<!--row-->
 						<div ng-repeat="i in 0:rows" ng-init="row=data[i+offsetTop]||getRow(i+offsetTop)" key="K" skip="100" row="{{i+realOffsetTop}}"
 							class="row {{i%2?'odd':'even'}} {{g.rowClass ? g.rowClass(row, i+offsetTop) : ''}}">
 							<!--cell-->
-							<div class="cell" ng-repeat="j in offsetLeft:offsetRight" ng-init="col=g.colDef[j]||getColDef(j),M=j*5+1"
+							<div class="cell" ng-repeat="j in offsetLeft:offsetRight" ng-init="col=g.colDef[j]||getColDef(j),M=j*10+1"
 								ng-style="width:{{col.width || g.colWidth}}px" col="{{j}}" tabindex=0>
 								{{ col.template_id ? doTA.C["T_" + col.template_id](row,F,0,0,0,K,M) : row[col.id] }}
 							</div>
@@ -167,7 +171,7 @@
 		</div><!--grid-center-->
 
 		<!--vertical scrollbar-->
-		<div class="grid grid-scroll" ng-style="width:{{scrollBarSize}}px">
+		<div class="grid grid-scroll v-scroll" ng-style="width:{{scrollBarSize}}px">
 			<div class="header">
 				<div class="canvas" ng-style="height:{{headerHeight}}px;"></div>
 			</div>
@@ -178,23 +182,20 @@
 		</div>
 
 		<!--horizontal left pinned-->
-		<div class="grid grid-left grid-bottom pinned" ng-style="width:{{g.widthLeft}}px;height:{{scrollBarSize}}px" ng-if="g.pinLeft">
-			<div class="body body-left" ng-style="width:{{g.widthLeft+scrollBarSize}}px;height:16px">
-			</div>
-		</div>
+		<div class="grid grid-left grid-bottom pinned" ng-style="width:{{g.widthLeft}}px;height:{{scrollBarSize}}px" ng-if="g.pinLeft"></div>
 
 		<!--horizontal scrollbar-->
-		<div class="grid grid-scroll grid-bottom" ng-style="width:{{bodyWidth}}px;height:{{scrollBarSize}}px">
-			<div class="body body-center" ng-style="height:16px;" onscroll="virtualScroll(this,1)">
-				<div class="canvas" ng-style="width:{{totalWidth}}px;height:16px;">
+		<div class="grid grid-scroll grid-center grid-bottom h-scroll" ng-style="height:{{scrollBarSize}}px">
+			<div class="body body-center" ng-style="width:{{bodyWidth+scrollBarSize}}px;height:{{scrollBarSize}}px;" onscroll="virtualScroll(this,1)">
+				<div class="canvas" ng-style="width:{{totalWidth+widthGap}}px;height:16px;">
 				</div>
 			</div>
 		</div>
 
 		<!--horizontal right square-->
-		<div class="grid grid-scroll grid-bottom pinned" ng-style="width:{{scrollBarSize}}px;height:{{scrollBarSize}}px">
+		<!--<div class="grid grid-scroll grid-bottom pinned" ng-style="width:{{scrollBarSize}}px;height:{{scrollBarSize}}px">
 			<div class="body"></div>
-		</div>
+		</div>-->
 
 	</div>
 
