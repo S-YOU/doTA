@@ -177,18 +177,18 @@
 				}
 			}
 		}
-
 	}
 
 	//http://jsperf.com/object-key-vs-array-indexof-lookup/6
 	//var events = ' scroll change click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste '
 	var EVENTS = {
-		"scroll":1,"change":1,"input":1,"click":1,"dblclick":1,
-		"mousedown":1,"mouseup":1,"mouseover":1,"mouseout":1,"mousemove":1,"mouseenter":1,"mouseleave":1,
-		"keydown":1,"keyup":1,"keypress":1,
-		"submit":1,"focus":1,"blur":1,
-		"copy":1,"cut":1,"paste":1
+		scroll: 1, change: 1, input: 1, click: 1, dblclick: 1,
+		mousedown: 1, mouseup: 1, mouseover: 1, mouseout: 1, mousemove: 1, mouseenter: 1, mouseleave: 1,
+		keydown: 1, keyup: 1, keypress: 1,
+		submit: 1, focus: 1, blur: 1,
+		copy: 1, cut: 1, paste: 1
 	};
+
 	//no unicode supportedgit
 	// var valid_chr = '_$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 	// var VALID_CHARS = {"_":1,"$":1,"a":1,"b":1,"c":1,"d":1,"e":1,"f":1,"g":1,"h":1,"i":1,"j":1,"k":1,"l":1,"m":1,"n":1,"o":1,"p":1,"q":1,"r":1,"s":1,"t":1,"u":1,"v":1,"w":1,"x":1,"y":1,"z":1,"A":1,"B":1,"C":1,"D":1,"E":1,"F":1,"G":1,"H":1,"I":1,"J":1,"K":1,"L":1,"M":1,"N":1,"O":1,"P":1,"Q":1,"R":1,"S":1,"T":1,"U":1,"V":1,"W":1,"X":1,"Y":1,"Z":1};
