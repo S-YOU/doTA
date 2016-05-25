@@ -1267,6 +1267,7 @@
 				//re-enable dota parsing
 				} else if (attr['dota-continue'] !== void 0) {
 					doTAContinue = level;
+					attr['dota-continue'] = void 0;
 				}
 
 				//unless dota-pass or with dota-continue
