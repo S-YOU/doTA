@@ -43,7 +43,7 @@ This project has two libraries, doTA, and ngDoTA.
 
 - conditionals
 	- `ng-if="expression"` - (must be valid javascript expression)
-		- extra `elif` and `else` support (must follow by previous `ng-if` or `elif` - no middle text nodes allowed)
+		- extra `elif` and `else` support (use with strip=1, must follow by previous `ng-if` or `elif` - no middle text nodes allowed)
 	- `ng-class="{a:x>y,b:z}"` - (must be valid javascript object)
 	- `ng-show` - when false, add `ng-hide` class
 	- `ng-hide` - when true, add `ng-hide` class
@@ -101,10 +101,10 @@ This project has two libraries, doTA, and ngDoTA.
 	- for static DOM, no dynamic binding.
 	- specify `2` to run `onLoad` expressions
 
-- dota-onload
+- onload
 	- evalulate javascript when done, `this` is bind to current DOM
 
-- dota-onload-scope
+- ng-load
 	- evaluate `$scope` function when done, with `$event` object injectable like angular
 
 - compile
