@@ -318,7 +318,8 @@
 			} //null or undefined
 
 			var modelName = partial.getAttribute('dota-model');
-			var initValue = partial.getAttribute('value');
+			var initValue = partial.type === 'checkbox' ?
+				partial.getAttribute('checked') != null : partial.getAttribute('value');
 
 			//textbox default event is input unless IE8, all others are change event
 			var updateOn = partial.getAttribute('update-on') ||
@@ -334,7 +335,7 @@
 			if (bindProp) {
 				//set true or false on dom properties
 				if (initValue)
-					partial[bindProp] = partial.value == curValue; //  loose compare
+					partial[bindProp] = partial.type === 'checkbox' && initValue || partial.value == curValue; //  loose compare
 				else
 					partial[bindProp] = curValue;
 			} else {
