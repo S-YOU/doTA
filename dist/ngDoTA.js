@@ -2160,10 +2160,10 @@
 			console.log('partial', [partial.tagName, modelName, bindProp, partial.type, curValue, partial.value, partial[bindProp]]);
 			if (bindProp) {
 				//set true or false on dom properties
-				if (initValue)
-					partial[bindProp] = partial.type === 'checkbox' && initValue || partial.value == curValue; //  loose compare
-				else
-					partial[bindProp] = curValue;
+				// if (initValue)
+					partial[bindProp] = initValue || curValue; //  loose compare
+				// else
+				// 	partial[bindProp] = curValue;
 			} else {
 				if (typeof curValue !== 'undefined') {
 					partial.value = curValue;
@@ -2195,7 +2195,9 @@
 							//console.log("value", [partial.value, partial.getAttribute('value'), curValue, bindProp, initValue, partial[bindProp]]);
 							if (bindProp) {
 								if (initValue) {
-									parsed.assign(partial[bindProp] ? partial.value : undefined);
+									//partial.value
+									parsed.assign(partial.type === 'checkbox' ? partial.checked :
+									partial[bindProp] ? partial.value : undefined);
 								} else {
 									parsed.assign(partial[bindProp]);
 								}
