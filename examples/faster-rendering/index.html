@@ -16,8 +16,8 @@ Scripts are based from this
 
 		<div render=1 inline=1 watch-diff=data model=1 bind=1 event=1>
 			<button ng-click="refresh()">Refresh Data</button>
-			<div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,radio]}}</span></div>
-			<div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,radio]"></span></div>
+			<div>Interpolate: <span>{{[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,choice]}}</span></div>
+			<div>ngBind: <span ng-bind="[name,name2,params.x.y.z,name3,select,checkbox1,checkbox2,checkbox3,checkbox4,choice]"></span></div>
 			<input ng-model="name" throttle="15">
 			<input ng-model="name2" ng-value="name3">
 			<input ng-model="params.x.y.z">
@@ -43,12 +43,16 @@ Scripts are based from this
 				CHK VALUE 4
 			</label>
 			<label>
-				<input name="radio" type="radio" ng-model="radio" value="r1">
+				<input name="radio" type="radio" ng-model="choice" value="1">
 				VALUE 1
 			</label>
 			<label>
-				<input name="radio" type="radio" ng-model="radio" value="r2">
+				<input name="radio" type="radio" ng-model="choice" value="2">
 				VALUE 2
+			</label>
+			<label>
+				<input name="radio" type="radio" ng-model="choice" value="0">
+				VALUE 3
 			</label>
 		</div>
 
@@ -89,8 +93,8 @@ Scripts are based from this
 			$scope.params = {x: {y: {z: 1}}};
 			$scope.name = "test123";
 			$scope.checkbox2 = false;
-			$scope.checkbox4 = true;
-			$scope.radio = "r2";
+			$scope.checkbox3 = true;
+			$scope.choice = "0";
 			$scope.name3 = "name3Val";
 	}]);
 //	angular.bootstrap(document.body, ['fasterAngular']);

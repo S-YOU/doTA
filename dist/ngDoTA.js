@@ -2143,8 +2143,11 @@
 				return;
 			} //null or undefined
 
+			var isCheckBox = partial.type === 'checkbox';
+			var isRadio = partial.type === 'radio';
+
 			var modelName = partial.getAttribute('dota-model');
-			var initValue = partial.type === 'checkbox' ?
+			var initValue = isCheckBox ?
 				partial.getAttribute('checked') != null : partial.getAttribute('value');
 
 			//textbox default event is input unless IE8, all others are change event
@@ -2154,14 +2157,19 @@
 
 			//use checked property for checkbox and radio
 			var bindProp = partial.getAttribute('bind-prop') ||
-				((partial.type === 'checkbox' || partial.type === 'radio') && 'checked');
+				((isCheckBox || partial.type === 'radio') && 'checked');
 			var curValue = resolveObject(modelName, scope);
 
-			console.log('partial', [partial.tagName, modelName, bindProp, partial.type, curValue, partial.value, partial[bindProp]]);
+			console.log('partial1', [partial.tagName, partial.type, modelName, bindProp])
+			console.log('partial2', [partial.type, initValue, curValue, partial.value, partial[bindProp]]);
 			if (bindProp) {
 				//set true or false on dom properties
 				// if (initValue)
-					partial[bindProp] = initValue || curValue; //  loose compare
+				if (isCheckBox)
+					partial[bindProp] = initValue || curValue;
+				else if (isRadio)
+					partial[bindProp] = initValue == curValue;
+
 				// else
 				// 	partial[bindProp] = curValue;
 			} else {
@@ -2196,7 +2204,7 @@
 							if (bindProp) {
 								if (initValue) {
 									//partial.value
-									parsed.assign(partial.type === 'checkbox' ? partial.checked :
+									parsed.assign(isCheckBox ? partial.checked :
 									partial[bindProp] ? partial.value : undefined);
 								} else {
 									parsed.assign(partial[bindProp]);
