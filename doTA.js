@@ -1403,7 +1403,7 @@
 					}
 
 					//only if there nothing between tags
-					if (attr.strip) {
+					if (optStrip) {
 						if (attr.elif) {
 							FnText += indent(level, 1) + 'else if('+ attachScope(attr.elif) +'){\n';
 							LevelMap[level] = LevelMap[level] ? LevelMap[level] + 1 : 1;
