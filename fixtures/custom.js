@@ -60,6 +60,6 @@ module.exports = {
 	//	 </tr>
 	// </table>`
 	'ng-click': '<div ng-if="!editing" ng-click="startEditing()" class="center">&nbsp;</div><div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)"><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>',
-	'bug1': '<a href="https://www.cheki.co.zw/search/result?year_from={{car.year}}&year_to={{car.year}}&keyword_search={{car.maker}}+{{car.model}}&sort_by=2" target="_blank">ZW</a>',
+	'bug1': '<a href="https://www.cheki.co.zw/search/result?year_from={{car.year}}&year_to={{car.year}}&keyword_search={{car.maker}}%20{{car.model}}&sort_by=2" target="_blank">ZW</a>',
 	'broken': '<div ng-if="!editing" ng-click="startEditing()">{{data.incharge_sale|incharge_label}}&nbsp;</div><div ng-if="editing"><select ng-model="incharge_sale" ng-change="doneEditing($event)><option ng-repeat="x in Sales" ng-value="x._id">{{x.name}}</option></select></div>',
 };
