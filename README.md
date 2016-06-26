@@ -30,6 +30,7 @@ This project has two libraries, doTA, and ngDoTA.
  - must be used html entities to attributes, NO `<, >, &`
  - usage of `'` or `"` or `\` in text nodes or inside attributes may work or may not works.
  - you need dedicated control on html, shouldn't be used on user-defined templates or security will suffer.
+ - don't use single plus + character between two interpolation like `{{x}}+{{y}}`, do `{{x+'+'+y}}` instead. It is fixable but don't want to stress regex with lookahead.
 
 ### Supported Angular or similar syntax
 
