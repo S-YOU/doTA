@@ -1043,7 +1043,7 @@
 		options = options || {};
 		var val_mod = options.loose ? "||''" : '';
 		var VarMap = {
-			true: 1, false: 1, null: 1, undefined: 1, this: 1,
+			true: 1, false: 1, null: 1, undefined: 1, this: 1, new: 1,
 			doTA: 1, $index: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
 			Math: 1, Date: 1, String: 1, Object: 1, Array: 1
 			// Infinity: 1, NaN: 1,
