@@ -1045,7 +1045,8 @@
 		var VarMap = {
 			true: 1, false: 1, null: 1, undefined: 1, this: 1, new: 1,
 			doTA: 1, $index: 1, S: 1, F: 1, $attr: 1, X: 1, K: 1, M: 1, N: 1,
-			Math: 1, Date: 1, String: 1, Object: 1, Array: 1
+			Math: 1, Date: 1, String: 1, Object: 1, Array: 1,
+			location: 1, window: 1
 			// Infinity: 1, NaN: 1,
 			// alert: 1, confirm: 1, prompt: 1,
 			//var: 1, in: 1
