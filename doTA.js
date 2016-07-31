@@ -1374,18 +1374,32 @@
 					}
 
 					if (attr['ng-init']) {
-						var eqPos = attr["ng-init"].indexOf('=');
-						if (eqPos > 0) {
-							var varName = attr["ng-init"].substr(0, eqPos);
-							if (varName.indexOf('.') < 0 && varName.indexOf('[') < 0) {
-								FnText += indent(level) + 'var ' + varName + '=' +
-									attachScope(attr["ng-init"].substr(eqPos + 1)) + '; \n';
-								VarMap[varName] = 1;
+						if (attr['ng-init'].slice(0, 4) === 'var ') {
+							var semiColonPos = attr['ng-init'].indexOf(';', 5);
+							if (semiColonPos >= 0) {
+								var vars = attr['ng-init'].slice(4, semiColonPos);
+								//var x,y,z;
+								if (vars.indexOf(',') >= 0) {
+									var xvars = vars.split(',');
+									for (var i = 0, l = xvars.length; i < l; i++) {
+										VarMap[xvars[i]] = 1;
+									}
+								//var x;
+								} else {
+									VarMap[vars] = 1;
+								}
 							} else {
-								FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
+								//var x = 1;
+								var eqPos = attr['ng-init'].indexOf('=');
+								if (eqPos >= 0) {
+									var vars = attr['ng-init'].slice(4, eqPos);
+									VarMap[vars] = 1;	
+								}
 							}
+							FnText += indent(level) + attr['ng-init'].slice(0, semiColonPos) +
+								attachScope(attr['ng-init'].slice(semiColonPos)) + '; \n';
 						} else {
-							FnText += indent(level) + attachScope(attr["ng-init"]) + '; \n';
+							FnText += indent(level) + attachScope(attr['ng-init']) + '; \n';
 						}
 						attr['ng-init'] = void 0;
 					}
