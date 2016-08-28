@@ -166,6 +166,10 @@ This project has two libraries, doTA, and ngDoTA.
 		- which set `textContent` or `innerText` when data change
 		- just one way binding of data into view
 
+- ng-model
+	- experimental
+	- ng-model on render tag will make render attribute removed and $compile with angular instead
+
 - loaded
 	- once loaded, this attribute will be set to `true`
 	- may be useful for hiding raw tags before angular render, with custom CSS (not included)

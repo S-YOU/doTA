@@ -2345,7 +2345,6 @@
 						var attrWatch = attrs.hasOwnProperty('watch') && attrs.watch;
 						var attrWatchDiff = attrs.watchDiff;
 						var attrCompile = attrs.compile;
-						var attrModel = attrs.model;
 						var attrBind = attrs.bind;
 						var attrCompileAll = attrs.compileAll;
 						var attrOnload = attrs.onload;
@@ -2368,7 +2367,7 @@
 
 						//to prevent angular binding this
 						if (attrNgController) {
-							elem[0].removeAttribute('ng-controller');
+							elem.removeAttr('ng-controller');
 						}
 
 						if (attrCacheDOM && doTA.D[attrRender]) {
@@ -2550,9 +2549,9 @@
 						// attach ng-model, events, ng-bind, and $compile
 						////////////////////////////////////////////////////////////////////////////
 						function attachEventsAndCompile(rawElem, scope) {
-							console.log('attachEventsAndCompile', attrRender, attrModel, attrEvent, attrBind, attrCompile, attrCompileAll);
+							console.log('attachEventsAndCompile', attrRender, attrs.model, attrEvent, attrBind, attrCompile, attrCompileAll);
 
-							if (attrModel) {
+							if (attrs.model) {
 								console.time('ngModel:' + attrRender);
 								addNgModels(rawElem, scope, uniqueId);
 								console.timeEnd('ngModel:' + attrRender);
@@ -2572,8 +2571,14 @@
 								console.timeEnd('ngBind:' + attrRender);
 							}
 
+							if (attrs.ngModel) {
+								elem.removeAttr('render');
+								console.time('suicide:' + attrRender);
+								$compile(elem[0])(scope);
+								console.timeEnd('suicide:' + attrRender);
+
 							//$compile html if you need ng-model or ng-something
-							if (attrCompile){
+							} else if (attrCompile){
 								//partially compile each dota-pass and its childs,
 								// not sure this is suitable if you have so many dota-passes
 								console.time('$compile:' + attrRender);
