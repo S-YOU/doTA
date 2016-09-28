@@ -2069,13 +2069,13 @@
 	function eventHandlerFn(scope, expr) {
 		var propagate = expr && expr[0] === '^';
 		return function(evt){
+			evt.target = evt.target || evt.srcElement || document;
 			if (propagate) {
 				scope.$eval(expr.substr(1), {$event: evt})
 				scope.$applyAsync();
 			} else {
 				if (ie8) {
 					//make $event.target always available
-					evt.target = evt.srcElement || document;
 					evt.returnValue = false;
 					evt.cancelBubble = true;
 				} else {
