@@ -138,8 +138,8 @@
 				}
 			}
 
-			tagName = tagName.toLowerCase();
-			if (tagName === 'input' || tagName === 'img') {
+			var tagNameL = tagName.toLowerCase();
+			if (tagNameL === 'input' || tagNameL === 'img') {
 				//http://www.w3.org/TR/html-markup/syntax.html
 				//area, base, br, col, command, embed, hr, img, input, keygen, link, meta, param, source, track, wbr
 				func.openTag(tagName, attr, 1);
@@ -1401,7 +1401,7 @@
 								var eqPos = attr['ng-init'].indexOf('=');
 								if (eqPos >= 0) {
 									var vars = attr['ng-init'].slice(4, eqPos);
-									VarMap[vars] = 1;	
+									VarMap[vars] = 1;
 								}
 							}
 							FnText += indent(level) + attr['ng-init'].slice(0, semiColonPos) +
