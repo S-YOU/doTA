@@ -196,7 +196,15 @@
 	// minimal stripped down html parser
 	function parseHTML(html, func) {
 		if (!html) { return; }
-		var prevPos = 0, pos = html.indexOf('<');
+		var prevPos = 0, pos;
+		if (html[1] === '?' && html[0] === '<') {
+			pos = html.indexOf('?', 2);
+			if (pos >= 1) {
+				prevPos = pos + 2;
+				func.text(html.substring(0, prevPos));
+			}
+		}
+		var pos = html.indexOf('<', prevPos);
 		do {
 			if (html[pos] === '<') {
 				pos++;
