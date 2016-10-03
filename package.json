@@ -1,6 +1,6 @@
 {
-	"name": "doTA",
-	"version": "0.1.0",
+	"name": "dota-render",
+	"version": "0.0.1",
 	"description": "doT for Angular",
 	"main": "dist/doTA.min.js",
 	"dependencies": {},
