@@ -196,12 +196,14 @@
 	// minimal stripped down html parser
 	function parseHTML(html, func) {
 		if (!html) { return; }
-		var prevPos = 0, pos;
+		var prevPos = 0;
 		if (html[1] === '?' && html[0] === '<') {
-			pos = html.indexOf('?', 2);
-			if (pos >= 1) {
-				prevPos = pos + 2;
+			prevPos = html.indexOf('?', 2);
+			if (prevPos >= 1) {
+				prevPos += 2;
 				func.text(html.substring(0, prevPos));
+			} else {
+				prevPos = 0;
 			}
 		}
 		var pos = html.indexOf('<', prevPos);
@@ -1038,7 +1040,7 @@
 	var varOrStringRegex = /'[^']*'|"[^"]*"|[\w$]+|[^\w$'"]+/g;
 	var quotedStringRegex = /"[^"]*"|'[^']*'/g;
 	var whiteSpaceRegex = /\s{2,}|\n/g;
-	var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'=\s]+)"(?=[\s>])/g;
+	var removeUnneededQuotesRegex = /\b([\w_-]+=)"([^"'=\s<>]+)"(?=[\s>])/g;
 	// var lazyNgAttrRegex = /^(?:src|alt|title|href)/;
 	var $indexRegex = /\$index/g;
 	var $parent$indexRegex = /(?:\$parent\.)+\$index/g;
