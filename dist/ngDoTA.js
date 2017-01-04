@@ -139,7 +139,7 @@
 			}
 
 			var tagNameL = tagName.toLowerCase();
-			if (tagNameL === 'input' || tagNameL === 'img') {
+			if (tagNameL === 'input' || tagNameL === 'img' || tagNameL === 'hr') {
 				//http://www.w3.org/TR/html-markup/syntax.html
 				//area, base, br, col, command, embed, hr, img, input, keygen, link, meta, param, source, track, wbr
 				func.openTag(tagName, attr, 1);
