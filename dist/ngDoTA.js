@@ -1,3 +1,4 @@
+// https://github.com/S-YOU/doTA
 (function(global, factory) {
 
 	if (typeof module === "object" && typeof module.exports === "object") {
@@ -2263,8 +2264,9 @@
 						var attrCompile = makeBool(attrs.compile, 1);
 
 						console.log('dotaInclude', attrs.dotaInclude);
-						$http.get(attrs.dotaInclude, {cache: $templateCache}).success(function (data) {
-							elem.html(data);
+						$http.get(attrs.dotaInclude, {cache: $templateCache}).then(function onSuccess (response) {
+							console.log(response.data);
+							elem.html(response.data);
 							if (attrCompile !== 0) {
 								$compile(elem.contents())(scope);
 							}
@@ -2286,10 +2288,10 @@
 						scope.$watch(evalExpr(attrs.dotaTemplate), function(newVal, oldVal) {
 							if (newVal) {
 								console.log('dotaTemplate', newVal);
-								$http.get(newVal, {cache: $templateCache}).success(function (data) {
-									elem.html(data);
+								$http.get(newVal, {cache: $templateCache}).then(function onSuccess (response) {
+									elem.html(response.data);
 									if (attrCompile !== 0) {
-										console.log('dotaTemplate $compile', newVal, data);
+										console.log('dotaTemplate $compile', newVal, response.data);
 										$compile(elem.contents())(scope);
 									}
 								});
@@ -2315,9 +2317,9 @@
 					callback(doTA.C[name](scope, $filter));
 				} else {
 					// /**/console.log('dotaHttp $http', name);
-					$http.get(name, {cache: $templateCache}).success(function(data) {
-						// /**/console.log('dotaHttp response', data);
-						doTA.C[name] = doTA.compile(data, options);
+					$http.get(name, {cache: $templateCache}).then(function onSuccess (response) {
+						// /**/console.log('dotaHttp response', response.data);
+						doTA.C[name] = doTA.compile(response.data, options);
 						callback(doTA.C[name](scope, $filter));
 					});
 				}
@@ -2794,9 +2796,9 @@
 									console.log('hasChildNodes', attrRender);
 									renderTemplate();
 								} else {
-									$http.get(attrRender, {cache: $templateCache}).success(function (v) {
-										console.log('after $http response', attrRender);
-										renderTemplate(compile(v, attrs));
+									$http.get(attrRender, {cache: $templateCache}).then(function onSuccess (response) {
+										console.log('after $http response', attrRender, response.data);
+										renderTemplate(compile(response.data, attrs));
 									});
 								}
 							}
