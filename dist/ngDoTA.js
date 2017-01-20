@@ -2077,10 +2077,12 @@
 			}));
 	}
 
-	function eventHandlerFn(scope, expr) {
+	function eventHandlerFn(partial, scope, expr) {
 		var propagate = expr && expr[0] === '^';
 		return function(evt){
 			evt.target = evt.target || evt.srcElement || document;
+			// specify evt.currentTarget so ng-click="clicked($event)" have an access to the original element
+			evt.currentTarget = partial;
 			if (propagate) {
 				scope.$eval(expr.substr(1), {$event: evt})
 				scope.$applyAsync();
@@ -2093,7 +2095,11 @@
 					evt.preventDefault();
 					evt.stopPropagation();
 				}
-				scope.$evalAsync(expr, {$event: evt});
+				// note: cannot call scope.$evalAsync() because Angular sets $event.currentTarget to NULL and bound method do not have an access to the original element anymore
+				// scope.$eval is in the same $digest cycle, thus $event.currentTarget stays populated
+				scope.$eval(expr, {$event: evt});
+				// note: at this point $event.currentTarget is null; fortunately our bound methods already executed in the line above
+				scope.$applyAsync();
 			}
 
 		};
@@ -2115,7 +2121,7 @@
 			if (attrName.substr(0, 3) === 'de-') {
 				//remove attribute, so never bind again
 				partial[listenerName]((ie8 ? 'on' : '') + attrName.substr(3),
-					eventHandlerFn(scope, attrVal));
+					eventHandlerFn(partial, scope, attrVal));
 				// console.log('event added', attrName);
 			}
 		}
@@ -2134,7 +2140,7 @@
 			// console.log(i, [attrVal, events[i]])
 			if (!attrVal) { continue; }
 			partial[listenerName]((ie8 ? 'on' : '') + events[i],
-				eventHandlerFn(scope, attrVal));
+				eventHandlerFn(partial, scope, attrVal));
 		}
 	}
 
