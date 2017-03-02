@@ -296,7 +296,7 @@ This project has two libraries, doTA, and ngDoTA.
 
 - fork of inductjs's benchmark - [angular/inductjs/react/doTA](http://rawgit.com/S-YOU/inductjs/master/examples/changing-list-nested/dota.html)
 
-- fork of Ben Nadel's benchmark - [Rendering Large Datasets With AngularJS](http://rawgit.com/S-YOU/JavaScript-Demos/master/demos/render-large-datasets-angularjs-reactjs/angular-dota.htm)
+- fork of Ben Nadel's benchmark - [Rendering Large Datasets With AngularJS](http://rawgit.com/S-YOU/doTA/master/examples/large-datasets/watch-diff.html)
 
 ---
 
